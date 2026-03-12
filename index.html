@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support No Faff</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #020617;
+    color: #cbd5e1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .card {
+    background: #0f172a;
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 440px;
+    width: 100%;
+  }
+
+  h1 {
+    color: #f8fafc;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #1e293b;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    text-decoration: none;
+    color: #cbd5e1;
+    transition: background 0.15s;
+  }
+
+  .option:hover {
+    background: #334155;
+  }
+
+  .option-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .kofi .option-icon { background: #ff5e5b22; color: #ff5e5b; }
+  .github .option-icon { background: #818cf822; color: #818cf8; }
+  .bitcoin .option-icon { background: #f7931a22; color: #f7931a; }
+
+  .option-text strong {
+    display: block;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .option-text span {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+
+  .btc-address {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    word-break: break-all;
+    cursor: pointer;
+    text-align: centre;
+    position: relative;
+    transition: background 0.15s;
+  }
+
+  .btc-address:hover { background: #334155; }
+
+  .btc-address .copy-hint {
+    display: block;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  .footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .footer a {
+    color: #818cf8;
+    text-decoration: none;
+  }
+
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Support No Faff</h1>
+  <p class="subtitle">No Faff apps are free and open source. If they save you time, here's how to say thanks.</p>
+
+  <a href="https://ko-fi.com/nofaff" class="option kofi" target="_blank" rel="noopener">
+    <div class="option-icon">&#9749;</div>
+    <div class="option-text">
+      <strong>Ko-fi</strong>
+      <span>Buy me a cuppa</span>
+    </div>
+  </a>
+
+  <a href="https://github.com/sponsors/no-faff" class="option github" target="_blank" rel="noopener">
+    <div class="option-icon">&#9829;</div>
+    <div class="option-text">
+      <strong>GitHub Sponsors</strong>
+      <span>Monthly or one-time</span>
+    </div>
+  </a>
+
+  <div class="option bitcoin">
+    <div class="option-icon">&#8383;</div>
+    <div class="option-text">
+      <strong>Bitcoin</strong>
+      <span>Send directly to wallet</span>
+    </div>
+  </div>
+
+  <div class="btc-address" onclick="navigator.clipboard.writeText('bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5'); this.querySelector('.copy-hint').textContent = 'Copied!'">
+    bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5
+    <span class="copy-hint">Click to copy</span>
+  </div>
+
+  <div class="footer">
+    <a href="https://github.com/no-faff">github.com/no-faff</a>
+  </div>
+</div>
+
+</body>
+</html>
