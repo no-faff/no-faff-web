@@ -5,3 +5,7 @@ HANDOFF.md
 
 # Local Netlify folder
 .netlify
+
+# Chat exports and personal files
+exports/
+non-repo-files/
