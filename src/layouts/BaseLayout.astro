@@ -1,0 +1,50 @@
+---
+import '@/styles/global.css';
+import ThemeBootstrap from '@components/ThemeBootstrap.astro';
+import TopNav from '@components/TopNav.astro';
+import Footer from '@components/Footer.astro';
+import Seo from '@components/Seo.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+}
+const { title, description, canonical, ogImage } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <ThemeBootstrap />
+    <Seo title={title} description={description} canonical={canonical} ogImage={ogImage} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <TopNav />
+    <main id="main"><slot /></main>
+    <Footer />
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--bg-raised);
+    color: var(--text);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    z-index: 100;
+  }
+  .skip-link:focus {
+    left: var(--space-3);
+    top: var(--space-3);
+  }
+</style>
