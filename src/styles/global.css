@@ -1,9 +1,13 @@
 @import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/bricolage-grotesque/index.css';
 @import './tokens.css';
 @import './reset.css';
 
 :root {
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display:
+    'Bricolage Grotesque Variable', 'Inter Variable', system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, monospace;
 }
 
@@ -23,6 +27,7 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--font-display);
   font-weight: var(--weight-bold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
