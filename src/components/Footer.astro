@@ -1,0 +1,177 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const btcAddress = 'bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5';
+---
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="block">
+      <div class="brand">
+        <span>no faff</span><span class="dot" aria-hidden="true"></span>
+      </div>
+      <p class="muted">
+        Small open-source utilities by Fred. No accounts, no subscriptions, no telemetry.
+      </p>
+    </div>
+
+    <div class="block">
+      <h4>Projects</h4>
+      <ul>
+        <li><a href="/installerclean">InstallerClean</a></li>
+        <li><a href="/silo">Silo</a></li>
+        <li><a href="/cookie-jar">Cookie Jar</a></li>
+        <li><a href="/simple-video-downloader">Simple Video Downloader</a></li>
+        <li><a href="/ulauncher">Ulauncher extensions</a></li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h4>About</h4>
+      <ul>
+        <li><a href="/about">About</a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li>
+          <a href="https://github.com/no-faff" target="_blank" rel="noopener">GitHub</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="block tip">
+      <h4>Saying thanks</h4>
+      <a class="tip-row" href="https://ko-fi.com/nofaff" target="_blank" rel="noopener">
+        <Icon name="lucide:coffee" class="tip-icon" aria-hidden="true" />
+        <span>Ko-fi</span>
+      </a>
+      <button type="button" class="tip-row btc" data-copy={btcAddress} aria-label="Copy Bitcoin address">
+        <Icon name="lucide:bitcoin" class="tip-icon" aria-hidden="true" />
+        <span class="btc-label">Bitcoin</span>
+        <code class="btc-addr">{btcAddress}</code>
+        <span class="btc-state" aria-live="polite"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="credit">
+    <span>
+      Visual style synthesised from indie tools including Upscayl, Linear, Stripe, Resend and Vercel.
+    </span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: var(--space-32);
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    padding: var(--space-16) var(--space-6) var(--space-10);
+  }
+  .footer-inner {
+    max-width: var(--container-wide);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+    gap: var(--space-12);
+  }
+  .block h4 {
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--text-muted);
+    font-weight: var(--weight-medium);
+    margin-bottom: var(--space-3);
+  }
+  .block ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .block ul a {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .block ul a:hover { color: var(--text); }
+  .brand {
+    font-weight: var(--weight-bold);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    margin-bottom: var(--space-3);
+  }
+  .brand .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--chick);
+    transform: translateY(-1px);
+  }
+  .muted {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .tip-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    padding: var(--space-2) 0;
+    width: 100%;
+    text-align: left;
+  }
+  .tip-row:hover { color: var(--text); }
+  .tip-row.btc { flex-wrap: wrap; }
+  .tip-icon { width: 14px; height: 14px; }
+  .btc-addr {
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    word-break: break-all;
+    margin-left: 22px;
+    width: 100%;
+    font-family: var(--font-mono);
+  }
+  .btc-state {
+    font-size: var(--text-xs);
+    color: var(--success);
+  }
+  .credit {
+    max-width: var(--container-wide);
+    margin: var(--space-12) auto 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border);
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+
+  @media (max-width: 768px) {
+    .footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+    }
+  }
+  @media (max-width: 480px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const value = btn.getAttribute('data-copy');
+      const state = btn.querySelector('.btc-state');
+      try {
+        await navigator.clipboard.writeText(value || '');
+        if (state) state.textContent = 'Copied';
+        setTimeout(() => {
+          if (state) state.textContent = '';
+        }, 1500);
+      } catch (_) {
+        if (state) state.textContent = 'Copy failed';
+      }
+    });
+  });
+</script>
