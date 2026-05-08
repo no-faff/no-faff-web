@@ -1,153 +1,242 @@
 ---
+import { Icon } from 'astro-icon/components';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import ProjectHero from '@components/ProjectHero.astro';
 import Explainer from '@components/Explainer.astro';
 import ScreenshotReel from '@components/ScreenshotReel.astro';
-import TrustBlock from '@components/TrustBlock.astro';
 import DownloadCards from '@components/DownloadCards.astro';
 import FaqAccordion from '@components/FaqAccordion.astro';
 
 import icon from '@assets/installerclean/icon.png';
-import heroShot from '@assets/installerclean/screenshots/10-moved-done-success.webp';
+import successShot from '@assets/installerclean/screenshots/10-moved-done-success.webp';
 import scanShot from '@assets/installerclean/screenshots/03-scan.webp';
 import mainShot from '@assets/installerclean/screenshots/04-main-window.webp';
 import deleteShot from '@assets/installerclean/screenshots/06-delete-details.webp';
+import allClearShot from '@assets/installerclean/screenshots/12-all-clear.webp';
 
-const releasesLatest = 'https://github.com/no-faff/InstallerClean/releases/latest';
+const downloadBase = 'https://github.com/no-faff/InstallerClean/releases/latest/download';
+const releasesPage = 'https://github.com/no-faff/InstallerClean/releases';
+
+const vtSetup =
+  'https://www.virustotal.com/gui/file/12a6584e2a20307fe5f7479146e776b153c263ec5cfa8f25e214d30f31d568f2';
+const vtPortable =
+  'https://www.virustotal.com/gui/file/cec6a5263dbafae4ff8b258be235f6f26ad59973eba037808a20b3d61aac546a';
+const vtSlim =
+  'https://www.virustotal.com/gui/file/77408d568533866a0c5cb3cc0fa01e14ac123756d9ee63aef0e420f2761f048c';
 ---
 
 <BaseLayout
   title="InstallerClean"
-  description={`Open source tool that safely cleans the hidden C:\\Windows\\Installer folder. Finds orphaned files and superseded patches and removes them. Free, no telemetry, Windows 10 and 11.`}
+  description={`A small Windows app that safely clears the dead weight in C:\\Windows\\Installer. Free, open source, no telemetry. Windows 10 and 11.`}
 >
   <ProjectHero
     icon={icon}
     iconAlt="InstallerClean app icon"
-    headline="Safely clean the hidden Windows folder that quietly eats your disk space."
-    subhead={`C:\\Windows\\Installer fills up over years of installs and patches. InstallerClean finds the dead weight and removes it. Free, open source, Windows 10 and 11.`}
-    primaryHref={releasesLatest}
-    primaryLabel="Download for Windows"
+    iconSize={280}
+    headline={`C:\\Windows\\Installer is full of dead weight. InstallerClean clears it safely in a minute.`}
+    subhead="There's a hidden folder on every Windows PC where install files and old patches pile up over the years. Windows never cleans it on its own. InstallerClean finds the ones you don't need any more and removes them. Free, open source, no telemetry."
+    primaryHref={`${downloadBase}/InstallerClean-portable.exe`}
+    primaryLabel="Download Portable (63 MB)"
     primaryIcon="lucide:download"
-    secondaryHref="https://github.com/no-faff/InstallerClean"
-    secondaryLabel="GitHub"
-    trustPills={['Open source (MIT)', 'No telemetry', 'Windows 10 and 11', '3,000+ downloads']}
-    heroImage={heroShot}
+    secondaryHref="#download"
+    secondaryLabel="All three builds ↓"
+    trustPills={['Open source', 'No telemetry', 'Windows 10 / 11', 'Clean on VirusTotal']}
+    heroImage={successShot}
     heroImageAlt="InstallerClean after a successful clean: 965 MB cleared"
   />
 
-  <Explainer eyebrow="What it is" title="The folder nobody tells you about">
+  <Explainer title="What's in there">
     <p>
-      There is a hidden folder on every Windows PC called <code>C:\Windows\Installer</code>.
-      Every time you install software, or apply a patch to Microsoft Office, Adobe Acrobat
-      or any other MSI-based application, a copy of that installer or patch goes in this
-      folder. And stays there.
+      If you've used WindirStat, TreeSize or any disk-space visualiser, you've probably seen
+      <code>C:\Windows\Installer</code> taking a chunk of your C: drive. It's hidden by default.
+      It's where Windows quietly keeps a copy of every install file and patch you've ever run.
     </p>
     <p>
-      When you uninstall the software, the files stay. When a newer patch replaces an older
-      one, both stay. Disk Cleanup does not touch them. DISM is for a different folder
-      entirely. Over years, the folder grows: 10 GB, 30 GB, 50 GB. On machines with heavy
-      MSI software (Acrobat is a frequent culprit), it can pass 100 GB.
+      The folder only grows. When you uninstall software, the install files stay. When a patch is
+      replaced by a newer one, both stay. Windows never cleans it. Disk Cleanup doesn't touch it.
     </p>
     <p>
-      <strong>InstallerClean finds the unneeded files and removes them safely.</strong>
-      It only removes files Windows itself reports as no longer needed. Delete sends to the
-      Recycle Bin. Move puts them in a folder you choose. Nothing is touched until you
-      confirm.
+      How much it adds up to depends on what you've installed. On my own machine it was just shy of
+      1 GB. One user
+      <a
+        href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816"
+        target="_blank"
+        rel="noopener">reported 25 GB</a
+      >. On a system with Adobe Acrobat installed, it can pass 100 GB. It could be nothing at all.
     </p>
   </Explainer>
 
   <ScreenshotReel
-    eyebrow="See it work"
-    title="A clean is three clicks"
+    eyebrow="The flow"
+    title="How it works in a minute"
     items={[
       {
         src: scanShot,
         alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
-        caption: 'Initial scan. Quick: a few seconds on most machines.',
+        caption: 'Scan. A few seconds on most machines.',
       },
       {
         src: mainShot,
         alt: 'Main window showing 114 files still used and 68 files to clean up',
-        caption: 'Results: how much is still in use, how much is removable.',
+        caption: 'Results. What is in use, what can go.',
       },
       {
         src: deleteShot,
         alt: 'Orphaned files window listing removable .msi files with reasons',
-        caption: 'The files Windows says it no longer needs.',
+        caption: 'The list. Every removable file, with the reason.',
       },
       {
-        src: heroShot,
-        alt: 'Success overlay showing 965 MB cleared after a move operation',
-        caption: 'After a Move: files relocated to a folder you choose.',
+        src: allClearShot,
+        alt: 'All-clear overlay shown when nothing is removable on a subsequent scan',
+        caption: 'All clear. Rescan after the cleanup. Nothing left to remove.',
       },
     ]}
   />
 
-  <TrustBlock
-    eyebrow="Is it safe?"
-    title="Yes. Here is why."
-    items={[
-      {
-        icon: 'lucide:shield-check',
-        title: 'Trusts Windows, not guesswork',
-        body: 'Queries the Windows Installer database. If Windows says a file is no longer needed, the app trusts it. It does not guess based on filenames or dates.',
-      },
-      {
-        icon: 'lucide:trash-2',
-        title: 'Recycle Bin, or a folder you choose',
-        body: 'Delete sends to the Recycle Bin. Move puts the files in a folder you choose, kept as a safety net you can restore from later or just hold onto. Either way they can be restored if anything breaks.',
-      },
-      {
-        icon: 'lucide:lock',
-        title: 'No telemetry, no network',
-        body: 'No phone-home. No version-check ping. No usage reporting. The app never opens a network connection.',
-      },
-      {
-        icon: 'lucide:badge-check',
-        title: 'Independently checked',
-        body: 'SHA-256 hashes published with each release. VirusTotal scans show 0 detections across setup, portable and slim. Listed by Softpedia and MajorGeeks after their own review processes.',
-      },
-    ]}
-    badges={[
-      {
-        src: '/images/installerclean/badges/softpedia-100-free2.webp',
-        href: 'https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml',
-        alt: 'Softpedia 100% free certified',
-        width: 190,
-        height: 67,
-      },
-    ]}
-  />
+  <section class="reel-closer">
+    <p>Empty the Recycle Bin (or delete from your chosen Move folder) and the space is back.</p>
+  </section>
+
+  <section class="safety">
+    <div class="safety-inner">
+      <h2>Is it safe?</h2>
+      <ul class="claims">
+        <li>
+          <Icon name="lucide:github" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Open source.</strong>
+            <a href="https://github.com/no-faff/InstallerClean" target="_blank" rel="noopener">
+              github.com/no-faff/InstallerClean
+              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+            </a>
+            <span class="muted"> · MIT licensed.</span>
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>No telemetry, no network.</strong>
+            <span class="muted"
+              >No version pings. No usage tracking. No analytics. The app never opens a network
+              connection on its own.</span
+            >
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:database" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Only removes what Windows says is unused.</strong>
+            <span class="muted"
+              >Asks the Windows Installer database directly; only removes files Windows itself
+              reports as no longer needed. No filename guessing, no date heuristics.</span
+            >
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:badge-check" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Listed by independent reviewers.</strong>
+            <span class="muted"> Both run their own reviews before listing. </span>
+            <a
+              href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+              target="_blank"
+              rel="noopener"
+            >
+              Softpedia
+              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+            </a>
+            <span class="muted"> certified 100% Free (no spyware, no adware, no viruses). </span>
+            <a
+              href="https://www.majorgeeks.com/files/details/installerclean.html"
+              target="_blank"
+              rel="noopener"
+            >
+              MajorGeeks
+              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+            </a>
+            <span class="muted"> Geek-o-licious 5/5 from 4 votes.</span>
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:shield-check" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Independent scans on VirusTotal.</strong>
+            <span class="muted"> All three builds scan clean across every engine: </span>
+            <a href={vtSetup} target="_blank" rel="noopener">setup</a>
+            <span class="muted"> (68 engines), </span>
+            <a href={vtPortable} target="_blank" rel="noopener">portable</a>
+            <span class="muted"> (69), </span>
+            <a href={vtSlim} target="_blank" rel="noopener">slim</a>
+            <span class="muted"> (70).</span>
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:hash" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Hashes published.</strong>
+            <span class="muted"
+              >Every release ships a SHA-256 sidecar file alongside each download for binary
+              verification.</span
+            >
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <Explainer title="If you've already found PatchCleaner">
+    <p>
+      <a href="https://www.homedev.com.au/free/patchcleaner" target="_blank" rel="noopener"
+        >PatchCleaner</a
+      > has been the go-to free tool for this folder since 2015. It works. But it hasn't been updated
+      since March 2016, it's closed source, and it filters Adobe Acrobat patches out by default. On
+      machines where Adobe is the worst offender (which is most of them), a lot of removable files
+      get left behind.
+    </p>
+    <p>
+      InstallerClean is a modern open-source alternative. It catches the Acrobat patches PatchCleaner
+      excludes, ships under the MIT licence and runs on .NET 10.
+    </p>
+  </Explainer>
 
   <DownloadCards
-    eyebrow="Download"
-    title="Three builds, choose one"
-    intro="Pick whichever fits. All three are clean on VirusTotal."
+    title="Download"
+    intro="Three builds. All three scan clean on every engine on VirusTotal."
     builds={[
       {
         label: 'Setup',
         filename: 'InstallerClean-setup.exe',
-        href: releasesLatest,
-        blurb: 'Regular Windows installer with the .NET 10 runtime bundled. Adds a Start Menu entry and uninstalls cleanly. Tucked into Programs so it is easy to find six months from now.',
+        size: '90 MB',
+        href: `${downloadBase}/InstallerClean-setup.exe`,
+        shaHref: `${downloadBase}/InstallerClean-setup.exe.sha256`,
+        blurb:
+          'A regular Windows installer. Adds InstallerClean to your Start Menu and Programs list so you can find it again later. Just run and follow the prompts.',
         icon: 'lucide:package',
       },
       {
         label: 'Portable',
         filename: 'InstallerClean-portable.exe',
-        href: releasesLatest,
-        blurb: 'Single self-contained exe with the runtime bundled. No install, no uninstaller. Run it, use it, delete it. Run it again whenever.',
+        size: '63 MB',
+        href: `${downloadBase}/InstallerClean-portable.exe`,
+        shaHref: `${downloadBase}/InstallerClean-portable.exe.sha256`,
+        blurb:
+          'A single file. Run it, use it, delete it. Nothing installed, nothing left behind. Drop it on a USB stick if you like.',
         icon: 'lucide:zap',
       },
       {
         label: 'Slim',
         filename: 'InstallerClean-slim.exe',
-        href: releasesLatest,
-        blurb: 'Smallest download. Requires the .NET 10 Desktop Runtime to be installed already.',
+        size: '1.86 MB',
+        href: `${downloadBase}/InstallerClean-slim.exe`,
+        shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
+        blurb:
+          'Smallest download, for users who already have the .NET 10 runtime. (You have it if you have an up-to-date Visual Studio.)',
         icon: 'lucide:feather',
       },
     ]}
-    releasePageHref="https://github.com/no-faff/InstallerClean/releases"
-    smartScreenNote="Windows SmartScreen will say 'Unknown publisher'. Click More info, then Run anyway. This is normal for unsigned open source software."
+    releasePageHref={releasesPage}
+    smartScreenNote="Windows SmartScreen will say 'Unknown publisher' on first run. Click More info, then Run anyway. This is normal for unsigned open-source software."
+    scoopSnippet={`scoop bucket add no-faff https://github.com/no-faff/scoop-bucket\nscoop install installerclean`}
   />
 
   <FaqAccordion
@@ -155,32 +244,166 @@ const releasesLatest = 'https://github.com/no-faff/InstallerClean/releases/lates
     items={[
       {
         q: 'Will I actually free up GBs of space?',
-        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running developer workstation, or any machine with heavy MSI software (Acrobat, Office, large dev tools), can have tens of GB. The CLI <code>installerclean-cli /s</code> shows what would be removed without removing it.',
+        a: "Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running developer workstation, or any machine with heavy MSI software (Acrobat, Office, large dev tools), can have tens of GB. One user reported 25 GB cleared. The CLI's <code>installerclean-cli /s</code> shows what would be removed without removing it.",
       },
       {
-        q: 'Why does it want Administrator?',
-        a: '<code>C:\\Windows\\Installer</code> is owned by SYSTEM and locked to admins only. Reading the folder, querying the Installer database and moving or deleting files all require elevation. There is no user-mode path.',
+        q: 'Will the app connect to the internet?',
+        a: 'No, never on its own. The app doesn\'t check for updates automatically, doesn\'t track usage, doesn\'t send any data anywhere. The "Check for updates" link in the About box opens the project page in your browser when you click it. Your browser makes the request; the app does not.',
+      },
+      {
+        q: 'Why does it ask for Administrator?',
+        a: '<code>C:\\Windows\\Installer</code> is owned by the SYSTEM account and locked down to administrators only. Reading the folder, querying the Windows Installer database, and moving or deleting files all require elevation. There is no way to do this without admin.',
       },
       {
         q: 'Can I undo a Delete?',
-        a: 'Yes. Delete sends files to the Recycle Bin. Restore them from there. If the Recycle Bin was emptied, the files are gone, but you can use Move instead to put them in a folder you choose, then verify nothing breaks before deleting from there.',
+        a: 'Delete sends files to the Recycle Bin. Restore from there if you change your mind in the next minute or hour. After you empty the Recycle Bin (which is how you actually free the disk), the files are gone for good.<br><br>If you want a longer-lasting backup, use <strong>Move</strong> instead. It puts the files in a folder of your choice, on whichever drive you pick. They stay there until you delete them yourself.',
       },
       {
         q: 'Will Windows complain if I remove these files?',
-        a: 'No. InstallerClean only removes files Windows itself reports as no longer needed via its installer database API. The next install, uninstall or patch cycle proceeds normally.',
+        a: 'No. InstallerClean only removes files Windows itself reports as no longer needed via the Installer database API. Future installs, uninstalls and patches all proceed normally.',
       },
       {
         q: 'Does it work on Windows 7 or 8?',
-        a: 'Untested and unsupported. InstallerClean targets Windows 10 and 11.',
+        a: 'Untested and not supported. InstallerClean targets Windows 10 and 11.',
       },
       {
-        q: 'Is it suitable for RMM or mass deployment?',
-        a: 'Yes. The CLI exits with three-state codes (0 success / 2 partial / 1 failure; 130 for Ctrl+C), writes a per-run summary to the Application event log and respects the same single-instance mutex as the GUI.',
+        q: 'Is this related to PatchCleaner?',
+        a: 'Yes. InstallerClean is a modern open-source alternative. PatchCleaner has been the go-to free tool for this folder since its 2015 release, but it hasn\'t been updated since 3 March 2016 and it\'s closed source. It also filters Adobe Acrobat patches out by default, which leaves a lot of removable files behind on machines where Adobe is the heaviest user. InstallerClean catches those and uses the Windows Installer COM API directly.',
       },
       {
-        q: 'Why does the app open my browser when I click "Check for updates" instead of checking inside the app?',
-        a: 'To keep the no-network promise clean. The app never opens a network connection; the "Check for updates" link hands a URL to your browser, which makes the request. An automatic version check on startup ran in older versions and was removed because elevated apps that suddenly hit the network can resemble C2 traffic to some AV engines.',
+        q: 'Is it suitable for sysadmins or mass deployment?',
+        a: 'Yes. There is a separate <code>installerclean-cli.exe</code> for headless use, with three-state exit codes (0 success / 2 partial / 1 failure; 130 for Ctrl+C), per-run summary in the Windows Application event log, and the same single-instance mutex as the GUI.',
       },
     ]}
   />
+
+  <section class="share-soon">
+    <div class="share-inner">
+      <h2>Share what you cleared (coming soon)</h2>
+      <p>
+        When InstallerClean v1.7.1 ships, the app will show a small "Share your result" button after
+        a successful clean. The numbers (version, MB cleared, files moved) go to a public counter on
+        this site. The app itself never connects to the network. It hands the URL to your browser,
+        which makes the request, and you see the exact data on the page before submitting. None of
+        this is mandatory.
+      </p>
+      <p class="quiet-link">
+        <a href="/installerclean/share">See the share page →</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="support">
+    <p>
+      If InstallerClean helped, <a href="/support">support No Faff →</a>
+    </p>
+  </section>
 </BaseLayout>
+
+<style>
+  .reel-closer {
+    padding: 0 var(--space-6) var(--space-12);
+    background: var(--bg-subtle);
+    text-align: center;
+  }
+  .reel-closer p {
+    max-width: 56ch;
+    margin: 0 auto;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+  }
+
+  .safety {
+    padding: var(--space-16) var(--space-6);
+  }
+  .safety-inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .safety h2 {
+    margin: 0 0 var(--space-10);
+  }
+  .claims {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+  .claims li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    line-height: var(--leading-relaxed);
+  }
+  .claim-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .claims strong {
+    color: var(--text);
+    font-weight: var(--weight-bold);
+    margin-right: var(--space-2);
+  }
+  .claims a {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .claims a:hover {
+    border-bottom-color: var(--accent);
+  }
+  .claims .inline-arrow {
+    width: 12px;
+    height: 12px;
+  }
+  .claims .muted {
+    color: var(--text-muted);
+  }
+
+  .share-soon {
+    padding: var(--space-12) var(--space-6);
+    background: var(--bg-subtle);
+  }
+  .share-inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .share-soon h2 {
+    font-size: var(--text-2xl);
+    margin: 0 0 var(--space-4);
+  }
+  .share-soon p {
+    color: var(--text-muted);
+    line-height: var(--leading-relaxed);
+  }
+  .quiet-link {
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+  }
+  .quiet-link a {
+    color: var(--accent);
+  }
+
+  .support {
+    padding: var(--space-12) var(--space-6);
+    text-align: center;
+  }
+  .support p {
+    color: var(--text-muted);
+    font-size: var(--text-base);
+  }
+  .support a {
+    color: var(--accent);
+    font-weight: var(--weight-medium);
+    border-bottom: 1px solid var(--accent-soft);
+  }
+  .support a:hover {
+    border-bottom-color: var(--accent);
+  }
+</style>
