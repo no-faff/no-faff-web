@@ -1,0 +1,76 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  title: string;
+  body: string;
+  hint?: string;
+  ctaHref?: string;
+  ctaLabel?: string;
+}
+const { title, body, hint, ctaHref, ctaLabel } = Astro.props as Props;
+---
+
+<section class="share-cta">
+  <div class="inner">
+    <Icon name="lucide:bar-chart-3" class="cta-icon" aria-hidden="true" />
+    <h2>{title}</h2>
+    <p>{body}</p>
+    {hint && <p class="hint">{hint}</p>}
+    {
+      ctaHref && ctaLabel && (
+        <a class="link" href={ctaHref}>
+          {ctaLabel}
+          <Icon name="lucide:arrow-right" class="arrow" aria-hidden="true" />
+        </a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .share-cta {
+    padding: var(--space-16) var(--space-6);
+  }
+  .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    text-align: center;
+    padding: var(--space-12);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .cta-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--accent);
+    margin: 0 auto var(--space-4);
+  }
+  .share-cta h2 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-3);
+  }
+  .share-cta p {
+    color: var(--text-muted);
+  }
+  .hint {
+    font-size: var(--text-sm);
+    margin-top: var(--space-3);
+  }
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: var(--space-5);
+    color: var(--accent);
+    font-weight: var(--weight-medium);
+  }
+  .link:hover {
+    color: var(--accent-strong);
+  }
+  .arrow {
+    width: 16px;
+    height: 16px;
+  }
+</style>
