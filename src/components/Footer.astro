@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
+import chick from '@assets/brand/chick.png';
 
 const btcAddress = 'bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5';
 ---
@@ -8,7 +10,8 @@ const btcAddress = 'bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5';
   <div class="footer-inner">
     <div class="block">
       <div class="brand">
-        <span>no faff</span><span class="dot" aria-hidden="true"></span>
+        <Image src={chick} alt="" width={28} height={28} class="brand-icon" />
+        <span>no faff</span>
       </div>
       <p class="muted">
         Small open-source utilities. No accounts, no subscriptions, no telemetry.
@@ -91,16 +94,15 @@ const btcAddress = 'bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5';
   .brand {
     font-weight: var(--weight-bold);
     display: inline-flex;
-    align-items: baseline;
-    gap: 2px;
+    align-items: center;
+    gap: var(--space-2);
     margin-bottom: var(--space-3);
   }
-  .brand .dot {
-    width: 5px;
-    height: 5px;
+  .brand .brand-icon {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: var(--chick);
-    transform: translateY(-1px);
+    flex-shrink: 0;
   }
   .muted {
     color: var(--text-muted);
