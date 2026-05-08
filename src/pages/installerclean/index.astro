@@ -132,42 +132,56 @@ const vtSlim =
             >
           </div>
         </li>
-        <li>
-          <Icon name="lucide:badge-check" class="claim-icon" aria-hidden="true" />
+        <li class="claim-virus">
+          <Icon name="lucide:shield-check" class="claim-icon" aria-hidden="true" />
           <div>
-            <strong>Listed by independent reviewers.</strong>
-            <span class="muted"> Both run their own reviews before listing. </span>
+            <strong>Three independent virus checks. All clean.</strong>
+            <span class="muted">
+              <a
+                href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+                target="_blank"
+                rel="noopener"
+              >
+                Softpedia
+                <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+              </a>
+              tests every release in their lab and certifies the binary free of spyware, adware
+              and viruses.
+            </span>
             <a
               href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
               target="_blank"
               rel="noopener"
+              class="badge-link"
             >
-              Softpedia
-              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+              <img
+                src="/images/installerclean/badges/softpedia-100-free2.webp"
+                alt="Softpedia certification: 100% Free, no spyware, no adware, no viruses"
+                width={190}
+                height={67}
+                loading="lazy"
+                class="sp-badge"
+              />
             </a>
-            <span class="muted"> certified 100% Free (no spyware, no adware, no viruses). </span>
-            <a
-              href="https://www.majorgeeks.com/files/details/installerclean.html"
-              target="_blank"
-              rel="noopener"
-            >
-              MajorGeeks
-              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
-            </a>
-            <span class="muted"> Geek-o-licious 5/5 from 4 votes.</span>
-          </div>
-        </li>
-        <li>
-          <Icon name="lucide:shield-check" class="claim-icon" aria-hidden="true" />
-          <div>
-            <strong>Independent scans on VirusTotal.</strong>
-            <span class="muted"> All three builds scan clean across every engine: </span>
-            <a href={vtSetup} target="_blank" rel="noopener">setup</a>
-            <span class="muted"> (68 engines), </span>
-            <a href={vtPortable} target="_blank" rel="noopener">portable</a>
-            <span class="muted"> (69), </span>
-            <a href={vtSlim} target="_blank" rel="noopener">slim</a>
-            <span class="muted"> (70).</span>
+            <span class="muted">
+              <a
+                href="https://www.majorgeeks.com/files/details/installerclean.html"
+                target="_blank"
+                rel="noopener"
+              >
+                MajorGeeks
+                <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+              </a>
+              tests every submission in a virtual machine before listing (Geek-o-licious 5/5 from 4
+              votes).
+            </span>
+            <span class="muted">
+              <a href={vtSetup} target="_blank" rel="noopener">VirusTotal</a> runs every build
+              through dozens of antivirus engines:
+              <a href={vtSetup} target="_blank" rel="noopener">setup</a> (68 engines),
+              <a href={vtPortable} target="_blank" rel="noopener">portable</a> (69),
+              <a href={vtSlim} target="_blank" rel="noopener">slim</a> (70).
+            </span>
           </div>
         </li>
         <li>
@@ -364,6 +378,24 @@ const vtSlim =
   }
   .claims .muted {
     color: var(--text-muted);
+  }
+  .claim-virus > div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .badge-link {
+    display: inline-block;
+    border: 0;
+    align-self: flex-start;
+  }
+  .badge-link:hover {
+    border: 0;
+  }
+  .sp-badge {
+    width: 190px;
+    height: auto;
+    display: block;
   }
 
   .share-soon {
