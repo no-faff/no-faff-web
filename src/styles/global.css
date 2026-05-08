@@ -1,13 +1,12 @@
 @import '@fontsource-variable/inter/index.css';
-@import '@fontsource-variable/bricolage-grotesque/index.css';
+@import '@fontsource/alegreya-sans/400.css';
+@import '@fontsource/alegreya-sans/700.css';
 @import './tokens.css';
 @import './reset.css';
 
 :root {
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display:
-    'Bricolage Grotesque Variable', 'Inter Variable', system-ui, -apple-system, 'Segoe UI',
-    sans-serif;
+  --font-display: 'Alegreya Sans', 'Inter Variable', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, monospace;
 }
 
