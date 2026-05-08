@@ -57,25 +57,6 @@ const vtSlim =
     </div>
   </section>
 
-  <section class="pull-quotes">
-    <div class="inner">
-      <figure class="quote">
-        <blockquote>
-          All of the threads I've found tend to recommend the same things which don't solve the
-          problem, and then go dead.
-        </blockquote>
-        <figcaption>ksparks519, r/Windows10</figcaption>
-      </figure>
-      <figure class="quote">
-        <blockquote>
-          I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the files are
-          'excluded by filters', so Patchcleaner doesn't seem to help.
-        </blockquote>
-        <figcaption>HeatherBunny1111, r/techsupport</figcaption>
-      </figure>
-    </div>
-  </section>
-
   <Explainer title="What's in there">
     <p>
       If you've used WindirStat, TreeSize or any disk-space visualiser, you've probably seen
@@ -100,6 +81,72 @@ const vtSlim =
     </p>
   </Explainer>
 
+  <section class="search-help">
+    <div class="inner">
+      <h2>The search for help</h2>
+      <p>
+        If you've ever searched for help with this folder, you know how it goes. Someone asks how
+        to clean it. They're told to run Disk Cleanup. They try it. It frees <a
+          href="https://learn.microsoft.com/en-us/answers/questions/4238108/windows-installer-folder-has-occupied-180gb"
+          target="_blank"
+          rel="noopener">600 MB of a 180 GB folder</a
+        >. The thread goes quiet.
+      </p>
+      <figure class="quote">
+        <blockquote>
+          All of the threads I've found tend to recommend the same things which don't solve the
+          problem, and then go dead.
+        </blockquote>
+        <figcaption>ksparks519, r/Windows10</figcaption>
+      </figure>
+      <p>
+        Or they're told not to touch it at all. One r/techsupport thread had someone with a 60 GB
+        Installer folder being told <a
+          href="https://www.reddit.com/r/techsupport/comments/1hw4suq/my_windows_installer_folder_is_like_60gb_so_i/"
+          target="_blank"
+          rel="noopener">"don't mess with it."</a
+        > When they asked what they should do instead, the reply was:
+      </p>
+      <figure class="quote quote-short">
+        <blockquote>I just told you.</blockquote>
+        <figcaption>r/techsupport</figcaption>
+      </figure>
+      <p>
+        The standard advice confuses deleting files at random (which genuinely is dangerous) with
+        removing files that Windows itself says it no longer needs (which isn't). InstallerClean
+        does the latter.
+      </p>
+      <p>
+        If you've searched before, you've probably already found <a
+          href="https://www.homedev.com.au/free/patchcleaner"
+          target="_blank"
+          rel="noopener">PatchCleaner</a
+        > by <a href="https://www.homedev.com.au/" target="_blank" rel="noopener">John Crawford</a>.
+        It's a fantastic app. The one thing it doesn't handle is Adobe patches: it filters them out
+        by default, and on machines where Adobe is the biggest offender (which is most of them), a
+        lot of removable files get left behind.
+      </p>
+      <figure class="quote">
+        <blockquote>
+          I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the files are
+          'excluded by filters', so Patchcleaner doesn't seem to help.
+        </blockquote>
+        <figcaption>
+          HeatherBunny1111, <a
+            href="https://www.reddit.com/r/techsupport/comments/1qc4tcf/how_to_delete_msp_files_safely/"
+            target="_blank"
+            rel="noopener">r/techsupport</a
+          >
+        </figcaption>
+      </figure>
+      <p>
+        InstallerClean detects which patches have been superseded by newer updates and flags them
+        as removable, including the Acrobat patches PatchCleaner excludes. Open source, MIT
+        licensed, runs on .NET 10.
+      </p>
+    </div>
+  </section>
+
   <ScreenshotReel
     eyebrow="The flow"
     title="How it works in a minute"
@@ -108,38 +155,34 @@ const vtSlim =
         src: scanShot,
         alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
         caption:
-          'The scan runs automatically when you open the app. A few seconds later it tells you how many files are removable. 68 in this run.',
+          'The app starts scanning the moment you open it. No menus, no settings, nothing to configure. A few seconds later you have a count of what can come off your disk. 68 files in this run.',
       },
       {
         src: mainShot,
         alt: 'Main window showing 114 files still used and 68 files to clean up',
         caption:
-          'The main window splits the folder cleanly. 114 files are still registered with Windows and stay where they are. 68 are orphaned and ready to remove.',
+          'The result, broken in two. 114 files Windows still uses, untouched. 68 it doesn\'t, ready to remove. Drill in for details if you want, or hit Move or Delete to act.',
       },
       {
         src: deleteShot,
         alt: 'Orphaned files window listing removable .msi files with reasons',
         caption:
-          'Every removable file is listed with the reason it can go. Orphaned (the product was uninstalled and the installer was left behind) or superseded (a newer patch replaced it). Review the list before doing anything.',
+          'Every removable file with the reason it can go. Orphaned means the product was uninstalled and the installer was left behind. Superseded means a newer patch replaced this one. Nothing gets touched until you confirm.',
       },
       {
         src: confirmShot,
         alt: 'Delete confirmation dialog showing 68 files (965 MB) will go to the Recycle Bin',
         caption:
-          'Move and Delete both ask before they touch anything. Delete sends files to the Recycle Bin so you can restore from there if you need to. Move puts them in a folder you choose, on a drive of your choice.',
+          'Both Move and Delete ask before they do anything. Delete sends files to the Recycle Bin so you can restore from there if you need to. Move puts them in a folder of your choice, on whichever drive you pick. Either way nothing leaves your machine without a click.',
       },
       {
         src: allClearShot,
         alt: 'All-clear overlay shown when nothing is removable on a subsequent scan',
         caption:
-          'Open InstallerClean again after the cleanup and it shows nothing left to remove. The folder is in good shape and the space is back.',
+          'Run the app a second time and it tells you there\'s nothing left. To actually free the disk space, empty the Recycle Bin (if you used Delete) or delete the files from your chosen folder (if you used Move).',
       },
     ]}
   />
-
-  <section class="reel-closer">
-    <p>Empty the Recycle Bin (or delete from your chosen Move folder) and the space is back.</p>
-  </section>
 
   <section class="safety">
     <div class="safety-inner">
@@ -233,18 +276,6 @@ const vtSlim =
       </p>
     </div>
   </section>
-
-  <Explainer title="If you've already found PatchCleaner">
-    <p>
-      <a href="https://www.homedev.com.au/free/patchcleaner" target="_blank" rel="noopener"
-        >PatchCleaner</a
-      > has been the go-to free tool for this folder since 2015. It works and still gets thousands
-      of downloads every week. But it hasn't been updated since March 2016, it's closed source and
-      it filters Adobe Acrobat patches out by default. On machines where Acrobat is a frequent
-      culprit for cache bloat, a lot of removable files get left behind.
-    </p>
-    <p>InstallerClean is a modern open-source alternative that catches those.</p>
-  </Explainer>
 
   <DownloadCards
     title="Download"
@@ -359,45 +390,57 @@ const vtSlim =
     margin: 0;
   }
 
-  .pull-quotes {
-    padding: var(--space-20) var(--space-6);
+  .search-help {
+    padding: var(--space-16) var(--space-6);
     background: var(--bg-subtle);
   }
-  .pull-quotes .inner {
+  .search-help .inner {
     max-width: var(--container-narrow);
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-16);
   }
-  .quote {
+  .search-help h2 {
+    margin: 0 0 var(--space-6);
+  }
+  .search-help p {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--text);
+    margin: 0 0 var(--space-5);
+  }
+  .search-help p:last-of-type {
+    margin-bottom: 0;
+  }
+  .search-help a {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+  }
+  .search-help a:hover {
+    border-bottom-color: var(--accent);
+  }
+  .search-help .quote {
+    margin: var(--space-8) 0;
+    padding-left: var(--space-6);
+    border-left: 3px solid var(--chick);
+  }
+  .search-help .quote blockquote {
     margin: 0;
-    position: relative;
-    padding-left: var(--space-12);
-  }
-  .quote::before {
-    content: '\201C';
-    position: absolute;
-    top: -0.25em;
-    left: -0.05em;
     font-family: var(--font-display);
-    font-size: 5rem;
-    font-weight: var(--weight-bold);
-    color: var(--chick);
-    line-height: 1;
-  }
-  .quote blockquote {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-size: var(--text-xl);
     line-height: var(--leading-snug);
     color: var(--text);
   }
-  .quote figcaption {
-    margin-top: var(--space-4);
+  .search-help .quote-short blockquote {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+  }
+  .search-help .quote figcaption {
+    margin-top: var(--space-3);
     font-size: var(--text-sm);
     color: var(--text-muted);
     font-style: italic;
+  }
+  .search-help .quote figcaption a {
+    color: var(--text-muted);
   }
 
   .verification {
@@ -492,18 +535,6 @@ const vtSlim =
     display: inline-block;
     vertical-align: middle;
     margin: 0 0.25em;
-  }
-
-  .reel-closer {
-    padding: 0 var(--space-6) var(--space-12);
-    background: var(--bg-subtle);
-    text-align: center;
-  }
-  .reel-closer p {
-    max-width: 56ch;
-    margin: 0 auto;
-    color: var(--text-muted);
-    font-size: var(--text-base);
   }
 
   .safety {

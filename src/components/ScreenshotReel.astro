@@ -46,35 +46,37 @@ const { eyebrow, title, items } = Astro.props as Props;
     background: var(--bg-subtle);
   }
   .inner {
-    max-width: var(--container);
+    max-width: var(--container-narrow);
     margin: 0 auto;
   }
   header {
-    text-align: center;
-    margin-bottom: var(--space-14);
+    margin-bottom: var(--space-10);
   }
   header h2 {
     margin-top: var(--space-2);
   }
   .items {
     display: grid;
-    gap: var(--space-20);
+    gap: var(--space-12);
   }
   figure {
     margin: 0;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
   }
   figcaption {
-    max-width: 62ch;
-    margin: 0 0 var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    margin: 0;
     color: var(--text);
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
+    border-bottom: 1px solid var(--border);
   }
   figure :global(img) {
     width: 100%;
     height: auto;
     display: block;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
   }
 </style>
