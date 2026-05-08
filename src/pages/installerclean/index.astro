@@ -49,7 +49,10 @@ const vtSlim =
     <p>
       If you've used WindirStat, TreeSize or any disk-space visualiser, you've probably seen
       <code>C:\Windows\Installer</code> taking a chunk of your C: drive. It's hidden by default.
-      It's where Windows quietly keeps a copy of every install file and patch you've ever run.
+      It's where Windows caches installers and patches for software that installs through the
+      Windows Installer system: Microsoft Office, Adobe Acrobat, Visual Studio, lots of enterprise
+      tools. Software that uses other installers (Chrome, games, NSIS- or Inno Setup-based
+      utilities, single-exe downloads) doesn't go in here.
     </p>
     <p>
       The folder only grows. When you uninstall software, the install files stay. When a patch is
