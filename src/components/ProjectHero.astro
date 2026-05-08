@@ -1,0 +1,170 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  icon: ImageMetadata;
+  iconAlt: string;
+  headline: string;
+  subhead: string;
+  primaryHref: string;
+  primaryLabel: string;
+  primaryIcon?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+  trustPills?: string[];
+  heroImage?: ImageMetadata;
+  heroImageAlt?: string;
+}
+
+const props = Astro.props as Props;
+---
+
+<section class="hero">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <Image src={props.icon} alt={props.iconAlt} width={88} height={88} class="icon" />
+    <h1>{props.headline}</h1>
+    <p class="lead subhead">{props.subhead}</p>
+
+    {
+      props.trustPills && props.trustPills.length > 0 && (
+        <ul class="pills" aria-label="Project facts">
+          {props.trustPills.map((p) => (
+            <li>{p}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="ctas">
+      <a class="btn btn-primary" href={props.primaryHref}>
+        {props.primaryIcon && <Icon name={props.primaryIcon} class="cta-icon" aria-hidden="true" />}
+        {props.primaryLabel}
+      </a>
+      {
+        props.secondaryHref && props.secondaryLabel && (
+          <a class="btn btn-ghost" href={props.secondaryHref} target="_blank" rel="noopener">
+            {props.secondaryLabel}
+            <Icon name="lucide:arrow-up-right" class="cta-icon" aria-hidden="true" />
+          </a>
+        )
+      }
+    </div>
+
+    {
+      props.heroImage && props.heroImageAlt && (
+        <figure class="hero-figure">
+          <Image src={props.heroImage} alt={props.heroImageAlt} loading="eager" />
+        </figure>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-20) var(--space-6) var(--space-16);
+  }
+  .glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .hero-inner {
+    position: relative;
+    max-width: var(--container-wide);
+    margin: 0 auto;
+    text-align: center;
+  }
+  .icon {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+  .hero h1 {
+    font-size: clamp(var(--text-4xl), 5vw, var(--text-5xl));
+    max-width: 22ch;
+    margin: 0 auto var(--space-5);
+  }
+  .subhead {
+    max-width: 56ch;
+    margin: 0 auto var(--space-8);
+    color: var(--text-muted);
+  }
+  .pills {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: center;
+    margin: 0 auto var(--space-8);
+  }
+  .pills li {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+  }
+  .ctas {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-12);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--accent-strong);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .cta-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .hero-figure {
+    margin: 0 auto;
+    max-width: var(--container);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .hero-figure :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+</style>
