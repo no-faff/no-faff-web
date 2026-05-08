@@ -1,0 +1,45 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<button class="theme-toggle" type="button" aria-label="Toggle theme" data-theme-toggle>
+  <Icon name="lucide:sun" class="icon icon-sun" aria-hidden="true" />
+  <Icon name="lucide:moon" class="icon icon-moon" aria-hidden="true" />
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+  .theme-toggle:hover {
+    color: var(--text);
+    background: var(--bg-subtle);
+  }
+  .icon { width: 18px; height: 18px; }
+  :global([data-theme='light']) .theme-toggle .icon-sun { display: block; }
+  :global([data-theme='light']) .theme-toggle .icon-moon { display: none; }
+  :global([data-theme='dark']) .theme-toggle .icon-sun { display: none; }
+  :global([data-theme='dark']) .theme-toggle .icon-moon { display: block; }
+</style>
+
+<script>
+  document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try {
+        localStorage.setItem('theme', next);
+      } catch (_) {}
+      window.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: next } }));
+    });
+  });
+</script>
