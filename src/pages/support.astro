@@ -1,0 +1,192 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+
+import chick from '@assets/brand/chick.png';
+
+const btcAddress = 'bc1qcr52sqcdh0vt0zgjcmt2htvgkflc8yg2de5nj5';
+---
+
+<BaseLayout
+  title="Support"
+  description="If a No Faff tool helped, here are the ways to say thanks. Ko-fi or Bitcoin. No subscriptions, no accounts."
+>
+  <section class="support">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <Image src={chick} alt="" width={96} height={96} class="mascot" />
+      <h1>Thanks for using No Faff.</h1>
+      <p class="lead">
+        Everything I make is free and open source. If a tool earned its keep, here are the ways to
+        say thanks. No accounts, no subscriptions, no follow-up.
+      </p>
+
+      <div class="options">
+        <a class="option" href="https://ko-fi.com/nofaff" target="_blank" rel="noopener">
+          <Icon name="lucide:coffee" class="opt-icon" aria-hidden="true" />
+          <div class="opt-text">
+            <strong>Buy me a cuppa</strong>
+            <span>Via Ko-fi</span>
+          </div>
+          <Icon name="lucide:arrow-up-right" class="opt-arrow" aria-hidden="true" />
+        </a>
+
+        <button
+          type="button"
+          class="option btc"
+          data-copy={btcAddress}
+          aria-label="Copy Bitcoin address"
+        >
+          <Icon name="lucide:bitcoin" class="opt-icon" aria-hidden="true" />
+          <div class="opt-text">
+            <strong>Bitcoin</strong>
+            <span>Send directly to wallet</span>
+          </div>
+          <code class="opt-addr">{btcAddress}</code>
+          <span class="opt-state" aria-live="polite"></span>
+        </button>
+      </div>
+
+      <p class="back">Or browse <a href="/">the rest of the suite</a>.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const value = btn.getAttribute('data-copy');
+      const state = btn.querySelector('.opt-state');
+      try {
+        await navigator.clipboard.writeText(value || '');
+        if (state) state.textContent = 'Copied';
+        setTimeout(() => {
+          if (state) state.textContent = '';
+        }, 1500);
+      } catch (_) {
+        if (state) state.textContent = 'Copy failed';
+      }
+    });
+  });
+</script>
+
+<style>
+  .support {
+    position: relative;
+    padding: var(--space-24) var(--space-6) var(--space-16);
+  }
+  .glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    text-align: center;
+  }
+  .mascot {
+    margin: 0 auto var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+  .support h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text-muted);
+    margin-bottom: var(--space-10);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+  }
+
+  .options {
+    display: grid;
+    gap: var(--space-3);
+    text-align: left;
+  }
+  .option {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--space-6);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--text);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+    cursor: pointer;
+    width: 100%;
+  }
+  .option:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+  }
+  .opt-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+  }
+  .opt-text strong {
+    display: block;
+    font-size: var(--text-base);
+  }
+  .opt-text span {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .opt-arrow {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+  }
+
+  .option.btc {
+    grid-template-columns: 32px 1fr;
+    grid-template-areas:
+      'icon text'
+      'addr addr';
+    row-gap: var(--space-3);
+  }
+  .option.btc .opt-icon {
+    grid-area: icon;
+  }
+  .option.btc .opt-text {
+    grid-area: text;
+  }
+  .opt-addr {
+    grid-area: addr;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    word-break: break-all;
+    background: var(--bg-subtle);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  .opt-state {
+    grid-column: 1 / -1;
+    font-size: var(--text-xs);
+    color: var(--success);
+    margin-top: 2px;
+  }
+
+  .back {
+    margin-top: var(--space-10);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .back a {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+  }
+  .back a:hover {
+    border-bottom-color: var(--accent);
+  }
+</style>
