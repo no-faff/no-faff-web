@@ -6,7 +6,6 @@ import ScreenshotReel from '@components/ScreenshotReel.astro';
 import TrustBlock from '@components/TrustBlock.astro';
 import DownloadCards from '@components/DownloadCards.astro';
 import FaqAccordion from '@components/FaqAccordion.astro';
-import ShareCta from '@components/ShareCta.astro';
 
 import icon from '@assets/installerclean/icon.png';
 import heroShot from '@assets/installerclean/screenshots/10-moved-done-success.webp';
@@ -95,18 +94,18 @@ const releasesLatest = 'https://github.com/no-faff/InstallerClean/releases/lates
       },
       {
         icon: 'lucide:trash-2',
-        title: 'Recycle Bin, not delete',
-        body: 'Delete sends files to the Recycle Bin where they can be restored. Move puts them in a folder you choose for inspection.',
+        title: 'Recycle Bin, or a folder you choose',
+        body: 'Delete sends to the Recycle Bin. Move puts the files in a folder you choose, kept as a safety net you can restore from later or just hold onto. Either way they can be restored if anything breaks.',
       },
       {
         icon: 'lucide:lock',
         title: 'No telemetry, no network',
-        body: 'The app makes zero network calls. The "Check for updates" link in About opens the GitHub releases page in your browser.',
+        body: 'No phone-home. No version-check ping. No usage reporting. The app never opens a network connection.',
       },
       {
         icon: 'lucide:badge-check',
-        title: 'Tested by Softpedia and MajorGeeks',
-        body: 'Independent labs scan every release. Clean on VirusTotal across all builds. SHA-256 hashes published with each release.',
+        title: 'Independently checked',
+        body: 'SHA-256 hashes published with each release. VirusTotal scans show 0 detections across setup, portable and slim. Listed by Softpedia and MajorGeeks after their own review processes.',
       },
     ]}
     badges={[
@@ -129,22 +128,21 @@ const releasesLatest = 'https://github.com/no-faff/InstallerClean/releases/lates
         label: 'Setup',
         filename: 'InstallerClean-setup.exe',
         href: releasesLatest,
-        blurb: 'Regular Windows installer. Bundles the .NET 10 runtime. Best for most users.',
+        blurb: 'Regular Windows installer with the .NET 10 runtime bundled. Adds a Start Menu entry and uninstalls cleanly. Tucked into Programs so it is easy to find six months from now.',
         icon: 'lucide:package',
-        recommended: true,
       },
       {
         label: 'Portable',
         filename: 'InstallerClean-portable.exe',
         href: releasesLatest,
-        blurb: 'Single self-contained exe. No install, no admin to install. Run, use, delete.',
+        blurb: 'Single self-contained exe with the runtime bundled. No install, no uninstaller. Run it, use it, delete it. Run it again whenever.',
         icon: 'lucide:zap',
       },
       {
         label: 'Slim',
         filename: 'InstallerClean-slim.exe',
         href: releasesLatest,
-        blurb: 'Smallest download. Needs the .NET 10 Desktop Runtime already installed.',
+        blurb: 'Smallest download. Requires the .NET 10 Desktop Runtime to be installed already.',
         icon: 'lucide:feather',
       },
     ]}
@@ -179,14 +177,10 @@ const releasesLatest = 'https://github.com/no-faff/InstallerClean/releases/lates
         q: 'Is it suitable for RMM or mass deployment?',
         a: 'Yes. The CLI exits with three-state codes (0 success / 2 partial / 1 failure; 130 for Ctrl+C), writes a per-run summary to the Application event log and respects the same single-instance mutex as the GUI.',
       },
+      {
+        q: 'Why does the app open my browser when I click "Check for updates" instead of checking inside the app?',
+        a: 'To keep the no-network promise clean. The app never opens a network connection; the "Check for updates" link hands a URL to your browser, which makes the request. An automatic version check on startup ran in older versions and was removed because elevated apps that suddenly hit the network can resemble C2 traffic to some AV engines.',
+      },
     ]}
-  />
-
-  <ShareCta
-    title="Used it? Share your result."
-    body="If the app shows you how much it cleared, you can share that anonymously. The app passes the numbers to your browser; the website handles the submission. The app never makes a network call itself."
-    hint="The share button only appears after a successful clean inside the app. The link below is for reference."
-    ctaHref="/installerclean/share"
-    ctaLabel="See the share page"
   />
 </BaseLayout>
