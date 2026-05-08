@@ -18,11 +18,20 @@ interface Props {
   builds: Build[];
   releasePageHref: string;
   smartScreenNote?: string;
+  wingetSnippet?: string;
   scoopSnippet?: string;
 }
 
-const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote, scoopSnippet } =
-  Astro.props as Props;
+const {
+  eyebrow,
+  title,
+  intro,
+  builds,
+  releasePageHref,
+  smartScreenNote,
+  wingetSnippet,
+  scoopSnippet,
+} = Astro.props as Props;
 ---
 
 <section class="dl" id="download">
@@ -62,9 +71,18 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote, scoopSn
     {smartScreenNote && <p class="note">{smartScreenNote}</p>}
 
     {
+      wingetSnippet && (
+        <div class="pkgmgr">
+          <p class="pkgmgr-label">Or via winget:</p>
+          <pre><code>{wingetSnippet}</code></pre>
+        </div>
+      )
+    }
+
+    {
       scoopSnippet && (
-        <div class="scoop">
-          <p class="scoop-label">Or via Scoop:</p>
+        <div class="pkgmgr">
+          <p class="pkgmgr-label">Or via Scoop:</p>
           <pre><code>{scoopSnippet}</code></pre>
         </div>
       )
@@ -201,15 +219,15 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote, scoopSn
     margin-top: var(--space-8);
     max-width: 56ch;
   }
-  .scoop {
+  .pkgmgr {
     margin-top: var(--space-8);
   }
-  .scoop-label {
+  .pkgmgr-label {
     font-size: var(--text-sm);
     color: var(--text-muted);
     margin-bottom: var(--space-2);
   }
-  .scoop pre {
+  .pkgmgr pre {
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -217,7 +235,7 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote, scoopSn
     overflow-x: auto;
     font-size: var(--text-sm);
   }
-  .scoop code {
+  .pkgmgr code {
     font-family: var(--font-mono);
     color: var(--text);
     background: transparent;
