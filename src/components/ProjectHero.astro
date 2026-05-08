@@ -6,6 +6,7 @@ import { Icon } from 'astro-icon/components';
 interface Props {
   icon: ImageMetadata;
   iconAlt: string;
+  iconSize?: number;
   headline: string;
   subhead: string;
   primaryHref: string;
@@ -19,12 +20,21 @@ interface Props {
 }
 
 const props = Astro.props as Props;
+const iconPx = props.iconSize ?? 280;
+const secondaryIsExternal = props.secondaryHref?.startsWith('http') ?? false;
 ---
 
 <section class="hero">
   <div class="glow" aria-hidden="true"></div>
   <div class="hero-inner">
-    <Image src={props.icon} alt={props.iconAlt} width={88} height={88} class="icon" />
+    <Image
+      src={props.icon}
+      alt={props.iconAlt}
+      width={iconPx}
+      height={iconPx}
+      class="icon"
+      loading="eager"
+    />
     <h1>{props.headline}</h1>
     <p class="lead subhead">{props.subhead}</p>
 
@@ -45,9 +55,15 @@ const props = Astro.props as Props;
       </a>
       {
         props.secondaryHref && props.secondaryLabel && (
-          <a class="btn btn-ghost" href={props.secondaryHref} target="_blank" rel="noopener">
+          <a
+            class="btn btn-ghost"
+            href={props.secondaryHref}
+            {...(secondaryIsExternal ? { target: '_blank', rel: 'noopener' } : {})}
+          >
             {props.secondaryLabel}
-            <Icon name="lucide:arrow-up-right" class="cta-icon" aria-hidden="true" />
+            {secondaryIsExternal && (
+              <Icon name="lucide:arrow-up-right" class="cta-icon" aria-hidden="true" />
+            )}
           </a>
         )
       }
@@ -82,10 +98,10 @@ const props = Astro.props as Props;
     text-align: center;
   }
   .icon {
-    width: 88px;
-    height: 88px;
-    margin: 0 auto var(--space-6);
-    border-radius: var(--radius-lg);
+    width: clamp(180px, 28vw, 280px);
+    height: auto;
+    margin: 0 auto var(--space-8);
+    border-radius: var(--radius-xl);
   }
   .hero h1 {
     font-size: clamp(var(--text-4xl), 5vw, var(--text-5xl));
@@ -156,10 +172,9 @@ const props = Astro.props as Props;
   }
   .hero-figure {
     margin: 0 auto;
-    max-width: var(--container);
+    max-width: 720px;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow);
     border: 1px solid var(--border);
   }
   .hero-figure :global(img) {

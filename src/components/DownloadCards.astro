@@ -4,10 +4,11 @@ import { Icon } from 'astro-icon/components';
 interface Build {
   label: string;
   filename: string;
+  size: string;
   href: string;
+  shaHref: string;
   blurb: string;
   icon: string;
-  recommended?: boolean;
 }
 
 interface Props {
@@ -17,13 +18,14 @@ interface Props {
   builds: Build[];
   releasePageHref: string;
   smartScreenNote?: string;
+  scoopSnippet?: string;
 }
 
-const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
+const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote, scoopSnippet } =
   Astro.props as Props;
 ---
 
-<section class="dl">
+<section class="dl" id="download">
   <div class="inner">
     {eyebrow && <p class="eyebrow">{eyebrow}</p>}
     <h2>{title}</h2>
@@ -32,16 +34,41 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
     <div class="cards">
       {
         builds.map((b) => (
-          <a class={`card ${b.recommended ? 'recommended' : ''}`} href={b.href}>
-            {b.recommended && <span class="badge">Recommended</span>}
-            <Icon name={b.icon} class="card-icon" aria-hidden="true" />
-            <h3>{b.label}</h3>
-            <p>{b.blurb}</p>
+          <article class="card">
+            <div class="head">
+              <Icon name={b.icon} class="card-icon" aria-hidden="true" />
+              <div class="title-block">
+                <h3>{b.label}</h3>
+                <p class="size">{b.size}</p>
+              </div>
+            </div>
+            <p class="blurb">{b.blurb}</p>
             <code class="filename">{b.filename}</code>
-          </a>
+            <div class="actions">
+              <a class="btn-download" href={b.href}>
+                <Icon name="lucide:download" class="dl-icon" aria-hidden="true" />
+                Download
+              </a>
+              <a class="sha-link" href={b.shaHref} target="_blank" rel="noopener">
+                SHA-256
+                <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+              </a>
+            </div>
+          </article>
         ))
       }
     </div>
+
+    {smartScreenNote && <p class="note">{smartScreenNote}</p>}
+
+    {
+      scoopSnippet && (
+        <div class="scoop">
+          <p class="scoop-label">Or via Scoop:</p>
+          <pre><code>{scoopSnippet}</code></pre>
+        </div>
+      )
+    }
 
     <p class="all-releases">
       <a href={releasePageHref} target="_blank" rel="noopener">
@@ -49,8 +76,6 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
         <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
       </a>
     </p>
-
-    {smartScreenNote && <p class="note">{smartScreenNote}</p>}
   </div>
 </section>
 
@@ -78,55 +103,126 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
     }
   }
   .card {
-    position: relative;
+    display: flex;
+    flex-direction: column;
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
-    color: var(--text);
-    transition:
-      transform var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out);
   }
-  .card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
-  .card.recommended {
-    border-color: var(--accent);
-  }
-  .badge {
-    position: absolute;
-    top: var(--space-4);
-    right: var(--space-4);
-    font-size: var(--text-xs);
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 2px 8px;
-    border-radius: 999px;
+  .head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
   }
   .card-icon {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     color: var(--accent);
-    margin-bottom: var(--space-4);
+    flex-shrink: 0;
+    margin-top: 2px;
   }
-  .card h3 {
-    font-size: var(--text-lg);
-    margin-bottom: var(--space-2);
+  .title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
-  .card p {
+  .title-block h3 {
+    font-size: var(--text-xl);
+    margin: 0;
+  }
+  .size {
     color: var(--text-muted);
     font-size: var(--text-sm);
+    margin: 0;
+  }
+  .blurb {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
     margin-bottom: var(--space-4);
+    flex-grow: 1;
   }
   .filename {
     font-size: var(--text-xs);
     color: var(--text-subtle);
     font-family: var(--font-mono);
+    margin-bottom: var(--space-5);
+    word-break: break-all;
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    background: var(--accent);
+    color: white;
+    border-radius: var(--radius);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+  .btn-download:hover {
+    background: var(--accent-strong);
+    transform: translateY(-1px);
+  }
+  .dl-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .sha-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  .sha-link:hover {
+    color: var(--text);
+  }
+  .ext-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .note {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    margin-top: var(--space-8);
+    max-width: 56ch;
+  }
+  .scoop {
+    margin-top: var(--space-8);
+  }
+  .scoop-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+  }
+  .scoop pre {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    overflow-x: auto;
+    font-size: var(--text-sm);
+  }
+  .scoop code {
+    font-family: var(--font-mono);
+    color: var(--text);
+    background: transparent;
   }
   .all-releases {
-    text-align: center;
     margin-top: var(--space-8);
     font-size: var(--text-sm);
   }
@@ -138,15 +234,5 @@ const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
   }
   .all-releases a:hover {
     color: var(--text);
-  }
-  .ext-icon {
-    width: 12px;
-    height: 12px;
-  }
-  .note {
-    text-align: center;
-    color: var(--text-subtle);
-    font-size: var(--text-sm);
-    margin-top: var(--space-6);
   }
 </style>
