@@ -1,0 +1,102 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  href: string;
+  icon: ImageMetadata;
+  iconAlt: string;
+  name: string;
+  oneLiner: string;
+  status: 'shipped' | 'in-development' | 'planning';
+  external?: boolean;
+}
+
+const props = Astro.props as Props;
+
+const statusLabel = {
+  shipped: 'Shipped',
+  'in-development': 'In development',
+  planning: 'Planning',
+}[props.status];
+---
+
+<a
+  class={`card ${props.status}`}
+  href={props.href}
+  {...(props.external ? { target: '_blank', rel: 'noopener' } : {})}
+>
+  <Image src={props.icon} alt={props.iconAlt} width={56} height={56} class="card-icon" />
+  <div class="head">
+    <h3>{props.name}</h3>
+    <span class="status">{statusLabel}</span>
+  </div>
+  <p>{props.oneLiner}</p>
+  <span class="more">
+    Read more
+    <Icon
+      name={props.external ? 'lucide:arrow-up-right' : 'lucide:arrow-right'}
+      class="more-icon"
+      aria-hidden="true"
+    />
+  </span>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--text);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .card-icon {
+    border-radius: var(--radius);
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .head h3 {
+    font-size: var(--text-xl);
+    margin: 0;
+  }
+  .status {
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+  }
+  .card.shipped .status {
+    color: var(--success);
+  }
+  .card p {
+    color: var(--text-muted);
+  }
+  .more {
+    margin-top: auto;
+    color: var(--accent);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .more-icon {
+    width: 14px;
+    height: 14px;
+  }
+</style>
