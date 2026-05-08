@@ -33,7 +33,7 @@ const vtSlim =
     icon={icon}
     iconAlt="InstallerClean app icon"
     iconSize={280}
-    headline={`C:\\Windows\\Installer huge? See what's safe to remove. In a minute.`}
+    headline={`C:\\Windows\\Installer huge? Clean out what's safe to remove. In a minute.`}
     subhead="There's a hidden folder on every Windows PC where install files and old patches pile up over the years. Windows never cleans it on its own. InstallerClean asks Windows itself what's still needed and shows you the result. Free, open source, no telemetry."
     primaryHref={`${downloadBase}/InstallerClean-portable.exe`}
     primaryLabel="Download Portable (63 MB)"
@@ -137,6 +137,13 @@ const vtSlim =
           <div>
             <strong>Three independent virus checks. All clean.</strong>
             <span class="muted">
+              <a href={vtSetup} target="_blank" rel="noopener">VirusTotal</a> runs every build
+              through dozens of antivirus engines:
+              <a href={vtSetup} target="_blank" rel="noopener">setup</a> (68 engines),
+              <a href={vtPortable} target="_blank" rel="noopener">portable</a> (69),
+              <a href={vtSlim} target="_blank" rel="noopener">slim</a> (70).
+            </span>
+            <span class="muted">
               <a
                 href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
                 target="_blank"
@@ -174,13 +181,6 @@ const vtSlim =
               </a>
               tests every submission in a virtual machine before listing.
             </span>
-            <span class="muted">
-              <a href={vtSetup} target="_blank" rel="noopener">VirusTotal</a> runs every build
-              through dozens of antivirus engines:
-              <a href={vtSetup} target="_blank" rel="noopener">setup</a> (68 engines),
-              <a href={vtPortable} target="_blank" rel="noopener">portable</a> (69),
-              <a href={vtSlim} target="_blank" rel="noopener">slim</a> (70).
-            </span>
           </div>
         </li>
         <li>
@@ -201,15 +201,12 @@ const vtSlim =
     <p>
       <a href="https://www.homedev.com.au/free/patchcleaner" target="_blank" rel="noopener"
         >PatchCleaner</a
-      > has been the go-to free tool for this folder since 2015. It works. But it hasn't been updated
-      since March 2016, it's closed source, and it filters Adobe Acrobat patches out by default. On
-      machines where Adobe is the worst offender (which is most of them), a lot of removable files
-      get left behind.
+      > has been the go-to free tool for this folder since 2015. It works and still gets thousands
+      of downloads every week. But it hasn't been updated since March 2016, it's closed source and
+      it filters Adobe Acrobat patches out by default. On machines where Acrobat is a frequent
+      culprit for cache bloat, a lot of removable files get left behind.
     </p>
-    <p>
-      InstallerClean is a modern open-source alternative. It catches the Acrobat patches PatchCleaner
-      excludes, ships under the MIT licence and runs on .NET 10.
-    </p>
+    <p>InstallerClean is a modern open-source alternative that catches those.</p>
   </Explainer>
 
   <DownloadCards
@@ -243,7 +240,7 @@ const vtSlim =
         href: `${downloadBase}/InstallerClean-slim.exe`,
         shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
         blurb:
-          'Smallest download, for users who already have the .NET 10 runtime. (You have it if you have an up-to-date Visual Studio.)',
+          'Smallest download. Only works if you already have the .NET 10 Desktop Runtime installed. If you do not (or are not sure), pick Setup or Portable instead.',
         icon: 'lucide:feather',
       },
     ]}
@@ -257,11 +254,11 @@ const vtSlim =
     items={[
       {
         q: 'Will I actually free up GBs of space?',
-        a: "Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running developer workstation, or any machine with heavy MSI software (Acrobat, Office, large dev tools), can have tens of GB. One user reported 25 GB cleared. The CLI's <code>installerclean-cli /s</code> shows what would be removed without removing it.",
+        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running developer workstation, or any machine with heavy MSI software (Acrobat, Office, large dev tools), can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> cleared. Once you run InstallerClean, the main window tells you exactly how much you can remove before you click anything to remove it. There is also a CLI dry-run mode (<code>installerclean-cli /s</code>) for headless or scripting use.',
       },
       {
         q: 'Will the app connect to the internet?',
-        a: 'No, never on its own. The app doesn\'t check for updates automatically, doesn\'t track usage, doesn\'t send any data anywhere. The "Check for updates" link in the About box opens the project page in your browser when you click it. Your browser makes the request; the app does not.',
+        a: 'No, never on its own. The app doesn\'t check for updates automatically, doesn\'t track usage, doesn\'t send any data anywhere. The "Check for updates" link in the About box opens the GitHub releases page in your browser when you click it. Your browser makes the request; the app does not.',
       },
       {
         q: 'Why does it ask for Administrator?',
@@ -269,7 +266,7 @@ const vtSlim =
       },
       {
         q: 'Can I undo a Delete?',
-        a: 'Delete sends files to the Recycle Bin. Restore from there if you change your mind in the next minute or hour. After you empty the Recycle Bin (which is how you actually free the disk), the files are gone for good.<br><br>If you want a longer-lasting backup, use <strong>Move</strong> instead. It puts the files in a folder of your choice, on whichever drive you pick. They stay there until you delete them yourself.',
+        a: 'Delete sends files to the Recycle Bin. Restore them from there until you empty the bin. Once you empty it, they are gone for good. (Emptying it is how the disk space actually comes back.)<br><br>Or use <strong>Move</strong> instead, which puts the files in a folder of your choice. Pick a different drive (the whole point is to free up space on C:, so don\'t put them back on C:).',
       },
       {
         q: 'Will Windows complain if I remove these files?',
@@ -278,10 +275,6 @@ const vtSlim =
       {
         q: 'Does it work on Windows 7 or 8?',
         a: 'Untested and not supported. InstallerClean targets Windows 10 and 11.',
-      },
-      {
-        q: 'Is this related to PatchCleaner?',
-        a: 'Yes. InstallerClean is a modern open-source alternative. PatchCleaner has been the go-to free tool for this folder since its 2015 release, but it hasn\'t been updated since 3 March 2016 and it\'s closed source. It also filters Adobe Acrobat patches out by default, which leaves a lot of removable files behind on machines where Adobe is the heaviest user. InstallerClean catches those and uses the Windows Installer COM API directly.',
       },
       {
         q: 'Is it suitable for sysadmins or mass deployment?',
