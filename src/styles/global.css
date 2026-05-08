@@ -1,6 +1,70 @@
 @import '@fontsource-variable/inter/index.css';
+@import './tokens.css';
+@import './reset.css';
 
 :root {
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text);
+}
+
+h1 { font-size: var(--text-5xl); }
+h2 { font-size: var(--text-3xl); line-height: var(--leading-snug); }
+h3 { font-size: var(--text-2xl); line-height: var(--leading-snug); }
+h4 { font-size: var(--text-xl); line-height: var(--leading-snug); }
+
+p { color: var(--text); }
+
+.lead {
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+}
+
+.eyebrow {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-strong); }
+
+code,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
