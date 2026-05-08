@@ -31,8 +31,8 @@ const { eyebrow, title, items } = Astro.props as Props;
       {
         items.map((item) => (
           <figure>
-            <Image src={item.src} alt={item.alt} />
             <figcaption>{item.caption}</figcaption>
+            <Image src={item.src} alt={item.alt} />
           </figure>
         ))
       }
@@ -46,37 +46,35 @@ const { eyebrow, title, items } = Astro.props as Props;
     background: var(--bg-subtle);
   }
   .inner {
-    max-width: var(--container-wide);
+    max-width: var(--container);
     margin: 0 auto;
   }
   header {
     text-align: center;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-14);
   }
   header h2 {
     margin-top: var(--space-2);
   }
   .items {
     display: grid;
-    gap: var(--space-12);
+    gap: var(--space-20);
   }
   figure {
     margin: 0;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: var(--bg-raised);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
+  }
+  figcaption {
+    max-width: 62ch;
+    margin: 0 0 var(--space-5);
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
   }
   figure :global(img) {
     width: 100%;
     height: auto;
     display: block;
-  }
-  figcaption {
-    padding: var(--space-4) var(--space-5);
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    border-top: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
   }
 </style>
