@@ -1,0 +1,7 @@
+dist/
+.astro/
+node_modules/
+non-repo-files/
+exports/
+.netlify/
+package-lock.json
