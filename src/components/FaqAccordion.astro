@@ -1,0 +1,101 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Item {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  items: Item[];
+}
+
+const { eyebrow, title, items } = Astro.props as Props;
+---
+
+<section class="faq">
+  <div class="inner">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    {title && <h2>{title}</h2>}
+    <div class="items">
+      {
+        items.map((it) => (
+          <details>
+            <summary>
+              <span>{it.q}</span>
+              <Icon name="lucide:chevron-down" class="chev" aria-hidden="true" />
+            </summary>
+            <div class="answer" set:html={it.a} />
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq {
+    padding: var(--space-16) var(--space-6);
+  }
+  .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .faq h2 {
+    margin: var(--space-2) 0 var(--space-8);
+  }
+  .items details {
+    border-top: 1px solid var(--border);
+    padding: var(--space-5) 0;
+  }
+  .items details:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+  .items summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: var(--weight-medium);
+    list-style: none;
+    color: var(--text);
+  }
+  .items summary::-webkit-details-marker {
+    display: none;
+  }
+  .chev {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    transition: transform var(--duration) var(--ease-out);
+  }
+  details[open] .chev {
+    transform: rotate(180deg);
+  }
+  .answer {
+    padding-top: var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  .answer :global(a) {
+    color: var(--accent);
+  }
+  .answer :global(code) {
+    font-size: 0.9em;
+    background: var(--bg-subtle);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+  }
+  .answer :global(kbd) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+</style>
