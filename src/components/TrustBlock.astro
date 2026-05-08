@@ -1,0 +1,108 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Item {
+  icon: string;
+  title: string;
+  body: string;
+}
+
+interface Badge {
+  src: string;
+  href: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  items: Item[];
+  badges?: Badge[];
+}
+
+const { eyebrow, title, items, badges } = Astro.props as Props;
+---
+
+<section class="trust">
+  <div class="inner">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h2>{title}</h2>
+
+    <ul class="items">
+      {
+        items.map((it) => (
+          <li>
+            <Icon name={it.icon} class="trust-icon" aria-hidden="true" />
+            <h3>{it.title}</h3>
+            <p>{it.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    {
+      badges && badges.length > 0 && (
+        <div class="badges">
+          {badges.map((b) => (
+            <a href={b.href} target="_blank" rel="noopener">
+              <img src={b.src} alt={b.alt} width={b.width} height={b.height} loading="lazy" />
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .trust {
+    padding: var(--space-16) var(--space-6);
+  }
+  .inner {
+    max-width: var(--container);
+    margin: 0 auto;
+  }
+  .trust h2 {
+    margin: var(--space-2) 0 var(--space-10);
+  }
+  .items {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-8);
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 640px) {
+    .items {
+      grid-template-columns: 1fr;
+    }
+  }
+  .items li {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+  }
+  .trust-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+  .items h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+  }
+  .items p {
+    color: var(--text-muted);
+  }
+  .badges {
+    margin-top: var(--space-10);
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+</style>
