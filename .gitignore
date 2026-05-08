@@ -6,6 +6,11 @@ HANDOFF.md
 # Local Netlify folder
 .netlify
 
-# Chat exports and personal files
-exports/
-non-repo-files/
+# Astro / Node
+node_modules/
+dist/
+.astro/
+
+# Editor
+.DS_Store
+*.log
