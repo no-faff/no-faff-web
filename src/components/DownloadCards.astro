@@ -1,0 +1,152 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Build {
+  label: string;
+  filename: string;
+  href: string;
+  blurb: string;
+  icon: string;
+  recommended?: boolean;
+}
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  intro?: string;
+  builds: Build[];
+  releasePageHref: string;
+  smartScreenNote?: string;
+}
+
+const { eyebrow, title, intro, builds, releasePageHref, smartScreenNote } =
+  Astro.props as Props;
+---
+
+<section class="dl">
+  <div class="inner">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h2>{title}</h2>
+    {intro && <p class="lead">{intro}</p>}
+
+    <div class="cards">
+      {
+        builds.map((b) => (
+          <a class={`card ${b.recommended ? 'recommended' : ''}`} href={b.href}>
+            {b.recommended && <span class="badge">Recommended</span>}
+            <Icon name={b.icon} class="card-icon" aria-hidden="true" />
+            <h3>{b.label}</h3>
+            <p>{b.blurb}</p>
+            <code class="filename">{b.filename}</code>
+          </a>
+        ))
+      }
+    </div>
+
+    <p class="all-releases">
+      <a href={releasePageHref} target="_blank" rel="noopener">
+        See all releases on GitHub
+        <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+      </a>
+    </p>
+
+    {smartScreenNote && <p class="note">{smartScreenNote}</p>}
+  </div>
+</section>
+
+<style>
+  .dl {
+    padding: var(--space-16) var(--space-6);
+    background: var(--bg-subtle);
+  }
+  .inner {
+    max-width: var(--container);
+    margin: 0 auto;
+  }
+  .lead {
+    margin-top: var(--space-3);
+  }
+  .cards {
+    margin-top: var(--space-10);
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(3, 1fr);
+  }
+  @media (max-width: 768px) {
+    .cards {
+      grid-template-columns: 1fr;
+    }
+  }
+  .card {
+    position: relative;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    color: var(--text);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .card.recommended {
+    border-color: var(--accent);
+  }
+  .badge {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    font-size: var(--text-xs);
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    margin-bottom: var(--space-4);
+  }
+  .card h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+  }
+  .card p {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+  }
+  .filename {
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+  }
+  .all-releases {
+    text-align: center;
+    margin-top: var(--space-8);
+    font-size: var(--text-sm);
+  }
+  .all-releases a {
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .all-releases a:hover {
+    color: var(--text);
+  }
+  .ext-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .note {
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    margin-top: var(--space-6);
+  }
+</style>
