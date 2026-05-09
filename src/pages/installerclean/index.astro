@@ -35,7 +35,7 @@ const vtSlim =
     iconAlt="InstallerClean app icon"
     iconSize={280}
     headline={`C:\\Windows\\Installer huge? Clean out what's safe to remove. In a minute.`}
-    subhead="There's a hidden folder on every Windows PC where install files and old patches pile up over the years. Windows never cleans it on its own. InstallerClean asks Windows itself what's still needed and shows you the result. Free, open source, no telemetry."
+    subhead="InstallerClean asks Windows itself which files are still needed and removes only the rest. Free, open source, no telemetry."
     primaryHref={`${downloadBase}/InstallerClean-portable.exe`}
     primaryLabel="Download Portable (63 MB)"
     primaryIcon="lucide:download"
@@ -225,8 +225,90 @@ const vtSlim =
           rel="noopener">triggers MSI repair</a
         > on every product during enumeration; InstallerClean calls the Windows Installer COM
         interface directly with no side effects. General-purpose cleaners like CCleaner and
-        BleachBit don't touch this folder at all because the API queries are the only safe way to
-        tell registered packages from orphaned ones.
+        BleachBit don't touch this folder at all.
+      </p>
+    </div>
+  </section>
+
+  <section class="safety">
+    <div class="safety-inner">
+      <h2>Is it safe?</h2>
+      <ul class="claims">
+        <li>
+          <Icon name="lucide:github" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Open source.</strong>
+            <a href="https://github.com/no-faff/InstallerClean" target="_blank" rel="noopener">
+              github.com/no-faff/InstallerClean
+              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
+            </a>
+            <span class="muted"> · MIT licensed.</span>
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>No telemetry, no network.</strong>
+            <span class="muted"
+              >No version pings. No usage tracking. No analytics. The app never opens a network
+              connection on its own.</span
+            >
+          </div>
+        </li>
+        <li>
+          <Icon name="lucide:hash" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>Hashes published.</strong>
+            <span class="muted"
+              >Every release ships a SHA-256 sidecar file alongside each download for binary
+              verification.</span
+            >
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="verification">
+    <div class="inner">
+      <h2>Scanned. Checked. Listed.</h2>
+      <p class="lead">Every release is scanned on VirusTotal across 68 to 70 antivirus engines.</p>
+      <div class="vt-row">
+        <a class="vt-link" href={vtSetup} target="_blank" rel="noopener">
+          <span class="vt-build">Setup</span>
+          <span class="vt-count">0/68</span>
+          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
+        </a>
+        <a class="vt-link" href={vtPortable} target="_blank" rel="noopener">
+          <span class="vt-build">Portable</span>
+          <span class="vt-count">0/69</span>
+          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
+        </a>
+        <a class="vt-link" href={vtSlim} target="_blank" rel="noopener">
+          <span class="vt-build">Slim</span>
+          <span class="vt-count">0/70</span>
+          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
+        </a>
+      </div>
+      <p class="supplementary">
+        Also certified by <a
+          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+          target="_blank"
+          rel="noopener">Softpedia</a> (100% Free, no spyware, no adware, no viruses) <a
+          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+          target="_blank"
+          rel="noopener"
+          class="sp-badge-link"><img
+            src="/images/installerclean/badges/softpedia-100-free2.webp"
+            alt=""
+            class="sp-badge-inline"
+            width="91"
+            height="32"
+            loading="lazy"
+          /></a> and listed on <a
+          href="https://www.majorgeeks.com/files/details/installerclean.html"
+          target="_blank"
+          rel="noopener">MajorGeeks</a> after their VM-based testing.
       </p>
     </div>
   </section>
@@ -338,102 +420,9 @@ const vtSlim =
         </li>
       </ul>
       <p>
-        If anything ever does break (it shouldn't), you copy or move the files back into <code
+        If you ever change your mind, copy or move the files back into <code
           >C:\Windows\Installer</code
         > and you're back to where you started. That's all "restore" means here.
-      </p>
-    </div>
-  </section>
-
-  <section class="safety">
-    <div class="safety-inner">
-      <h2>Is it safe?</h2>
-      <ul class="claims">
-        <li>
-          <Icon name="lucide:github" class="claim-icon" aria-hidden="true" />
-          <div>
-            <strong>Open source.</strong>
-            <a href="https://github.com/no-faff/InstallerClean" target="_blank" rel="noopener">
-              github.com/no-faff/InstallerClean
-              <Icon name="lucide:arrow-up-right" class="inline-arrow" aria-hidden="true" />
-            </a>
-            <span class="muted"> · MIT licensed.</span>
-          </div>
-        </li>
-        <li>
-          <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
-          <div>
-            <strong>No telemetry, no network.</strong>
-            <span class="muted"
-              >No version pings. No usage tracking. No analytics. The app never opens a network
-              connection on its own.</span
-            >
-          </div>
-        </li>
-        <li>
-          <Icon name="lucide:database" class="claim-icon" aria-hidden="true" />
-          <div>
-            <strong>Only removes what Windows says is unused.</strong>
-            <span class="muted"
-              >Asks the Windows Installer database directly; only removes files Windows itself
-              reports as no longer needed. No filename guessing, no date heuristics.</span
-            >
-          </div>
-        </li>
-        <li>
-          <Icon name="lucide:hash" class="claim-icon" aria-hidden="true" />
-          <div>
-            <strong>Hashes published.</strong>
-            <span class="muted"
-              >Every release ships a SHA-256 sidecar file alongside each download for binary
-              verification.</span
-            >
-          </div>
-        </li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="verification">
-    <div class="inner">
-      <h2>Scanned. Checked. Listed.</h2>
-      <p class="lead">Every release is scanned on VirusTotal across 68 to 70 antivirus engines.</p>
-      <div class="vt-row">
-        <a class="vt-link" href={vtSetup} target="_blank" rel="noopener">
-          <span class="vt-build">Setup</span>
-          <span class="vt-count">0/68</span>
-          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
-        </a>
-        <a class="vt-link" href={vtPortable} target="_blank" rel="noopener">
-          <span class="vt-build">Portable</span>
-          <span class="vt-count">0/69</span>
-          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
-        </a>
-        <a class="vt-link" href={vtSlim} target="_blank" rel="noopener">
-          <span class="vt-build">Slim</span>
-          <span class="vt-count">0/70</span>
-          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
-        </a>
-      </div>
-      <p class="supplementary">
-        Also certified by <a
-          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-          target="_blank"
-          rel="noopener">Softpedia</a> (100% Free, no spyware, no adware, no viruses) <a
-          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-          target="_blank"
-          rel="noopener"
-          class="sp-badge-link"><img
-            src="/images/installerclean/badges/softpedia-100-free2.webp"
-            alt=""
-            class="sp-badge-inline"
-            width="91"
-            height="32"
-            loading="lazy"
-          /></a> and listed on <a
-          href="https://www.majorgeeks.com/files/details/installerclean.html"
-          target="_blank"
-          rel="noopener">MajorGeeks</a> after their VM-based testing.
       </p>
     </div>
   </section>
@@ -618,64 +607,57 @@ const vtSlim =
     margin-bottom: 0;
   }
 
-  .hiw-run {
-    padding: var(--space-8) var(--space-6);
-    background: var(--bg-subtle);
+  .safety {
+    padding: var(--space-16) var(--space-6);
   }
-  .hiw-run .inner {
+  .safety-inner {
     max-width: var(--container-narrow);
     margin: 0 auto;
   }
-  .hiw-run p {
-    font-size: var(--text-lg);
-    line-height: var(--leading-relaxed);
-    margin: 0;
+  .safety h2 {
+    margin: 0 0 var(--space-10);
   }
-  .hiw-run strong {
-    color: var(--text);
-    font-weight: var(--weight-bold);
-    margin-right: 0.4em;
-  }
-
-  .hiw-safety {
-    padding: var(--space-8) var(--space-6) var(--space-16);
-    background: var(--bg-subtle);
-  }
-  .hiw-safety .inner {
-    max-width: var(--container-narrow);
-    margin: 0 auto;
-  }
-  .hiw-safety h3 {
-    font-size: var(--text-xl);
-    margin: 0 0 var(--space-5);
-  }
-  .hiw-safety p {
-    font-size: var(--text-base);
-    line-height: var(--leading-relaxed);
-    color: var(--text);
-    margin: 0 0 var(--space-4);
-  }
-  .hiw-safety ul {
-    margin: 0 0 var(--space-5);
-    padding-left: var(--space-6);
+  .claims {
+    list-style: none;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-8);
   }
-  .hiw-safety li {
-    font-size: var(--text-base);
+  .claims li {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: var(--space-4);
+    align-items: start;
     line-height: var(--leading-relaxed);
   }
-  .hiw-safety strong {
+  .claim-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .claims strong {
     color: var(--text);
     font-weight: var(--weight-bold);
+    margin-right: var(--space-2);
   }
-  .hiw-safety code {
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-    background: var(--bg-raised);
-    padding: 1px 4px;
-    border-radius: var(--radius-sm);
+  .claims a {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .claims a:hover {
+    border-bottom-color: var(--accent);
+  }
+  .claims .inline-arrow {
+    width: 12px;
+    height: 12px;
+  }
+  .claims .muted {
+    color: var(--text-muted);
   }
 
   .verification {
@@ -772,58 +754,66 @@ const vtSlim =
     margin: 0 0.25em;
   }
 
-  .safety {
-    padding: var(--space-16) var(--space-6);
+  .hiw-run {
+    padding: var(--space-8) var(--space-6);
+    background: var(--bg-subtle);
   }
-  .safety-inner {
+  .hiw-run .inner {
     max-width: var(--container-narrow);
     margin: 0 auto;
   }
-  .safety h2 {
-    margin: 0 0 var(--space-10);
-  }
-  .claims {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-  }
-  .claims li {
-    display: grid;
-    grid-template-columns: 32px 1fr;
-    gap: var(--space-4);
-    align-items: start;
+  .hiw-run p {
+    font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
+    margin: 0;
   }
-  .claim-icon {
-    width: 22px;
-    height: 22px;
-    color: var(--accent);
-    margin-top: 4px;
-  }
-  .claims strong {
+  .hiw-run strong {
     color: var(--text);
     font-weight: var(--weight-bold);
-    margin-right: var(--space-2);
+    margin-right: 0.4em;
   }
-  .claims a {
-    color: var(--accent);
-    border-bottom: 1px solid var(--accent-soft);
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
+
+  .hiw-safety {
+    padding: var(--space-8) var(--space-6) var(--space-16);
+    background: var(--bg-subtle);
   }
-  .claims a:hover {
-    border-bottom-color: var(--accent);
+  .hiw-safety .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
   }
-  .claims .inline-arrow {
-    width: 12px;
-    height: 12px;
+  .hiw-safety h3 {
+    font-size: var(--text-xl);
+    margin: 0 0 var(--space-5);
   }
-  .claims .muted {
-    color: var(--text-muted);
+  .hiw-safety p {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--text);
+    margin: 0 0 var(--space-4);
   }
+  .hiw-safety ul {
+    margin: 0 0 var(--space-5);
+    padding-left: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .hiw-safety li {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  .hiw-safety strong {
+    color: var(--text);
+    font-weight: var(--weight-bold);
+  }
+  .hiw-safety code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--bg-raised);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+  }
+
   .support {
     padding: var(--space-12) var(--space-6);
     text-align: center;
