@@ -409,8 +409,10 @@ const vtSlim =
 
     <figure class="step-figure">
       <figcaption>
-        SmartScreen first run. Click <strong>More info</strong>, then <strong>Run
-        anyway</strong>.
+        <div class="caption-inner">
+          <p>SmartScreen, first run.</p>
+          <p>Click <strong>More info</strong>, then <strong>Run anyway</strong>.</p>
+        </div>
       </figcaption>
       <Image
         src={smartScreenShot}
@@ -429,26 +431,39 @@ const vtSlim =
       {
         src: scanShot,
         alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
-        caption:
-          'A few seconds in. The scan reads the Windows Installer database and counts what can come off your disk. 68 files in this run.',
+        caption: [
+          'A few seconds in.',
+          'The scan reads the Windows Installer database and counts what can come off your disk.',
+          '68 files in this run.',
+        ],
       },
       {
         src: mainShot,
         alt: 'Main window showing 114 files still used and 68 files to clean up',
-        caption:
-          'The result, broken in two. 114 files Windows still uses, untouched. 68 it does not, ready to remove. Click Details on either side to drill in.',
+        caption: [
+          'The result, broken in two.',
+          '114 files Windows still uses, untouched.',
+          '68 it does not, ready to remove.',
+          'Click Details on either side to drill in.',
+        ],
       },
       {
         src: keepShot,
         alt: 'Registered files window listing the 114 still-used installers and their installer-database metadata',
-        caption:
-          'The "still used" details. Every kept file is shown with the product it belongs to, drawn from the same Windows Installer database the app uses to decide what is safe to remove. None of these get touched.',
+        caption: [
+          'The "still used" details.',
+          'Every kept file is shown with the product it belongs to, drawn from the same Windows Installer database the app uses to decide what is safe to remove.',
+          'None of these get touched.',
+        ],
       },
       {
         src: orphanShot,
         alt: 'Orphaned files window listing removable .msi files with reasons',
-        caption:
-          'And the removable files, with the reason for each. "Orphaned" means the product was uninstalled and the installer file was left behind. "Superseded" means a newer patch has already replaced this one.',
+        caption: [
+          'And the removable files, with the reason for each.',
+          '"Orphaned" means the product was uninstalled and the installer file was left behind.',
+          '"Superseded" means a newer patch has already replaced this one.',
+        ],
       },
     ]}
   />
@@ -470,9 +485,15 @@ const vtSlim =
 
     <figure class="step-figure">
       <figcaption>
-        The confirmation prompt. Delete sends the files to the Recycle Bin so you can restore
-        from there if you need to. Move puts them in your chosen folder. Either way nothing
-        leaves your machine without your click.
+        <div class="caption-inner">
+          <p>The confirmation prompt.</p>
+          <p>
+            Delete sends the files to the Recycle Bin so you can restore from there if you
+            need to.
+          </p>
+          <p>Move puts them in your chosen folder.</p>
+          <p>Either way nothing leaves your machine without your click.</p>
+        </div>
       </figcaption>
       <Image
         src={confirmShot}
@@ -513,8 +534,11 @@ const vtSlim =
 
     <figure class="step-figure">
       <figcaption>
-        Run InstallerClean again later and it tells you there's nothing left to clean. The
-        folder is in good shape.
+        <div class="caption-inner">
+          <p>Run InstallerClean again later.</p>
+          <p>It tells you there's nothing left to clean.</p>
+          <p>The folder is in good shape.</p>
+        </div>
       </figcaption>
       <Image
         src={allClearShot}
@@ -945,14 +969,29 @@ const vtSlim =
     display: block;
   }
   .step-figure figcaption {
-    padding: var(--space-5) var(--space-7);
+    background: var(--bg-subtle);
+    padding: var(--space-7) var(--space-8);
     margin: 0;
-    color: var(--text);
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: var(--weight-regular);
-    line-height: var(--leading-relaxed);
     border-bottom: 1px solid var(--border);
+  }
+  .step-figure .caption-inner {
+    max-width: 70ch;
+    color: var(--text);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+  }
+  .step-figure .caption-inner p {
+    margin: 0 0 var(--space-2);
+  }
+  .step-figure .caption-inner p:first-child {
+    font-weight: var(--weight-medium);
+    color: var(--text);
+  }
+  .step-figure .caption-inner p:not(:first-child) {
+    color: var(--text-muted);
+  }
+  .step-figure .caption-inner p:last-child {
+    margin-bottom: 0;
   }
 
   .support {

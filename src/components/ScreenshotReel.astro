@@ -5,7 +5,7 @@ import type { ImageMetadata } from 'astro';
 interface Item {
   src: ImageMetadata;
   alt: string;
-  caption: string;
+  caption: string[];
 }
 
 interface Props {
@@ -31,7 +31,13 @@ const { eyebrow, title, items } = Astro.props as Props;
       {
         items.map((item) => (
           <figure>
-            <figcaption>{item.caption}</figcaption>
+            <figcaption>
+              <div class="caption-inner">
+                {item.caption.map((line) => (
+                  <p>{line}</p>
+                ))}
+              </div>
+            </figcaption>
             <Image src={item.src} alt={item.alt} />
           </figure>
         ))
@@ -67,14 +73,29 @@ const { eyebrow, title, items } = Astro.props as Props;
     overflow: hidden;
   }
   figcaption {
-    padding: var(--space-5) var(--space-7);
+    background: var(--bg-subtle);
+    padding: var(--space-7) var(--space-8);
     margin: 0;
-    color: var(--text);
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: var(--weight-regular);
-    line-height: var(--leading-relaxed);
     border-bottom: 1px solid var(--border);
+  }
+  .caption-inner {
+    max-width: 70ch;
+    color: var(--text);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+  }
+  .caption-inner p {
+    margin: 0 0 var(--space-2);
+  }
+  .caption-inner p:first-child {
+    font-weight: var(--weight-medium);
+    color: var(--text);
+  }
+  .caption-inner p:not(:first-child) {
+    color: var(--text-muted);
+  }
+  .caption-inner p:last-child {
+    margin-bottom: 0;
   }
   figure :global(img) {
     width: 100%;
