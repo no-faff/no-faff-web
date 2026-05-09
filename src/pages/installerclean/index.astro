@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import ProjectHero from '@components/ProjectHero.astro';
 import Explainer from '@components/Explainer.astro';
@@ -260,6 +261,16 @@ const vtSlim =
           </div>
         </li>
         <li>
+          <Icon name="lucide:bell-off" class="claim-icon" aria-hidden="true" />
+          <div>
+            <strong>No bundled extras.</strong>
+            <span class="muted"
+              >No toolbars, no third-party offers, no upsells, no nag screens. The .exe does
+              what it says and exits.</span
+            >
+          </div>
+        </li>
+        <li>
           <Icon name="lucide:hash" class="claim-icon" aria-hidden="true" />
           <div>
             <strong>Hashes published.</strong>
@@ -291,31 +302,49 @@ const vtSlim =
           <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
         </a>
       </div>
-      <p class="supplementary">
-        Also certified by <a
-          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-          target="_blank"
-          rel="noopener">Softpedia</a> (100% Free, no spyware, no adware, no viruses) <a
-          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-          target="_blank"
-          rel="noopener"
-          class="sp-badge-link"><img
-            src="/images/installerclean/badges/softpedia-100-free2.webp"
-            alt=""
-            class="sp-badge-inline"
-            width="91"
-            height="32"
-            loading="lazy"
-          /></a> and listed on <a
-          href="https://www.majorgeeks.com/files/details/installerclean.html"
-          target="_blank"
-          rel="noopener">MajorGeeks</a> after their VM-based testing.
-      </p>
+      <div class="reviewers">
+        <div class="reviewer reviewer-sp">
+          <p>
+            Independently certified by <a
+              href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+              target="_blank"
+              rel="noopener">Softpedia</a>: 100% Free, no spyware, no adware, no viruses.
+          </p>
+          <a
+            href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+            target="_blank"
+            rel="noopener"
+            class="sp-badge-link"
+            aria-label="View on Softpedia"
+          >
+            <img
+              src="/images/installerclean/badges/softpedia-100-free2.webp"
+              alt="Softpedia certification badge"
+              class="sp-badge"
+              width="91"
+              height="32"
+              loading="lazy"
+            />
+          </a>
+        </div>
+        <p class="reviewer">
+          Listed on <a
+            href="https://www.majorgeeks.com/files/details/installerclean.html"
+            target="_blank"
+            rel="noopener">MajorGeeks</a> after their VM-based testing.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="walkthrough-intro">
+    <div class="inner">
+      <h2>How to use it</h2>
+      <p class="lead">Five short steps. The whole thing takes about a minute.</p>
     </div>
   </section>
 
   <DownloadCards
-    eyebrow="How to use it"
     title="1. Download"
     builds={[
       {
@@ -358,11 +387,20 @@ const vtSlim =
     <div class="inner">
       <h2>2. Run it</h2>
       <p>
-        Double-click the .exe. Windows will ask for Administrator (the folder is locked down to
-        admins, so the app needs it). On first run, Windows SmartScreen may say "Unknown
-        publisher". Click <strong>More info</strong>, then <strong>Run anyway</strong>. This is
-        normal for unsigned open-source software.
+        Double-click the .exe. Windows will ask for Administrator. The folder is locked down to
+        admins, so the app needs it. There's no other way to read or change anything inside.
       </p>
+      <p>
+        On first run, Windows SmartScreen will probably say <strong>"Windows protected your
+        PC"</strong> with an Unknown publisher warning. Click <strong>More info</strong>, then
+        <strong>Run anyway</strong>. This is what Windows shows for any unsigned software, open
+        source or not.
+        <span class="step-aside">
+          (Code-signing certificates cost a few hundred a year. The project would rather stay
+          free than charge for that.)
+        </span>
+      </p>
+      {/* TODO: drop in the SmartScreen warning screenshot when the user provides it. */}
       <p>The app starts scanning the moment it opens. No menus, no settings.</p>
     </div>
   </section>
@@ -374,55 +412,57 @@ const vtSlim =
         src: scanShot,
         alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
         caption:
-          'A few seconds in. The scan tells you how many files can come off your disk. 68 files in this run.',
+          'A few seconds in. The scan reads the Windows Installer database and counts what can come off your disk. 68 files in this run.',
       },
       {
         src: mainShot,
         alt: 'Main window showing 114 files still used and 68 files to clean up',
         caption:
-          'The result, broken in two. 114 files Windows still uses, untouched. 68 it doesn\'t, ready to remove.',
+          'The result, broken in two. 114 files Windows still uses, untouched. 68 it does not, ready to remove. Click Details on either side to drill in.',
       },
       {
         src: deleteShot,
         alt: 'Orphaned files window listing removable .msi files with reasons',
         caption:
-          'Every removable file with the reason it can go. Orphaned means the product was uninstalled and the installer was left behind. Superseded means a newer patch replaced this one. Nothing gets touched until you confirm.',
-      },
-      {
-        src: confirmShot,
-        alt: 'Delete confirmation dialog showing 68 files (965 MB) will go to the Recycle Bin',
-        caption:
-          'Both Move and Delete ask before they do anything. Delete sends files to the Recycle Bin so you can restore from there if you need to. Move puts them in a folder of your choice, on whichever drive you pick. Either way nothing leaves your machine without a click.',
-      },
-      {
-        src: allClearShot,
-        alt: 'All-clear overlay shown when nothing is removable on a subsequent scan',
-        caption:
-          'Run it again later and the app tells you there\'s nothing left. The folder is in good shape.',
+          'Every removable file with the reason it can go. "Orphaned" means the product was uninstalled and the installer file was left behind. "Superseded" means a newer patch has already replaced this one.',
       },
     ]}
   />
 
-  <section class="step">
+  <section class="step step-with-shot">
     <div class="inner">
       <h2>4. Move or Delete</h2>
       <p>
-        Both are safe. The app only removes files Windows itself reports as no longer needed.
-        Move and Bin are an optional safety net for users who want a verification window before
-        committing. They're not required.
+        Click <strong>Move</strong> or <strong>Delete</strong> on the main window. The app shows
+        a confirmation prompt before it touches anything.
       </p>
+    </div>
+
+    <figure class="step-figure">
+      <figcaption>
+        Both Move and Delete prompt for confirmation. Delete sends the files to the Recycle Bin
+        so you can restore from there if you need to. Move puts them in a folder of your choice,
+        on whichever drive you pick. Either way nothing leaves your machine without your click.
+      </figcaption>
+      <Image
+        src={confirmShot}
+        alt="Delete confirmation dialog showing 68 files (965 MB) will go to the Recycle Bin"
+      />
+    </figure>
+
+    <div class="inner">
       <p>What happens to your disk space:</p>
       <ul class="step-list">
         <li>
           <strong>Delete</strong> sends the files to the Recycle Bin. Empty the bin and the C:
-          space is back.
+          drive space is back.
         </li>
         <li>
-          <strong>Move to a different drive</strong> reclaims your C: drive space straight away.
+          <strong>Move to a different drive</strong> reclaims the C: drive space straight away.
         </li>
         <li>
-          <strong>Move to a folder on C:</strong> keeps the files but doesn't free C: space until
-          you delete them from there.
+          <strong>Move to a folder on C:</strong> keeps the files but doesn't free C: drive
+          space until you delete them from there.
         </li>
       </ul>
       <p>
@@ -430,12 +470,27 @@ const vtSlim =
           >C:\Windows\Installer</code
         > and you're back to where you started. That's all "restore" means here.
       </p>
-      <p class="smartscreen-reminder">
-        Note: Windows SmartScreen will say "Unknown publisher" the first time you run the .exe.
-        Click <strong>More info</strong>, then <strong>Run anyway</strong>. Normal for unsigned
-        open-source software.
+    </div>
+  </section>
+
+  <section class="step step-with-shot">
+    <div class="inner">
+      <h2>5. Done</h2>
+      <p>
+        That's the cleanup. If you used the portable .exe, you can delete it now.
       </p>
     </div>
+
+    <figure class="step-figure">
+      <figcaption>
+        Run InstallerClean again later and it tells you there's nothing left to clean. The
+        folder is in good shape.
+      </figcaption>
+      <Image
+        src={allClearShot}
+        alt="All-clear overlay shown when nothing is removable on a subsequent scan"
+      />
+    </figure>
   </section>
 
   <FaqAccordion
@@ -456,6 +511,10 @@ const vtSlim =
       {
         q: 'Will Windows complain if I remove these files?',
         a: 'No. InstallerClean only removes files Windows itself says are no longer needed. Future installs, uninstalls and updates all keep working normally.',
+      },
+      {
+        q: 'What about that other big Windows folder, WinSxS?',
+        a: '<code>C:\\Windows\\WinSxS</code> is a different folder with different rules and InstallerClean does not touch it. Clean that one with Windows\'s own Disk Cleanup, or for sysadmins <code>Dism /Online /Cleanup-Image /StartComponentCleanup</code> from an elevated command prompt.',
       },
       {
         q: 'Does it work on Windows 7 or 8?',
@@ -729,32 +788,65 @@ const vtSlim =
     height: 14px;
     color: var(--text-muted);
   }
-  .supplementary {
+  .reviewers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .reviewers a {
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--accent-soft);
+  }
+  .reviewers a:hover {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .reviewer {
     font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: var(--leading-relaxed);
     margin: 0;
   }
-  .supplementary a {
+  .reviewer-sp {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .reviewer-sp p {
+    flex: 1;
+    min-width: 240px;
+    margin: 0;
+  }
+  .sp-badge-link {
+    display: inline-block;
+    flex-shrink: 0;
+    border-bottom: 0;
+  }
+  .sp-badge-link:hover {
+    border-bottom: 0;
+  }
+  .sp-badge {
+    display: block;
+    height: 32px;
+    width: auto;
+  }
+
+  .walkthrough-intro {
+    padding: var(--space-16) var(--space-6) var(--space-6);
+  }
+  .walkthrough-intro .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .walkthrough-intro h2 {
+    margin: 0 0 var(--space-3);
+  }
+  .walkthrough-intro .lead {
+    font-size: var(--text-lg);
     color: var(--text-muted);
-    border-bottom: 1px solid var(--accent-soft);
-  }
-  .supplementary a:hover {
-    color: var(--text);
-    border-bottom-color: var(--accent);
-  }
-  .supplementary .sp-badge-link {
-    display: inline-block;
-    border-bottom: 0;
-    vertical-align: middle;
-  }
-  .supplementary .sp-badge-link:hover {
-    border-bottom: 0;
-  }
-  .sp-badge-inline {
-    display: inline-block;
-    vertical-align: middle;
-    margin: 0 0.25em;
+    line-height: var(--leading-relaxed);
+    margin: 0;
   }
 
   .step {
@@ -784,6 +876,12 @@ const vtSlim =
     padding: 1px 4px;
     border-radius: var(--radius-sm);
   }
+  .step-aside {
+    display: inline-block;
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+  }
   .step-list {
     margin: 0 0 var(--space-5);
     padding-left: var(--space-6);
@@ -795,12 +893,34 @@ const vtSlim =
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
   }
-  .smartscreen-reminder {
-    margin-top: var(--space-6);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-4);
+
+  .step-with-shot {
+    padding: var(--space-12) var(--space-6);
+  }
+  .step-with-shot .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .step-figure {
+    max-width: var(--container);
+    margin: var(--space-8) auto;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .step-figure :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .step-figure figcaption {
+    padding: var(--space-5) var(--space-6);
+    margin: 0;
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    border-bottom: 1px solid var(--border);
   }
 
   .support {
