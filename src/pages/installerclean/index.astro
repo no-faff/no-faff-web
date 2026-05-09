@@ -66,7 +66,11 @@ const vtSlim =
         href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816"
         target="_blank"
         rel="noopener">reported 25 GB</a
-      >. On a system with Adobe Acrobat installed, it can pass 100 GB. It could be nothing at all.
+      >. On a system with Adobe Acrobat installed, it can <a
+        href="https://www.reddit.com/r/sysadmin/comments/1oxcrmh/acrobat_filling_up_the_cwindowsinstaller_folder/"
+        target="_blank"
+        rel="noopener">pass 100 GB</a
+      >. It could be nothing at all.
     </p>
   </Explainer>
 
@@ -101,9 +105,36 @@ const vtSlim =
         <figcaption>r/techsupport</figcaption>
       </figure>
       <p>
-        The standard advice confuses deleting files at random (which genuinely is dangerous) with
-        removing files that Windows itself says it no longer needs (which isn't). InstallerClean
-        does the latter.
+        And it isn't only lay-user forums. Here's a recent reply on r/sysadmin to someone
+        reporting a <a
+          href="https://www.reddit.com/r/sysadmin/comments/1sanmuq/finding_270_gb_used_by_cwindowsinstaller_most/"
+          target="_blank"
+          rel="noopener">270 GB Installer folder</a
+        >:
+      </p>
+      <figure class="quote">
+        <blockquote>
+          DO NOT TOUCH C:\Windows\Installer!!!!!!!!!! ... It cannot be safely touched by any
+          humans.
+        </blockquote>
+        <figcaption>
+          bbbbbthatsfivebees, <a
+            href="https://www.reddit.com/r/sysadmin/comments/1sanmuq/finding_270_gb_used_by_cwindowsinstaller_most/"
+            target="_blank"
+            rel="noopener">r/sysadmin</a
+          >
+        </figcaption>
+      </figure>
+      <p>
+        The folder is admin-only because Windows itself reads and writes there during installs and
+        uninstalls, not because it's opaque. Windows has its own database tracking which files are
+        still needed for installed products and which are orphaned. It exposes that database
+        through the Windows Installer COM API.
+      </p>
+      <p>
+        PatchCleaner has used that API to clean this folder safely for over a decade, with 800,000
+        downloads and around 7,000 a week. The technique works. InstallerClean is the modern,
+        open-source version of the same approach.
       </p>
     </div>
   </section>
@@ -134,7 +165,8 @@ const vtSlim =
           >
         </figcaption>
       </figure>
-      <table class="compare-table">
+      <div class="compare-table-wrap">
+        <table class="compare-table">
         <thead>
           <tr>
             <th></th>
@@ -184,7 +216,8 @@ const vtSlim =
             <td>None</td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
       <p class="compare-note">
         The API row matters. PatchCleaner's <code>Win32_Product</code> query <a
           href="https://gregramsey.net/2012/02/20/win32_product-is-evil/"
@@ -435,22 +468,6 @@ const vtSlim =
     ]}
   />
 
-  <section class="share-soon">
-    <div class="share-inner">
-      <h2>Share what you cleared (coming soon)</h2>
-      <p>
-        When InstallerClean v1.7.1 ships, the app will show a small "Share your result" button after
-        a successful clean. The numbers (version, MB cleared, files moved) go to a public counter on
-        this site. The app itself never connects to the network. It hands the URL to your browser,
-        which makes the request, and you see the exact data on the page before submitting. None of
-        this is mandatory.
-      </p>
-      <p class="quiet-link">
-        <a href="/installerclean/share">See the share page →</a>
-      </p>
-    </div>
-  </section>
-
   <section class="support">
     <p>
       If InstallerClean helped, <a href="/support">consider supporting No Faff →</a>
@@ -559,10 +576,15 @@ const vtSlim =
   .patchcleaner-compare .quote figcaption a {
     color: var(--text-muted);
   }
+  .compare-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: var(--space-8) 0;
+  }
   .compare-table {
     width: 100%;
+    min-width: 480px;
     border-collapse: collapse;
-    margin: var(--space-8) 0;
     font-size: var(--text-sm);
   }
   .compare-table th,
@@ -802,30 +824,6 @@ const vtSlim =
   .claims .muted {
     color: var(--text-muted);
   }
-  .share-soon {
-    padding: var(--space-12) var(--space-6);
-    background: var(--bg-subtle);
-  }
-  .share-inner {
-    max-width: var(--container-narrow);
-    margin: 0 auto;
-  }
-  .share-soon h2 {
-    font-size: var(--text-2xl);
-    margin: 0 0 var(--space-4);
-  }
-  .share-soon p {
-    color: var(--text-muted);
-    line-height: var(--leading-relaxed);
-  }
-  .quiet-link {
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
-  }
-  .quiet-link a {
-    color: var(--accent);
-  }
-
   .support {
     padding: var(--space-12) var(--space-6);
     text-align: center;
