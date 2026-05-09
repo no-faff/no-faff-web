@@ -974,25 +974,23 @@ const vtSlim =
     display: block;
   }
   .step-figure figcaption {
-    background: var(--chick-soft);
+    background: var(--caption-bg);
     padding: var(--space-8) var(--space-12);
     margin: 0;
   }
   .step-figure .caption-inner {
-    max-width: 70ch;
-    color: var(--text);
+    color: var(--caption-text);
     font-size: var(--text-lg);
-    line-height: var(--leading-relaxed);
+    line-height: var(--leading-snug);
   }
   .step-figure .caption-inner p {
-    margin: 0 0 var(--space-2);
+    margin: 0 0 var(--space-3);
   }
   .step-figure .caption-inner p:first-child {
     font-weight: var(--weight-medium);
-    color: var(--text);
-  }
-  .step-figure .caption-inner p:not(:first-child) {
-    color: var(--text-muted);
+    font-size: var(--text-xl);
+    color: var(--caption-heading);
+    margin-bottom: var(--space-4);
   }
   .step-figure .caption-inner p:last-child {
     margin-bottom: 0;
