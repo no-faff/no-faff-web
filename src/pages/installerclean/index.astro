@@ -35,18 +35,18 @@ const vtSlim =
     iconAlt="InstallerClean app icon"
     iconSize={280}
     headline={`C:\\Windows\\Installer huge? Clean out what's safe to remove. In a minute.`}
-    subhead="InstallerClean asks Windows itself which files are still needed and removes only the rest. Free, open source, no telemetry."
+    subhead="InstallerClean asks Windows itself which files are still needed. It removes only the rest."
     primaryHref={`${downloadBase}/InstallerClean-portable.exe`}
     primaryLabel="Download Portable (63 MB)"
     primaryIcon="lucide:download"
     secondaryHref="#download"
     secondaryLabel="All three builds ↓"
-    trustPills={['Open source', 'No telemetry', 'Windows 10 / 11', 'Clean on VirusTotal']}
+    trustPills={['Windows 10 / 11', 'Free', 'Open source', 'No telemetry', 'Clean on VirusTotal']}
     heroImage={successShot}
     heroImageAlt="InstallerClean after a successful clean: 965 MB cleared"
   />
 
-  <Explainer title="What's in there">
+  <Explainer title="What's in there?">
     <p>
       If you've used WindirStat, TreeSize or any disk-space visualiser, you've probably seen
       <code>C:\Windows\Installer</code> taking a chunk of your C: drive. It's hidden by default.
@@ -134,26 +134,25 @@ const vtSlim =
         through the official Windows Installer API. Only files Windows says aren't needed get
         removed.
       </p>
-      <p>
-        PatchCleaner has used this same approach safely for over a decade, with 800,000 downloads
-        and around 7,000 a week. The technique works. InstallerClean is the modern, open-source
-        version of it.
-      </p>
     </div>
   </section>
 
   <section class="patchcleaner-compare">
     <div class="inner">
-      <h2>Compared to PatchCleaner</h2>
+      <h2>Replacement for PatchCleaner</h2>
       <p>
         Your search might, much more usefully, have unearthed <a
           href="https://www.homedev.com.au/free/patchcleaner"
           target="_blank"
           rel="noopener">PatchCleaner</a
         > by <a href="https://www.homedev.com.au/" target="_blank" rel="noopener">John Crawford</a>.
-        It's a fantastic app. The one thing it doesn't handle is Adobe patches: it filters them out
-        by default, and on machines where Adobe is the biggest offender (which is most of them) a
-        lot of removable files get left behind.
+      </p>
+      <p>
+        PatchCleaner has been the go-to free tool for cleaning <code>C:\Windows\Installer</code>
+        for years and is still pulling around 7,000 downloads a week. But it hasn't been updated
+        since March 2016, it's closed source, and it filters Adobe products out by default. Adobe
+        is often the worst culprit for cache bloat, so on the machines that need cleanup most,
+        PatchCleaner leaves a lot of removable files behind:
       </p>
       <figure class="quote">
         <blockquote>
@@ -168,6 +167,11 @@ const vtSlim =
           >
         </figcaption>
       </figure>
+      <p>
+        InstallerClean is built to replace it. Open source, actively maintained, and it detects
+        the superseded Adobe patches PatchCleaner filters out. (First shipped on 3 March 2026,
+        exactly ten years to the day after PatchCleaner's last update.)
+      </p>
       <div class="compare-table-wrap">
         <table class="compare-table">
         <thead>
@@ -217,9 +221,15 @@ const vtSlim =
         </table>
       </div>
       <p class="compare-note">
-        Both apps use the same Windows API to ask which files are needed. InstallerClean calls it
-        directly; PatchCleaner does it through a VBScript file, which is slower in practice.
-        Generic system cleaners like CCleaner and BleachBit don't touch this folder at all.
+        Both apps ask Windows the same way: through the official Windows Installer API.
+        InstallerClean calls it directly; PatchCleaner shells out through a VBScript file, which
+        is slower in practice.
+      </p>
+      <p class="compare-note">
+        <a href="https://www.carifred.com/uvk/" target="_blank" rel="noopener">Ultra Virus Killer
+        (UVK)</a> is a paid alternative ($15-25). It includes Installer cleanup as one feature
+        inside a much larger system-tools app. Generic system cleaners like CCleaner and BleachBit
+        don't touch this folder at all.
       </p>
     </div>
   </section>
@@ -260,13 +270,10 @@ const vtSlim =
           </div>
         </li>
       </ul>
-    </div>
-  </section>
 
-  <section class="verification">
-    <div class="inner">
-      <h2>Scanned. Checked. Listed.</h2>
-      <p class="lead">Every release is scanned on VirusTotal across 68 to 70 antivirus engines.</p>
+      <p class="vt-lead">
+        Every release is also scanned on VirusTotal across 68 to 70 antivirus engines.
+      </p>
       <div class="vt-row">
         <a class="vt-link" href={vtSetup} target="_blank" rel="noopener">
           <span class="vt-build">Setup</span>
@@ -308,7 +315,8 @@ const vtSlim =
   </section>
 
   <DownloadCards
-    title="How it works"
+    eyebrow="How to use it"
+    title="1. Download"
     builds={[
       {
         label: 'Setup',
@@ -342,33 +350,37 @@ const vtSlim =
       },
     ]}
     releasePageHref={releasesPage}
-    smartScreenNote="Windows SmartScreen will say 'Unknown publisher' on first run. Click More info, then Run anyway. This is normal for unsigned open-source software."
     wingetSnippet="winget install NoFaff.InstallerClean"
     scoopSnippet={`scoop bucket add no-faff https://github.com/no-faff/scoop-bucket\nscoop install installerclean`}
   />
 
-  <section class="hiw-run">
+  <section class="step">
     <div class="inner">
+      <h2>2. Run it</h2>
       <p>
-        <strong>Run it.</strong> Windows will ask for Administrator (the folder requires it). The
-        app starts scanning the moment it opens.
+        Double-click the .exe. Windows will ask for Administrator (the folder is locked down to
+        admins, so the app needs it). On first run, Windows SmartScreen may say "Unknown
+        publisher". Click <strong>More info</strong>, then <strong>Run anyway</strong>. This is
+        normal for unsigned open-source software.
       </p>
+      <p>The app starts scanning the moment it opens. No menus, no settings.</p>
     </div>
   </section>
 
   <ScreenshotReel
+    title="3. See what's there"
     items={[
       {
         src: scanShot,
         alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
         caption:
-          'The app starts scanning the moment you open it. No menus, no settings, nothing to configure. A few seconds later you have a count of what can come off your disk. 68 files in this run.',
+          'A few seconds in. The scan tells you how many files can come off your disk. 68 files in this run.',
       },
       {
         src: mainShot,
         alt: 'Main window showing 114 files still used and 68 files to clean up',
         caption:
-          'The result, broken in two. 114 files Windows still uses, untouched. 68 it doesn\'t, ready to remove. Drill in for details if you want, or hit Move or Delete to act.',
+          'The result, broken in two. 114 files Windows still uses, untouched. 68 it doesn\'t, ready to remove.',
       },
       {
         src: deleteShot,
@@ -391,16 +403,16 @@ const vtSlim =
     ]}
   />
 
-  <section class="hiw-safety">
+  <section class="step">
     <div class="inner">
-      <h3>Move or Delete?</h3>
+      <h2>4. Move or Delete</h2>
       <p>
-        Both are safe. The app only removes files Windows itself reports as no longer needed. Move
-        and Bin are an optional safety net for users who want a verification window before
+        Both are safe. The app only removes files Windows itself reports as no longer needed.
+        Move and Bin are an optional safety net for users who want a verification window before
         committing. They're not required.
       </p>
       <p>What happens to your disk space:</p>
-      <ul>
+      <ul class="step-list">
         <li>
           <strong>Delete</strong> sends the files to the Recycle Bin. Empty the bin and the C:
           space is back.
@@ -417,6 +429,11 @@ const vtSlim =
         If you ever change your mind, copy or move the files back into <code
           >C:\Windows\Installer</code
         > and you're back to where you started. That's all "restore" means here.
+      </p>
+      <p class="smartscreen-reminder">
+        Note: Windows SmartScreen will say "Unknown publisher" the first time you run the .exe.
+        Click <strong>More info</strong>, then <strong>Run anyway</strong>. Normal for unsigned
+        open-source software.
       </p>
     </div>
   </section>
@@ -597,12 +614,15 @@ const vtSlim =
   .patchcleaner-compare .compare-note {
     font-size: var(--text-base);
     color: var(--text-muted);
-    margin-top: var(--space-2);
+    margin: 0 0 var(--space-4);
+  }
+  .patchcleaner-compare .compare-note:last-child {
     margin-bottom: 0;
   }
 
   .safety {
     padding: var(--space-16) var(--space-6);
+    background: var(--bg-subtle);
   }
   .safety-inner {
     max-width: var(--container-narrow);
@@ -617,6 +637,7 @@ const vtSlim =
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
+    margin: 0 0 var(--space-12);
   }
   .claims li {
     display: grid;
@@ -653,21 +674,9 @@ const vtSlim =
   .claims .muted {
     color: var(--text-muted);
   }
-
-  .verification {
-    padding: var(--space-16) var(--space-6);
-    background: var(--bg-subtle);
-  }
-  .verification .inner {
-    max-width: var(--container-narrow);
-    margin: 0 auto;
-  }
-  .verification h2 {
-    margin: 0 0 var(--space-4);
-  }
-  .verification .lead {
-    margin: 0 0 var(--space-8);
-    color: var(--text-muted);
+  .vt-lead {
+    margin: 0 0 var(--space-6);
+    color: var(--text);
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
   }
@@ -675,7 +684,7 @@ const vtSlim =
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-6);
   }
   @media (max-width: 640px) {
     .vt-row {
@@ -748,64 +757,50 @@ const vtSlim =
     margin: 0 0.25em;
   }
 
-  .hiw-run {
-    padding: var(--space-8) var(--space-6);
-    background: var(--bg-subtle);
+  .step {
+    padding: var(--space-12) var(--space-6);
   }
-  .hiw-run .inner {
+  .step .inner {
     max-width: var(--container-narrow);
     margin: 0 auto;
   }
-  .hiw-run p {
-    font-size: var(--text-lg);
-    line-height: var(--leading-relaxed);
-    margin: 0;
-  }
-  .hiw-run strong {
-    color: var(--text);
-    font-weight: var(--weight-bold);
-    margin-right: 0.4em;
-  }
-
-  .hiw-safety {
-    padding: var(--space-8) var(--space-6) var(--space-16);
-    background: var(--bg-subtle);
-  }
-  .hiw-safety .inner {
-    max-width: var(--container-narrow);
-    margin: 0 auto;
-  }
-  .hiw-safety h3 {
-    font-size: var(--text-xl);
+  .step h2 {
     margin: 0 0 var(--space-5);
   }
-  .hiw-safety p {
-    font-size: var(--text-base);
+  .step p {
+    font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
     color: var(--text);
     margin: 0 0 var(--space-4);
   }
-  .hiw-safety ul {
+  .step strong {
+    color: var(--text);
+    font-weight: var(--weight-bold);
+  }
+  .step code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--bg-raised);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+  }
+  .step-list {
     margin: 0 0 var(--space-5);
     padding-left: var(--space-6);
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
   }
-  .hiw-safety li {
+  .step-list li {
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
   }
-  .hiw-safety strong {
-    color: var(--text);
-    font-weight: var(--weight-bold);
-  }
-  .hiw-safety code {
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-    background: var(--bg-raised);
-    padding: 1px 4px;
-    border-radius: var(--radius-sm);
+  .smartscreen-reminder {
+    margin-top: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-4);
   }
 
   .support {

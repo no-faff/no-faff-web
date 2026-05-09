@@ -105,7 +105,7 @@ const secondaryIsExternal = props.secondaryHref?.startsWith('http') ?? false;
   }
   .hero h1 {
     font-size: clamp(var(--text-4xl), 5vw, var(--text-5xl));
-    max-width: 22ch;
+    max-width: 30ch;
     margin: 0 auto var(--space-5);
   }
   .subhead {
@@ -123,12 +123,13 @@ const secondaryIsExternal = props.secondaryHref?.startsWith('http') ?? false;
     margin: 0 auto var(--space-8);
   }
   .pills li {
-    font-size: var(--text-xs);
-    padding: var(--space-1) var(--space-3);
-    background: var(--bg-subtle);
-    border: 1px solid var(--border);
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-raised);
+    border: 1px solid var(--border-strong);
     border-radius: 999px;
-    color: var(--text-muted);
+    color: var(--text);
+    font-weight: var(--weight-medium);
   }
   .ctas {
     display: flex;
