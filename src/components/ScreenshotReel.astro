@@ -42,15 +42,16 @@ const { eyebrow, title, items } = Astro.props as Props;
 
 <style>
   .reel {
-    padding: var(--space-16) var(--space-6);
+    padding: var(--space-12) var(--space-6);
     background: var(--bg-subtle);
   }
   .inner {
-    max-width: var(--container-narrow);
+    max-width: var(--container-wide);
     margin: 0 auto;
   }
   header {
-    margin-bottom: var(--space-10);
+    max-width: var(--container-narrow);
+    margin: 0 auto var(--space-10);
   }
   header h2 {
     margin-top: var(--space-2);

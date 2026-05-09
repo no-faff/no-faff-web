@@ -46,17 +46,6 @@ const vtSlim =
     heroImageAlt="InstallerClean after a successful clean: 965 MB cleared"
   />
 
-  <section class="walkthrough">
-    <div class="inner">
-      <p>
-        Download. Run it. It scans automatically and shows you what's safe to remove. You move (or
-        delete via the Recycle Bin) the orphans, close the app, bin the exe if you don't need it.
-        The whole thing takes seconds. You might clear nothing, you might clear several GB. Either
-        way you'll know.
-      </p>
-    </div>
-  </section>
-
   <Explainer title="What's in there">
     <p>
       If you've used WindirStat, TreeSize or any disk-space visualiser, you've probably seen
@@ -107,7 +96,7 @@ const vtSlim =
           rel="noopener">"don't mess with it."</a
         > When they asked what they should do instead, the reply was:
       </p>
-      <figure class="quote quote-short">
+      <figure class="quote">
         <blockquote>I just told you.</blockquote>
         <figcaption>r/techsupport</figcaption>
       </figure>
@@ -116,14 +105,20 @@ const vtSlim =
         removing files that Windows itself says it no longer needs (which isn't). InstallerClean
         does the latter.
       </p>
+    </div>
+  </section>
+
+  <section class="patchcleaner-compare">
+    <div class="inner">
+      <h2>Compared to PatchCleaner</h2>
       <p>
-        If you've searched before, you've probably already found <a
+        Your search might, much more usefully, have unearthed <a
           href="https://www.homedev.com.au/free/patchcleaner"
           target="_blank"
           rel="noopener">PatchCleaner</a
         > by <a href="https://www.homedev.com.au/" target="_blank" rel="noopener">John Crawford</a>.
         It's a fantastic app. The one thing it doesn't handle is Adobe patches: it filters them out
-        by default, and on machines where Adobe is the biggest offender (which is most of them), a
+        by default, and on machines where Adobe is the biggest offender (which is most of them) a
         lot of removable files get left behind.
       </p>
       <figure class="quote">
@@ -139,17 +134,120 @@ const vtSlim =
           >
         </figcaption>
       </figure>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>InstallerClean</th>
+            <th>PatchCleaner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Last updated</th>
+            <td>2026 (active)</td>
+            <td>3 March 2016</td>
+          </tr>
+          <tr>
+            <th>Source code</th>
+            <td>Open source (MIT)</td>
+            <td>Closed source</td>
+          </tr>
+          <tr>
+            <th>Runtime</th>
+            <td>.NET 10 (self-contained)</td>
+            <td>.NET + VBScript</td>
+          </tr>
+          <tr>
+            <th>API</th>
+            <td>Windows Installer COM</td>
+            <td>WMI (<code>Win32_Product</code>)</td>
+          </tr>
+          <tr>
+            <th>Superseded patch detection</th>
+            <td>Yes</td>
+            <td>No</td>
+          </tr>
+          <tr>
+            <th>Adobe handling</th>
+            <td>Detects superseded patches</td>
+            <td>Excludes by default</td>
+          </tr>
+          <tr>
+            <th>UI</th>
+            <td>Dark theme (WPF)</td>
+            <td>Windows Forms</td>
+          </tr>
+          <tr>
+            <th>Data collection</th>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="compare-note">
+        The API row matters. PatchCleaner's <code>Win32_Product</code> query <a
+          href="https://gregramsey.net/2012/02/20/win32_product-is-evil/"
+          target="_blank"
+          rel="noopener">triggers MSI repair</a
+        > on every product during enumeration; InstallerClean calls the Windows Installer COM
+        interface directly with no side effects. General-purpose cleaners like CCleaner and
+        BleachBit don't touch this folder at all because the API queries are the only safe way to
+        tell registered packages from orphaned ones.
+      </p>
+    </div>
+  </section>
+
+  <DownloadCards
+    title="How it works"
+    builds={[
+      {
+        label: 'Setup',
+        filename: 'InstallerClean-setup.exe',
+        size: '90 MB',
+        href: `${downloadBase}/InstallerClean-setup.exe`,
+        shaHref: `${downloadBase}/InstallerClean-setup.exe.sha256`,
+        blurb:
+          'A regular Windows installer. Adds InstallerClean to your Start Menu and Programs list so you can find it again later. Just run and follow the prompts.',
+        icon: 'lucide:package',
+      },
+      {
+        label: 'Portable',
+        filename: 'InstallerClean-portable.exe',
+        size: '63 MB',
+        href: `${downloadBase}/InstallerClean-portable.exe`,
+        shaHref: `${downloadBase}/InstallerClean-portable.exe.sha256`,
+        blurb:
+          'A single file. Run it, use it, delete it. Nothing installed, nothing left behind. Drop it on a USB stick if you like.',
+        icon: 'lucide:zap',
+      },
+      {
+        label: 'Slim',
+        filename: 'InstallerClean-slim.exe',
+        size: '1.86 MB',
+        href: `${downloadBase}/InstallerClean-slim.exe`,
+        shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
+        blurb:
+          'Smallest download. Requires the .NET 10 Desktop Runtime already installed. (Pick Setup or Portable if you\'re not sure.)',
+        icon: 'lucide:feather',
+      },
+    ]}
+    releasePageHref={releasesPage}
+    smartScreenNote="Windows SmartScreen will say 'Unknown publisher' on first run. Click More info, then Run anyway. This is normal for unsigned open-source software."
+    wingetSnippet="winget install NoFaff.InstallerClean"
+    scoopSnippet={`scoop bucket add no-faff https://github.com/no-faff/scoop-bucket\nscoop install installerclean`}
+  />
+
+  <section class="hiw-run">
+    <div class="inner">
       <p>
-        InstallerClean detects which patches have been superseded by newer updates and flags them
-        as removable, including the Acrobat patches PatchCleaner excludes. Open source, MIT
-        licensed, runs on .NET 10.
+        <strong>Run it.</strong> Windows will ask for Administrator (the folder requires it). The
+        app starts scanning the moment it opens.
       </p>
     </div>
   </section>
 
   <ScreenshotReel
-    eyebrow="The flow"
-    title="How it works in a minute"
     items={[
       {
         src: scanShot,
@@ -179,10 +277,40 @@ const vtSlim =
         src: allClearShot,
         alt: 'All-clear overlay shown when nothing is removable on a subsequent scan',
         caption:
-          'Run the app a second time and it tells you there\'s nothing left. To actually free the disk space, empty the Recycle Bin (if you used Delete) or delete the files from your chosen folder (if you used Move).',
+          'Run it again later and the app tells you there\'s nothing left. The folder is in good shape.',
       },
     ]}
   />
+
+  <section class="hiw-safety">
+    <div class="inner">
+      <h3>Move or Delete?</h3>
+      <p>
+        Both are safe. The app only removes files Windows itself reports as no longer needed. Move
+        and Bin are an optional safety net for users who want a verification window before
+        committing. They're not required.
+      </p>
+      <p>What happens to your disk space:</p>
+      <ul>
+        <li>
+          <strong>Delete</strong> sends the files to the Recycle Bin. Empty the bin and the C:
+          space is back.
+        </li>
+        <li>
+          <strong>Move to a different drive</strong> reclaims your C: drive space straight away.
+        </li>
+        <li>
+          <strong>Move to a folder on C:</strong> keeps the files but doesn't free C: space until
+          you delete them from there.
+        </li>
+      </ul>
+      <p>
+        If anything ever does break (it shouldn't), you copy or move the files back into <code
+          >C:\Windows\Installer</code
+        > and you're back to where you started. That's all "restore" means here.
+      </p>
+    </div>
+  </section>
 
   <section class="safety">
     <div class="safety-inner">
@@ -277,47 +405,6 @@ const vtSlim =
     </div>
   </section>
 
-  <DownloadCards
-    title="Download"
-    intro="Three builds. All three scan clean on every engine on VirusTotal."
-    builds={[
-      {
-        label: 'Setup',
-        filename: 'InstallerClean-setup.exe',
-        size: '90 MB',
-        href: `${downloadBase}/InstallerClean-setup.exe`,
-        shaHref: `${downloadBase}/InstallerClean-setup.exe.sha256`,
-        blurb:
-          'A regular Windows installer. Adds InstallerClean to your Start Menu and Programs list so you can find it again later. Just run and follow the prompts.',
-        icon: 'lucide:package',
-      },
-      {
-        label: 'Portable',
-        filename: 'InstallerClean-portable.exe',
-        size: '63 MB',
-        href: `${downloadBase}/InstallerClean-portable.exe`,
-        shaHref: `${downloadBase}/InstallerClean-portable.exe.sha256`,
-        blurb:
-          'A single file. Run it, use it, delete it. Nothing installed, nothing left behind. Drop it on a USB stick if you like.',
-        icon: 'lucide:zap',
-      },
-      {
-        label: 'Slim',
-        filename: 'InstallerClean-slim.exe',
-        size: '1.86 MB',
-        href: `${downloadBase}/InstallerClean-slim.exe`,
-        shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
-        blurb:
-          'Smallest download. Requires the .NET 10 Desktop Runtime already installed. (Pick Setup or Portable if you\'re not sure.)',
-        icon: 'lucide:feather',
-      },
-    ]}
-    releasePageHref={releasesPage}
-    smartScreenNote="Windows SmartScreen will say 'Unknown publisher' on first run. Click More info, then Run anyway. This is normal for unsigned open-source software."
-    wingetSnippet="winget install NoFaff.InstallerClean"
-    scoopSnippet={`scoop bucket add no-faff https://github.com/no-faff/scoop-bucket\nscoop install installerclean`}
-  />
-
   <FaqAccordion
     title="Common questions"
     items={[
@@ -332,10 +419,6 @@ const vtSlim =
       {
         q: 'Why does it ask for Administrator?',
         a: '<code>C:\\Windows\\Installer</code> is owned by the SYSTEM account and locked down to administrators only. Reading the folder, querying the Windows Installer database, and moving or deleting files all require elevation. There is no way to do this without admin.',
-      },
-      {
-        q: 'Can I undo a Delete?',
-        a: 'Delete sends files to the Recycle Bin. Restore them from there until you empty the bin. Once you empty it, they are gone for good. (Emptying it is how the disk space actually comes back.)<br><br>Or use <strong>Move</strong> instead, which puts the files in a folder of your choice. Pick a different drive (the whole point is to free up space on C:, so don\'t put them back on C:).',
       },
       {
         q: 'Will Windows complain if I remove these files?',
@@ -376,20 +459,6 @@ const vtSlim =
 </BaseLayout>
 
 <style>
-  .walkthrough {
-    padding: var(--space-12) var(--space-6) var(--space-8);
-  }
-  .walkthrough .inner {
-    max-width: 62ch;
-    margin: 0 auto;
-  }
-  .walkthrough p {
-    font-size: var(--text-lg);
-    line-height: var(--leading-relaxed);
-    color: var(--text);
-    margin: 0;
-  }
-
   .search-help {
     padding: var(--space-16) var(--space-6);
     background: var(--bg-subtle);
@@ -429,10 +498,6 @@ const vtSlim =
     line-height: var(--leading-snug);
     color: var(--text);
   }
-  .search-help .quote-short blockquote {
-    font-size: var(--text-2xl);
-    font-weight: var(--weight-bold);
-  }
   .search-help .quote figcaption {
     margin-top: var(--space-3);
     font-size: var(--text-sm);
@@ -441,6 +506,154 @@ const vtSlim =
   }
   .search-help .quote figcaption a {
     color: var(--text-muted);
+  }
+
+  .patchcleaner-compare {
+    padding: var(--space-16) var(--space-6);
+  }
+  .patchcleaner-compare .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .patchcleaner-compare h2 {
+    margin: 0 0 var(--space-6);
+  }
+  .patchcleaner-compare p {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--text);
+    margin: 0 0 var(--space-5);
+  }
+  .patchcleaner-compare a {
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+  }
+  .patchcleaner-compare a:hover {
+    border-bottom-color: var(--accent);
+  }
+  .patchcleaner-compare code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--bg-subtle);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+  }
+  .patchcleaner-compare .quote {
+    margin: var(--space-8) 0;
+    padding-left: var(--space-6);
+    border-left: 3px solid var(--chick);
+  }
+  .patchcleaner-compare .quote blockquote {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    line-height: var(--leading-snug);
+    color: var(--text);
+  }
+  .patchcleaner-compare .quote figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .patchcleaner-compare .quote figcaption a {
+    color: var(--text-muted);
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-8) 0;
+    font-size: var(--text-sm);
+  }
+  .compare-table th,
+  .compare-table td {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .compare-table thead th {
+    border-bottom: 2px solid var(--border-strong);
+    font-weight: var(--weight-bold);
+    color: var(--text);
+  }
+  .compare-table tbody th {
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+    width: 40%;
+  }
+  .compare-table tbody td {
+    color: var(--text);
+  }
+  .compare-table tbody tr:last-child th,
+  .compare-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .patchcleaner-compare .compare-note {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    margin-bottom: 0;
+  }
+
+  .hiw-run {
+    padding: var(--space-8) var(--space-6);
+    background: var(--bg-subtle);
+  }
+  .hiw-run .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .hiw-run p {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+  }
+  .hiw-run strong {
+    color: var(--text);
+    font-weight: var(--weight-bold);
+    margin-right: 0.4em;
+  }
+
+  .hiw-safety {
+    padding: var(--space-8) var(--space-6) var(--space-16);
+    background: var(--bg-subtle);
+  }
+  .hiw-safety .inner {
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  .hiw-safety h3 {
+    font-size: var(--text-xl);
+    margin: 0 0 var(--space-5);
+  }
+  .hiw-safety p {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    color: var(--text);
+    margin: 0 0 var(--space-4);
+  }
+  .hiw-safety ul {
+    margin: 0 0 var(--space-5);
+    padding-left: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .hiw-safety li {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+  .hiw-safety strong {
+    color: var(--text);
+    font-weight: var(--weight-bold);
+  }
+  .hiw-safety code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--bg-raised);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
   }
 
   .verification {
