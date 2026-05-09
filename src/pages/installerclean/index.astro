@@ -52,8 +52,8 @@ const vtSlim =
       <code>C:\Windows\Installer</code> taking a chunk of your C: drive. It's hidden by default.
       It's where Windows caches installers and patches for software that installs through the
       Windows Installer system: Microsoft Office, Adobe Acrobat, Visual Studio, lots of enterprise
-      tools. Software that uses other installers (Steam, games, NSIS- or Inno Setup-based
-      utilities, single-exe downloads) doesn't go in here.
+      tools. Software with its own installer (Steam, most games, single .exe downloads) doesn't go
+      in here.
     </p>
     <p>
       The folder only grows. When you uninstall software, the install files stay. When a patch is
@@ -127,14 +127,14 @@ const vtSlim =
       </figure>
       <p>
         The folder is admin-only because Windows itself reads and writes there during installs and
-        uninstalls, not because it's opaque. Windows has its own database tracking which files are
-        still needed for installed products and which are orphaned. It exposes that database
-        through the Windows Installer COM API.
+        uninstalls, not because it's opaque. Windows keeps its own list of which files are still
+        needed. The app asks Windows directly through the official Windows Installer API. Only
+        files Windows says are no longer needed get removed.
       </p>
       <p>
-        PatchCleaner has used that API to clean this folder safely for over a decade, with 800,000
-        downloads and around 7,000 a week. The technique works. InstallerClean is the modern,
-        open-source version of the same approach.
+        PatchCleaner has used this same approach safely for over a decade, with 800,000 downloads
+        and around 7,000 a week. The technique works. InstallerClean is the modern, open-source
+        version of it.
       </p>
     </div>
   </section>
@@ -191,11 +191,6 @@ const vtSlim =
             <td>.NET + VBScript</td>
           </tr>
           <tr>
-            <th>API</th>
-            <td>Windows Installer COM</td>
-            <td>WMI (<code>Win32_Product</code>)</td>
-          </tr>
-          <tr>
             <th>Superseded patch detection</th>
             <td>Yes</td>
             <td>No</td>
@@ -219,13 +214,9 @@ const vtSlim =
         </table>
       </div>
       <p class="compare-note">
-        The API row matters. PatchCleaner's <code>Win32_Product</code> query <a
-          href="https://gregramsey.net/2012/02/20/win32_product-is-evil/"
-          target="_blank"
-          rel="noopener">triggers MSI repair</a
-        > on every product during enumeration; InstallerClean calls the Windows Installer COM
-        interface directly with no side effects. General-purpose cleaners like CCleaner and
-        BleachBit don't touch this folder at all.
+        Both apps use the same Windows API to ask which files are needed. InstallerClean calls it
+        directly; PatchCleaner does it through a VBScript file, which is slower in practice.
+        Generic system cleaners like CCleaner and BleachBit don't touch this folder at all.
       </p>
     </div>
   </section>
@@ -432,7 +423,7 @@ const vtSlim =
     items={[
       {
         q: 'Will I actually free up GBs of space?',
-        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running developer workstation, or any machine with heavy MSI software (Acrobat, Office, large dev tools), can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> cleared. Once you run InstallerClean, the main window tells you exactly how much you can remove before you click anything to remove it. There is also a CLI dry-run mode (<code>installerclean-cli /s</code>) for headless or scripting use.',
+        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> cleared. The app shows you exactly how much it can remove before you click anything; you can decide then.',
       },
       {
         q: 'Will the app connect to the internet?',
@@ -440,11 +431,11 @@ const vtSlim =
       },
       {
         q: 'Why does it ask for Administrator?',
-        a: '<code>C:\\Windows\\Installer</code> is owned by the SYSTEM account and locked down to administrators only. Reading the folder, querying the Windows Installer database, and moving or deleting files all require elevation. There is no way to do this without admin.',
+        a: 'Windows locks <code>C:\\Windows\\Installer</code> down so only administrators can touch it. Reading what is in the folder, asking Windows what is still needed, and moving or deleting files all need Administrator permission. There is no other way.',
       },
       {
         q: 'Will Windows complain if I remove these files?',
-        a: 'No. InstallerClean only removes files Windows itself reports as no longer needed via the Installer database API. Future installs, uninstalls and patches all proceed normally.',
+        a: 'No. InstallerClean only removes files Windows itself says are no longer needed. Future installs, uninstalls and updates all keep working normally.',
       },
       {
         q: 'Does it work on Windows 7 or 8?',
