@@ -10,9 +10,11 @@ import FaqAccordion from '@components/FaqAccordion.astro';
 
 import icon from '@assets/installerclean/icon.png';
 import successShot from '@assets/installerclean/screenshots/10-moved-done-success.webp';
+import smartScreenShot from '@assets/installerclean/screenshots/smartscreen.webp';
 import scanShot from '@assets/installerclean/screenshots/03-scan.webp';
 import mainShot from '@assets/installerclean/screenshots/04-main-window.webp';
-import deleteShot from '@assets/installerclean/screenshots/06-delete-details.webp';
+import keepShot from '@assets/installerclean/screenshots/05-keep-details.webp';
+import orphanShot from '@assets/installerclean/screenshots/06-delete-details.webp';
 import confirmShot from '@assets/installerclean/screenshots/08-delete.webp';
 import allClearShot from '@assets/installerclean/screenshots/12-all-clear.webp';
 
@@ -265,8 +267,8 @@ const vtSlim =
           <div>
             <strong>No bundled extras.</strong>
             <span class="muted"
-              >No toolbars, no third-party offers, no upsells, no nag screens. The .exe does
-              what it says and exits.</span
+              >No toolbars, no third-party offers, no upsells. The .exe does what it says and
+              exits.</span
             >
           </div>
         </li>
@@ -340,7 +342,10 @@ const vtSlim =
   <section class="walkthrough-intro">
     <div class="inner">
       <h2>How to use it</h2>
-      <p class="lead">Five short steps. The whole thing takes about a minute.</p>
+      <p class="lead">
+        Five short steps. Download, run, look at what's removable, click Move or Delete, you're
+        done.
+      </p>
     </div>
   </section>
 
@@ -383,7 +388,7 @@ const vtSlim =
     scoopSnippet={`scoop bucket add no-faff https://github.com/no-faff/scoop-bucket\nscoop install installerclean`}
   />
 
-  <section class="step">
+  <section class="step step-with-shot">
     <div class="inner">
       <h2>2. Run it</h2>
       <p>
@@ -391,16 +396,29 @@ const vtSlim =
         admins, so the app needs it. There's no other way to read or change anything inside.
       </p>
       <p>
-        On first run, Windows SmartScreen will probably say <strong>"Windows protected your
+        On first run, Windows SmartScreen will probably show <strong>"Windows protected your
         PC"</strong> with an Unknown publisher warning. Click <strong>More info</strong>, then
-        <strong>Run anyway</strong>. This is what Windows shows for any unsigned software, open
-        source or not.
+        <strong>Run anyway</strong>. Windows shows this for any unsigned software, open source
+        or not.
         <span class="step-aside">
           (Code-signing certificates cost a few hundred a year. The project would rather stay
           free than charge for that.)
         </span>
       </p>
-      {/* TODO: drop in the SmartScreen warning screenshot when the user provides it. */}
+    </div>
+
+    <figure class="step-figure">
+      <figcaption>
+        SmartScreen first run. Click <strong>More info</strong>, then <strong>Run
+        anyway</strong>.
+      </figcaption>
+      <Image
+        src={smartScreenShot}
+        alt="Windows SmartScreen 'Windows protected your PC' warning with Run anyway button"
+      />
+    </figure>
+
+    <div class="inner">
       <p>The app starts scanning the moment it opens. No menus, no settings.</p>
     </div>
   </section>
@@ -421,10 +439,16 @@ const vtSlim =
           'The result, broken in two. 114 files Windows still uses, untouched. 68 it does not, ready to remove. Click Details on either side to drill in.',
       },
       {
-        src: deleteShot,
+        src: keepShot,
+        alt: 'Registered files window listing the 114 still-used installers and their installer-database metadata',
+        caption:
+          'The "still used" details. Every kept file is shown with the product it belongs to, drawn from the same Windows Installer database the app uses to decide what is safe to remove. None of these get touched.',
+      },
+      {
+        src: orphanShot,
         alt: 'Orphaned files window listing removable .msi files with reasons',
         caption:
-          'Every removable file with the reason it can go. "Orphaned" means the product was uninstalled and the installer file was left behind. "Superseded" means a newer patch has already replaced this one.',
+          'And the removable files, with the reason for each. "Orphaned" means the product was uninstalled and the installer file was left behind. "Superseded" means a newer patch has already replaced this one.',
       },
     ]}
   />
@@ -433,16 +457,22 @@ const vtSlim =
     <div class="inner">
       <h2>4. Move or Delete</h2>
       <p>
-        Click <strong>Move</strong> or <strong>Delete</strong> on the main window. The app shows
-        a confirmation prompt before it touches anything.
+        Click <strong>Move</strong> or <strong>Delete</strong> on the main window. Either way
+        the app prompts for confirmation before it touches anything.
+      </p>
+      <p>
+        For Move, fill in the <strong>Move location</strong> field at the top. Click
+        <strong>Browse...</strong> to pick an existing folder, or type a path directly: if the
+        folder doesn't exist yet, the app creates it. Pick a different drive (D:, E:, an
+        external drive) if you actually want to free up your C: drive.
       </p>
     </div>
 
     <figure class="step-figure">
       <figcaption>
-        Both Move and Delete prompt for confirmation. Delete sends the files to the Recycle Bin
-        so you can restore from there if you need to. Move puts them in a folder of your choice,
-        on whichever drive you pick. Either way nothing leaves your machine without your click.
+        The confirmation prompt. Delete sends the files to the Recycle Bin so you can restore
+        from there if you need to. Move puts them in your chosen folder. Either way nothing
+        leaves your machine without your click.
       </figcaption>
       <Image
         src={confirmShot}
@@ -915,10 +945,12 @@ const vtSlim =
     display: block;
   }
   .step-figure figcaption {
-    padding: var(--space-5) var(--space-6);
+    padding: var(--space-5) var(--space-7);
     margin: 0;
     color: var(--text);
-    font-size: var(--text-base);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-regular);
     line-height: var(--leading-relaxed);
     border-bottom: 1px solid var(--border);
   }
