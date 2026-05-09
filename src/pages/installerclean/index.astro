@@ -114,8 +114,9 @@ const vtSlim =
       </p>
       <figure class="quote">
         <blockquote>
-          DO NOT TOUCH C:\Windows\Installer!!!!!!!!!! ... It cannot be safely touched by any
-          humans.
+          DO NOT TOUCH C:\Windows\Installer!!!!!!!!!! It's essentially a repository of all the MSI
+          files that have ever been installed on a machine, which are needed to uninstall any
+          software. It cannot be safely touched by any humans.
         </blockquote>
         <figcaption>
           bbbbbthatsfivebees, <a
@@ -126,10 +127,12 @@ const vtSlim =
         </figcaption>
       </figure>
       <p>
-        The folder is admin-only because Windows itself reads and writes there during installs and
-        uninstalls, not because it's opaque. Windows keeps its own list of which files are still
-        needed. The app asks Windows directly through the official Windows Installer API. Only
-        files Windows says are no longer needed get removed.
+        It's true that many of the files in there are needed (for uninstalls and updates of
+        installed software), and deleting them at random would break things. But this isn't
+        random deletion. Windows itself keeps a list of which files are still needed and which
+        are leftover from software you've already uninstalled. The app asks Windows directly
+        through the official Windows Installer API. Only files Windows says aren't needed get
+        removed.
       </p>
       <p>
         PatchCleaner has used this same approach safely for over a decade, with 800,000 downloads
