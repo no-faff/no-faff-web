@@ -956,16 +956,18 @@ const vtSlim =
     margin: 0 auto;
   }
   .step-figure {
-    max-width: var(--container);
     margin: var(--space-8) auto;
+    width: fit-content;
+    max-width: 100%;
     background: var(--bg-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     overflow: hidden;
   }
   .step-figure :global(img) {
-    width: 100%;
+    width: auto;
     height: auto;
+    max-width: 100%;
     display: block;
   }
   .step-figure figcaption {
