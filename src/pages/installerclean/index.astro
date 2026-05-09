@@ -524,7 +524,7 @@ const vtSlim =
     </div>
   </section>
 
-  <section class="step step-with-shot">
+  <section class="step step-with-shot step-bg">
     <div class="inner">
       <h2>5. Done</h2>
       <p>
@@ -951,6 +951,9 @@ const vtSlim =
   .step-with-shot {
     padding: var(--space-12) var(--space-6);
   }
+  .step-with-shot.step-bg {
+    background: var(--bg-subtle);
+  }
   .step-with-shot .inner {
     max-width: var(--container-narrow);
     margin: 0 auto;
@@ -972,7 +975,8 @@ const vtSlim =
   }
   .step-figure figcaption {
     background: var(--bg-subtle);
-    padding: var(--space-7) var(--space-8);
+    border-left: 4px solid var(--chick);
+    padding: var(--space-7) var(--space-10);
     margin: 0;
     border-bottom: 1px solid var(--border);
   }
