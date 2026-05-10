@@ -70,7 +70,7 @@ type StoredRecord = {
     operation?: {
       kind?: string;
       outcome?: string;
-      bytesCleared?: number;
+      bytesFreed?: number;
       moveDestinationKind?: string | null;
     };
   };
@@ -79,7 +79,7 @@ type StoredRecord = {
 type Stats = {
   generatedAt: string;
   totalRuns: number;
-  totalBytesCleared: number;
+  totalBytesFreed: number;
   runsByOutcome: Record<string, number>;
   runsByOperation: Record<string, number>;
   pendingRebootDistribution: Record<string, number>;
@@ -120,7 +120,7 @@ async function aggregate(): Promise<Stats> {
   const store = getStore(STORE_NAME);
 
   let totalRuns = 0;
-  let totalBytesCleared = 0;
+  let totalBytesFreed = 0;
   const runsByOutcome: Record<string, number> = {};
   const runsByOperation: Record<string, number> = {};
   const pendingRebootDistribution: Record<string, number> = {};
@@ -156,8 +156,8 @@ async function aggregate(): Promise<Stats> {
       totalRuns++;
 
       const op = payload.operation ?? {};
-      if (typeof op.bytesCleared === "number" && Number.isFinite(op.bytesCleared)) {
-        totalBytesCleared += op.bytesCleared;
+      if (typeof op.bytesFreed === "number" && Number.isFinite(op.bytesFreed)) {
+        totalBytesFreed += op.bytesFreed;
       }
       bump(runsByOutcome, op.outcome);
       bump(runsByOperation, op.kind);
@@ -176,7 +176,7 @@ async function aggregate(): Promise<Stats> {
   return {
     generatedAt: new Date().toISOString(),
     totalRuns,
-    totalBytesCleared,
+    totalBytesFreed,
     runsByOutcome,
     runsByOperation,
     pendingRebootDistribution,
