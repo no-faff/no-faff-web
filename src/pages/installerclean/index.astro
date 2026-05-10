@@ -259,9 +259,12 @@ const vtSlim =
             <span class="muted"
               >No version pings on startup, no usage tracking, no analytics. The app makes no
               network call until you click one of two opt-in buttons: "Check for updates" in
-              About queries GitHub's public releases API on click; "Share what you cleared" on
-              the completion screen opens your browser to a No Faff page where you can
-              optionally post the cleared-bytes count.</span
+              About queries GitHub's public releases API on click; "Send result log to No
+              Faff" on the completion screen reads a small JSON file the app wrote to
+              <code>%LOCALAPPDATA%\NoFaff\InstallerClean\last-run.json</code> and HTTPS-POSTs
+              it. The JSON contains counts and categorical labels only: no file paths, no
+              user names, no machine identifiers, no time-of-day. The file can be opened
+              from About to inspect before sending.</span
             >
           </div>
         </li>

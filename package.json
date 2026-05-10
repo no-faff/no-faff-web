@@ -13,6 +13,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@netlify/blobs": "^10.7.4",
+    "@netlify/edge-functions": "^3.0.6",
     "astro": "^6.3.1",
     "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
