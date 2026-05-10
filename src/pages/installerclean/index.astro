@@ -255,10 +255,13 @@ const vtSlim =
         <li>
           <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
           <div>
-            <strong>No telemetry, no network.</strong>
+            <strong>No automatic telemetry, no background network.</strong>
             <span class="muted"
-              >No version pings. No usage tracking. No analytics. The app never opens a network
-              connection on its own.</span
+              >No version pings on startup, no usage tracking, no analytics. The app makes no
+              network call until you click one of two opt-in buttons: "Check for updates" in
+              About queries GitHub's public releases API on click; "Share what you cleared" on
+              the completion screen opens your browser to a No Faff page where you can
+              optionally post the cleared-bytes count.</span
             >
           </div>
         </li>
