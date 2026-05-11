@@ -9,9 +9,9 @@ import { getStore } from "@netlify/blobs";
 //
 // Schema is defined and versioned in the desktop client at
 // src/InstallerClean.Core/Models/ResultLogEntry.cs. The function
-// validates required field types up front so the Blob store never
-// holds a structurally-broken record that a future read endpoint
-// could echo back.
+// validates required field types and rejects unknown keys at every
+// object level, so the Blob store never holds attacker-controlled
+// bytes that a future read endpoint could echo back.
 //
 // SchemaVersion is checked so a future client bumping the shape can
 // roll out without breaking older deployed function code: any
@@ -50,6 +50,30 @@ const MOVE_DESTINATION_KINDS = new Set([
   "unknown",
 ]);
 
+// Allowlists for known keys at each object level. Schema-v1 envelopes
+// containing any other key are rejected so an attacker cannot pad
+// `body.app.extraJunk = "x".repeat(60_000)` into a stored blob.
+const ALLOWED_TOP = new Set(["schemaVersion", "app", "os", "scan", "operation"]);
+const ALLOWED_APP = new Set(["version"]);
+const ALLOWED_SCAN = new Set([
+  "durationMs",
+  "registeredCount",
+  "orphanedCount",
+  "supersededCount",
+  "missingFromDiskCount",
+  "pendingReboot",
+]);
+const ALLOWED_OPERATION = new Set([
+  "kind",
+  "outcome",
+  "filesProcessed",
+  "filesFailed",
+  "bytesFreed",
+  "errors",
+  "moveDestinationKind",
+]);
+const ALLOWED_ERROR = new Set(["category", "count"]);
+
 export default async function handler(req: Request, _ctx: Context): Promise<Response> {
   if (req.method !== "POST") {
     return new Response("Method not allowed", {
@@ -66,8 +90,26 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
     });
   }
 
+  // Reject oversize at the Content-Length header before decoding so a
+  // hostile client can't tie up the function on a 6 MiB body. The
+  // header can be spoofed; the post-decode byte check below is the
+  // belt to this braces.
+  const claimedLength = parseInt(req.headers.get("Content-Length") ?? "0", 10);
+  if (Number.isFinite(claimedLength) && claimedLength > MAX_BODY_BYTES) {
+    return new Response("Body too large", {
+      status: 413,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
   const raw = await req.text();
-  if (raw.length > MAX_BODY_BYTES) {
+  // raw.length is the UTF-16 code-unit count of the decoded string.
+  // A request of 65,535 Chinese characters (3 bytes each in UTF-8)
+  // passes a `raw.length <= MAX_BODY_BYTES` check at ~196 KiB on the
+  // wire. Measure the encoded byte length so the cap means what it
+  // says.
+  const bodyBytes = new TextEncoder().encode(raw).length;
+  if (bodyBytes > MAX_BODY_BYTES) {
     return new Response("Body too large", {
       status: 413,
       headers: { "Content-Type": "text/plain" },
@@ -120,25 +162,19 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   const suffix = crypto.randomUUID().split("-")[0];
   const key = `${versionPrefix}/${timestamp}-${suffix}.json`;
 
-  // The envelope intentionally carries no country code and no source
-  // IP. The user's confirmation modal shows the literal client payload;
-  // adding fields here that the user didn't see would break the
-  // "what you see is what gets stored" contract. Netlify's
-  // platform-level access log still retains IPs for ~24h, which is
-  // the upper bound on IP exposure; nothing here extends that.
-  const enriched = JSON.stringify(
-    {
-      receivedAt: new Date().toISOString(),
-      userAgent,
-      payload: parsed,
-    },
-    null,
-    2,
-  );
+  // The stored blob body is the literal client payload, nothing
+  // added. The user's confirmation modal showed exactly this; the
+  // "what you see is what gets stored" contract is a literal property
+  // of the blob. Netlify retains a per-blob uploadedAt at the
+  // platform layer (visible via store.list()) so receive-time
+  // ordering is preserved without a separate timestamp here. The
+  // validated User-Agent lives only in Blob metadata, which the
+  // public stats endpoint never surfaces.
+  const stored = JSON.stringify(parsed, null, 2);
 
   try {
     const store = getStore(STORE_NAME);
-    await store.set(key, enriched, { metadata: { userAgent, schemaVersion: String(schemaVersion) } });
+    await store.set(key, stored, { metadata: { userAgent, schemaVersion: String(schemaVersion) } });
   } catch (err) {
     console.error("result-log store.set failed", err);
     return new Response("Storage error", {
@@ -154,8 +190,13 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
 }
 
 function validateSchema1(body: Record<string, unknown>): string | null {
+  const topUnknown = unknownKey(body, ALLOWED_TOP);
+  if (topUnknown) return `unknown key at top level: ${topUnknown}`;
+
   const app = body.app;
   if (!isPlainObject(app)) return "app must be an object";
+  const appUnknown = unknownKey(app, ALLOWED_APP);
+  if (appUnknown) return `unknown key in app: ${appUnknown}`;
   if (typeof app.version !== "string" || !/^\d+\.\d+\.\d+$/.test(app.version)) {
     return "app.version must match semver";
   }
@@ -166,6 +207,8 @@ function validateSchema1(body: Record<string, unknown>): string | null {
 
   const scan = body.scan;
   if (!isPlainObject(scan)) return "scan must be an object";
+  const scanUnknown = unknownKey(scan, ALLOWED_SCAN);
+  if (scanUnknown) return `unknown key in scan: ${scanUnknown}`;
   for (const key of [
     "durationMs",
     "registeredCount",
@@ -184,6 +227,8 @@ function validateSchema1(body: Record<string, unknown>): string | null {
 
   const op = body.operation;
   if (!isPlainObject(op)) return "operation must be an object";
+  const opUnknown = unknownKey(op, ALLOWED_OPERATION);
+  if (opUnknown) return `unknown key in operation: ${opUnknown}`;
   if (typeof op.kind !== "string" || !OPERATION_KINDS.has(op.kind)) {
     return "operation.kind must be scan, move, or delete";
   }
@@ -200,6 +245,8 @@ function validateSchema1(body: Record<string, unknown>): string | null {
   if (op.errors.length > 100) return "operation.errors length capped at 100";
   for (const entry of op.errors) {
     if (!isPlainObject(entry)) return "operation.errors entries must be objects";
+    const errUnknown = unknownKey(entry, ALLOWED_ERROR);
+    if (errUnknown) return `unknown key in operation.errors[]: ${errUnknown}`;
     if (typeof entry.category !== "string" || entry.category.length === 0 || entry.category.length > 64) {
       return "operation.errors[].category must be a non-empty string under 64 chars";
     }
@@ -212,6 +259,13 @@ function validateSchema1(body: Record<string, unknown>): string | null {
     return "operation.moveDestinationKind must be null or a known label";
   }
 
+  return null;
+}
+
+function unknownKey(obj: Record<string, unknown>, allowed: Set<string>): string | null {
+  for (const key of Object.keys(obj)) {
+    if (!allowed.has(key)) return key;
+  }
   return null;
 }
 
