@@ -50,9 +50,13 @@ const MOVE_DESTINATION_KINDS = new Set([
   "unknown",
 ]);
 
-// Allowlists for known keys at each object level. Schema-v1 envelopes
-// containing any other key are rejected so an attacker cannot pad
-// `body.app.extraJunk = "x".repeat(60_000)` into a stored blob.
+// Allowlists for known keys at each object level. Envelopes containing
+// any other key are rejected so an attacker cannot pad
+// `body.app.extraJunk = "x".repeat(60_000)` into a stored blob. The
+// top-level allowlist is enforced for every schemaVersion (not only
+// the ones validateSchema1 understands); the per-object allowlists
+// run inside validateSchema1 because the published schema for an
+// unknown version is by definition unknown.
 const ALLOWED_TOP = new Set(["schemaVersion", "app", "os", "scan", "operation"]);
 const ALLOWED_APP = new Set(["version"]);
 const ALLOWED_SCAN = new Set([
@@ -73,6 +77,45 @@ const ALLOWED_OPERATION = new Set([
   "moveDestinationKind",
 ]);
 const ALLOWED_ERROR = new Set(["category", "count"]);
+
+// Architecture suffix from RuntimeInformation.OSArchitecture mirrors
+// .NET's Architecture enum names; the four family labels come from
+// ResultLogEntry.ResolveOs. The combinations are the only legitimate
+// client outputs.
+const ALLOWED_OS = new Set([
+  "Windows 11 (X64)",
+  "Windows 11 (X86)",
+  "Windows 11 (Arm64)",
+  "Windows 11 (Arm)",
+  "Windows 10 (X64)",
+  "Windows 10 (X86)",
+  "Windows 10 (Arm64)",
+  "Windows 10 (Arm)",
+  "Windows (X64)",
+  "Windows (X86)",
+  "Windows (Arm64)",
+  "Windows (Arm)",
+  "Unknown (X64)",
+  "Unknown (X86)",
+  "Unknown (Arm64)",
+  "Unknown (Arm)",
+]);
+
+// Categories are the C# runtime type names of FileOperationError's
+// subclasses in InstallerClean.Core.Models. Anything else rejects.
+const ALLOWED_ERROR_CATEGORY = new Set([
+  "MissingSourceFile",
+  "AccessDenied",
+  "DestinationCollision",
+  "ShellRefused",
+  "SourceIsReparsePoint",
+  "IOFailure",
+  "UnknownError",
+]);
+
+// Reflected key names in 400 responses are truncated to this width so
+// a 60 KiB key in a request cannot mint a 60 KiB response body.
+const MAX_KEY_ECHO = 40;
 
 export default async function handler(req: Request, _ctx: Context): Promise<Response> {
   if (req.method !== "POST") {
@@ -141,9 +184,24 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
     });
   }
 
+  // Top-level unknown-key allowlist runs for EVERY schemaVersion, not
+  // only v1. A POST with schemaVersion: 2 and `body.padding = "x"
+  // .repeat(60000)` would otherwise reach store.set unfiltered through
+  // the forward-compat branch below. Any future schema that bumps
+  // the version also gets added to ALLOWED_TOP if it introduces new
+  // top-level keys.
+  const topUnknown = unknownKey(parsed, ALLOWED_TOP);
+  if (topUnknown) {
+    return new Response(`unknown key at top level: ${truncate(topUnknown)}`, {
+      status: 400,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
   // Schema-version 1 is checked field-by-field. Unknown versions skip
-  // validation (stored under v<n>-unknown/) so a forward-compatible
-  // client deployment doesn't 400 against an older function.
+  // the field-level validation (stored under v<n>-unknown/) so a
+  // forward-compatible client deployment doesn't 400 against an older
+  // function.
   if (schemaVersion === 1) {
     const error = validateSchema1(parsed);
     if (error) {
@@ -190,25 +248,26 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
 }
 
 function validateSchema1(body: Record<string, unknown>): string | null {
-  const topUnknown = unknownKey(body, ALLOWED_TOP);
-  if (topUnknown) return `unknown key at top level: ${topUnknown}`;
+  // Top-level allowlist runs above this function so unknown
+  // schemaVersions are also filtered. Per-object allowlists below
+  // are gated on knowing the v1 shape.
 
   const app = body.app;
   if (!isPlainObject(app)) return "app must be an object";
   const appUnknown = unknownKey(app, ALLOWED_APP);
-  if (appUnknown) return `unknown key in app: ${appUnknown}`;
+  if (appUnknown) return `unknown key in app: ${truncate(appUnknown)}`;
   if (typeof app.version !== "string" || !/^\d+\.\d+\.\d+$/.test(app.version)) {
     return "app.version must match semver";
   }
 
-  if (typeof body.os !== "string" || body.os.length === 0 || body.os.length > 200) {
-    return "os must be a non-empty string under 200 chars";
+  if (typeof body.os !== "string" || !ALLOWED_OS.has(body.os)) {
+    return "os must be a known family / architecture label";
   }
 
   const scan = body.scan;
   if (!isPlainObject(scan)) return "scan must be an object";
   const scanUnknown = unknownKey(scan, ALLOWED_SCAN);
-  if (scanUnknown) return `unknown key in scan: ${scanUnknown}`;
+  if (scanUnknown) return `unknown key in scan: ${truncate(scanUnknown)}`;
   for (const key of [
     "durationMs",
     "registeredCount",
@@ -228,7 +287,7 @@ function validateSchema1(body: Record<string, unknown>): string | null {
   const op = body.operation;
   if (!isPlainObject(op)) return "operation must be an object";
   const opUnknown = unknownKey(op, ALLOWED_OPERATION);
-  if (opUnknown) return `unknown key in operation: ${opUnknown}`;
+  if (opUnknown) return `unknown key in operation: ${truncate(opUnknown)}`;
   if (typeof op.kind !== "string" || !OPERATION_KINDS.has(op.kind)) {
     return "operation.kind must be scan, move, or delete";
   }
@@ -246,9 +305,9 @@ function validateSchema1(body: Record<string, unknown>): string | null {
   for (const entry of op.errors) {
     if (!isPlainObject(entry)) return "operation.errors entries must be objects";
     const errUnknown = unknownKey(entry, ALLOWED_ERROR);
-    if (errUnknown) return `unknown key in operation.errors[]: ${errUnknown}`;
-    if (typeof entry.category !== "string" || entry.category.length === 0 || entry.category.length > 64) {
-      return "operation.errors[].category must be a non-empty string under 64 chars";
+    if (errUnknown) return `unknown key in operation.errors[]: ${truncate(errUnknown)}`;
+    if (typeof entry.category !== "string" || !ALLOWED_ERROR_CATEGORY.has(entry.category)) {
+      return "operation.errors[].category must be a known FileOperationError subtype";
     }
     if (typeof entry.count !== "number" || !Number.isFinite(entry.count) || entry.count < 0) {
       return "operation.errors[].count must be a non-negative finite number";
@@ -267,6 +326,10 @@ function unknownKey(obj: Record<string, unknown>, allowed: Set<string>): string 
     if (!allowed.has(key)) return key;
   }
   return null;
+}
+
+function truncate(value: string): string {
+  return value.length > MAX_KEY_ECHO ? value.slice(0, MAX_KEY_ECHO) + "..." : value;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

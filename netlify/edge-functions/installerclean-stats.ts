@@ -59,20 +59,21 @@ const STORE_NAME = "installerclean-results";
 const APP_VERSION_TOP_N = 10;
 const CACHE_MAX_AGE_SECONDS = 300;
 
+// The stored blob is the literal client payload. The pre-r2
+// `{ receivedAt, userAgent, country, payload }` envelope is gone;
+// receive-time ordering is preserved at the platform layer via
+// per-blob uploadedAt and is not surfaced here. The aggregator only
+// reads schema-1 fields by name; unknown keys are filtered at write
+// time by the result-log endpoint.
 type StoredRecord = {
-  receivedAt?: string;
-  userAgent?: string | null;
-  country?: string | null;
-  payload?: {
-    schemaVersion?: number;
-    app?: { version?: string };
-    scan?: { pendingReboot?: string };
-    operation?: {
-      kind?: string;
-      outcome?: string;
-      bytesFreed?: number;
-      moveDestinationKind?: string | null;
-    };
+  schemaVersion?: number;
+  app?: { version?: string };
+  scan?: { pendingReboot?: string };
+  operation?: {
+    kind?: string;
+    outcome?: string;
+    bytesFreed?: number;
+    moveDestinationKind?: string | null;
   };
 };
 
@@ -150,12 +151,11 @@ async function aggregate(): Promise<Stats> {
         continue;
       }
 
-      const payload = record.payload;
-      if (!payload || payload.schemaVersion !== 1) continue;
+      if (record.schemaVersion !== 1) continue;
 
       totalRuns++;
 
-      const op = payload.operation ?? {};
+      const op = record.operation ?? {};
       if (typeof op.bytesFreed === "number" && Number.isFinite(op.bytesFreed)) {
         totalBytesFreed += op.bytesFreed;
       }
@@ -163,10 +163,10 @@ async function aggregate(): Promise<Stats> {
       bump(runsByOperation, op.kind);
       bump(moveDestinationKindDistribution, op.moveDestinationKind);
 
-      const scan = payload.scan ?? {};
+      const scan = record.scan ?? {};
       bump(pendingRebootDistribution, scan.pendingReboot);
 
-      const appVersion = payload.app?.version;
+      const appVersion = record.app?.version;
       if (typeof appVersion === "string" && /^\d+\.\d+\.\d+$/.test(appVersion)) {
         appVersionCounts[appVersion] = (appVersionCounts[appVersion] ?? 0) + 1;
       }
