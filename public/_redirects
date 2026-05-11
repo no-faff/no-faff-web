@@ -1,0 +1,9 @@
+# Netlify redirects. Astro copies public/_redirects into the build
+# output verbatim so Netlify's edge picks it up.
+#
+# Donate-button targets in shipped InstallerClean builds (v1.7 and
+# earlier) open the bare site root in the user's browser. Until the
+# /. studio-overview page lands, redirect those clicks to /support
+# (Ko-fi + Bitcoin), which is the same content the legacy
+# pre-redesign root carried.
+/  /support  302
