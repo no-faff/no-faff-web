@@ -1,0 +1,86 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+import cookie from '@assets/projects/cookie-circuit.png';
+---
+
+<BaseLayout
+  title="Cookie Jar"
+  description="Cookie Jar: a Firefox extension that auto-deletes cookies when tabs close. Keep the sites you trust. In development."
+>
+  <article class="page">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <Image src={cookie} alt="" width={420} class="hero-image" />
+      <h1>Cookie Jar</h1>
+      <p class="lead">
+        A Firefox extension that auto-deletes cookies from a site as soon as you've closed the
+        last tab using that site. Whitelist the sites you want to stay logged in to. Everything
+        else gets cleaned up automatically.
+      </p>
+
+      <section>
+        <h2>Status</h2>
+        <p>
+          In development. Not on Firefox Add-ons yet, no public install. The first public release
+          is being worked on now.
+        </p>
+      </section>
+
+      <p class="placeholder-note">A fuller page is on the way.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    padding: var(--space-16) var(--space-6);
+  }
+  .glow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 50vh;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+    text-align: center;
+  }
+  .hero-image {
+    display: block;
+    margin: 0 auto var(--space-8);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+  }
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-12);
+    text-align: left;
+  }
+  section {
+    margin-bottom: var(--space-10);
+    text-align: left;
+  }
+  section h2 {
+    margin-bottom: var(--space-3);
+  }
+  section p {
+    color: var(--text-muted);
+  }
+  .placeholder-note {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    margin-top: var(--space-12);
+  }
+</style>

@@ -1,0 +1,150 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<BaseLayout
+  title="Silo"
+  description="Silo: a browser picker for Linux. Choose which browser or profile opens each link."
+>
+  <article class="page">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <h1>Silo</h1>
+      <p class="lead">
+        A browser picker for Linux. When something opens a link, Silo shows a picker of every
+        browser and every profile so you can choose where it goes. Rules let you route a domain
+        to a specific browser silently after the first time.
+      </p>
+
+      <section>
+        <h2>The Linux app</h2>
+        <p>
+          Released and in daily use. Written in Rust with GTK4 / libadwaita. Detects profiles for
+          every Chromium and Firefox family browser, including Flatpak and Snap variants. Optional
+          redirect unwrapping for SafeLinks and Google tracking links.
+        </p>
+        <p>
+          <a
+            class="ext-link"
+            href="https://github.com/no-faff/Silo"
+            target="_blank"
+            rel="noopener"
+          >
+            github.com/no-faff/Silo
+            <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+          </a>
+        </p>
+      </section>
+
+      <section>
+        <h2>"Open with Silo" browser extensions</h2>
+        <p>
+          Right-click a link in your browser and pick "Open with Silo". The link goes to the
+          Silo picker on your Linux desktop.
+        </p>
+        <ul class="links">
+          <li>
+            <strong>Firefox:</strong> live on
+            <a
+              class="ext-link"
+              href="https://addons.mozilla.org/en-GB/firefox/addon/open-with-silo/"
+              target="_blank"
+              rel="noopener"
+            >
+              Firefox Add-ons
+              <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+            </a>.
+          </li>
+          <li>
+            <strong>Chrome and Chromium:</strong> source is at
+            <a
+              class="ext-link"
+              href="https://github.com/no-faff/silo-chrome"
+              target="_blank"
+              rel="noopener"
+            >
+              github.com/no-faff/silo-chrome
+              <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+            </a>; not on the Chrome Web Store yet, manual install only.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Windows and macOS</h2>
+        <p>
+          Coming. The Windows version is in progress, built on an earlier browser-picker project
+          for Windows.
+        </p>
+      </section>
+
+      <p class="placeholder-note">A fuller page is on the way.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    padding: var(--space-16) var(--space-6);
+  }
+  .glow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 50vh;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-12);
+  }
+  section {
+    margin-bottom: var(--space-10);
+  }
+  section h2 {
+    margin-bottom: var(--space-3);
+  }
+  section p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+  }
+  .ext-link {
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ext-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .links li {
+    color: var(--text-muted);
+  }
+  .placeholder-note {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    text-align: center;
+    margin-top: var(--space-12);
+  }
+</style>

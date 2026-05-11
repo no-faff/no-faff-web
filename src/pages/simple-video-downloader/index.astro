@@ -1,0 +1,141 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<BaseLayout
+  title="Simple Video Downloader"
+  description="A Firefox extension for downloading video and audio with yt-dlp. Live on Firefox Add-ons; a complete rewrite is landing soon."
+>
+  <article class="page">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <h1>Simple Video Downloader</h1>
+      <p class="lead">
+        A Firefox extension for downloading video and audio from thousands of sites, backed by
+        yt-dlp. Works on Reddit, YouTube and most things in between. Files save to your Downloads
+        folder. No accounts, no upload to anyone else's server.
+      </p>
+
+      <section>
+        <h2>Install</h2>
+        <p>
+          The current version is on Firefox Add-ons. The new version is a complete rewrite and
+          will replace the listed one shortly.
+        </p>
+        <p>
+          <a
+            class="ext-link"
+            href="https://addons.mozilla.org/en-GB/firefox/addon/simple-video-audio-downloader/"
+            target="_blank"
+            rel="noopener"
+          >
+            Firefox Add-ons listing
+            <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+          </a>
+        </p>
+      </section>
+
+      <section>
+        <h2>From the reviews</h2>
+        <figure class="quote">
+          <blockquote>
+            "I have tried many add-ons of this type, and this is the only one that does exactly
+            as it promises."
+          </blockquote>
+          <figcaption>Motorbike daftie, Firefox Add-ons</figcaption>
+        </figure>
+        <figure class="quote">
+          <blockquote>
+            "I really like the method and it works great so far."
+          </blockquote>
+          <figcaption>Zemi Atral, Firefox Add-ons</figcaption>
+        </figure>
+        <figure class="quote">
+          <blockquote>"Works great, thanks and keep it up."</blockquote>
+          <figcaption>Yusef B, Firefox Add-ons</figcaption>
+        </figure>
+      </section>
+
+      <section>
+        <h2>Coming next</h2>
+        <p>
+          Version 10 is a complete rebuild. New UI, simpler setup, lower resolution options for
+          phone-friendly downloads. Landing on Firefox Add-ons soon.
+        </p>
+      </section>
+
+      <p class="placeholder-note">A fuller page is on the way.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    padding: var(--space-16) var(--space-6);
+  }
+  .glow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 50vh;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-12);
+  }
+  section {
+    margin-bottom: var(--space-10);
+  }
+  section h2 {
+    margin-bottom: var(--space-3);
+  }
+  section p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+  }
+  .ext-link {
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ext-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .quote {
+    margin: 0 0 var(--space-6) 0;
+    padding: var(--space-4) var(--space-5);
+    background: var(--bg-raised);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+  }
+  .quote blockquote {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--text);
+    font-style: italic;
+  }
+  .quote figcaption {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+  }
+  .placeholder-note {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    text-align: center;
+    margin-top: var(--space-12);
+  }
+</style>

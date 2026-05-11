@@ -1,0 +1,132 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+const extensions = [
+  {
+    name: 'Dicky',
+    blurb:
+      'Offline dictionary lookup. Type "d" and a word; fuzzy match via fzf, typo correction by edit-distance. Uses StarDict dictionaries, so any StarDict file works. I use Chambers 11th Edition.',
+    href: 'https://github.com/no-faff/ulauncher-dicky',
+  },
+  {
+    name: 'Find',
+    blurb:
+      'File and directory search using locate. Three keywords: "fd" for everything, "ff" for files, "fdir" for directories. Alt+Enter to open the containing folder, a terminal there, or copy the path.',
+    href: 'https://github.com/no-faff/ulauncher-find',
+  },
+  {
+    name: 'YT-DLP',
+    blurb:
+      'Download videos and audio with yt-dlp without leaving Ulauncher. Format selection, clips with timestamps, subtitles, SponsorBlock, metadata. Downloads run in the background.',
+    href: 'https://github.com/no-faff/ulauncher-yt-dlp',
+  },
+  {
+    name: 'Calculate Anything',
+    blurb:
+      'Currency and unit conversion, percentages, time arithmetic, trig and complex calculations. A Ulauncher v6 compatible fork of tchar\'s original.',
+    href: 'https://github.com/no-faff/ulauncher-calculate-anything',
+  },
+];
+---
+
+<BaseLayout
+  title="Ulauncher extensions"
+  description="Four small extensions for Ulauncher: offline dictionary, file search, video downloader, calculator and unit converter."
+>
+  <article class="page">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <h1>Ulauncher extensions</h1>
+      <p class="lead">
+        Four small extensions for Ulauncher, the keystroke launcher for Linux. Each one is in
+        regular use here. Install through Ulauncher's preferences by pasting the GitHub URL into
+        the "Add extension" field.
+      </p>
+
+      <ul class="ext-list">
+        {
+          extensions.map((e) => (
+            <li>
+              <h2>{e.name}</h2>
+              <p>{e.blurb}</p>
+              <a class="ext-link" href={e.href} target="_blank" rel="noopener">
+                {e.href.replace('https://', '')}
+                <Icon name="lucide:arrow-up-right" class="ext-icon" aria-hidden="true" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="placeholder-note">A fuller page is on the way.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    padding: var(--space-16) var(--space-6);
+  }
+  .glow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 50vh;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-12);
+  }
+  .ext-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+  .ext-list li {
+    padding: var(--space-5) var(--space-6);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .ext-list h2 {
+    font-size: var(--text-2xl);
+    margin: 0 0 var(--space-2) 0;
+  }
+  .ext-list p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+  }
+  .ext-link {
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+  }
+  .ext-icon {
+    width: 14px;
+    height: 14px;
+  }
+  .placeholder-note {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    text-align: center;
+    margin-top: var(--space-12);
+  }
+</style>

@@ -1,0 +1,65 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Privacy"
+  description="No analytics, no tracking, no cookies on this site. The only opt-in data collection is InstallerClean's Send result log button, with the full payload visible before sending."
+>
+  <article class="page">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="inner">
+      <h1>Privacy</h1>
+      <p class="lead">I am in favour of it.</p>
+
+      <p>
+        I don't collect anything from visitors to this site. No analytics, no tracking, no
+        cookies. Who you are and what you read here are none of my business.
+      </p>
+
+      <p>
+        The one bit of information I do collect: <a href="/installerclean">InstallerClean</a> has
+        a completely optional "Send result log" button that users can press after a clean. When pressed, the app sends a small JSON file to this
+        site with counts and categorical labels: bytes freed, success or failure, app version,
+        that sort of thing. No file paths, no usernames, no IP addresses. I read those in
+        aggregate to see whether the app is working. The button shows you exactly what's about
+        to be sent before you press it.
+      </p>
+
+      <p>That's it.</p>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    padding: var(--space-16) var(--space-6);
+  }
+  .glow {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 40vh;
+    pointer-events: none;
+    background: var(--hero-glow);
+  }
+  .inner {
+    position: relative;
+    max-width: var(--container-narrow);
+    margin: 0 auto;
+  }
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+  .lead {
+    color: var(--text);
+    font-size: var(--text-xl);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-8);
+  }
+  p {
+    color: var(--text-muted);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-5);
+  }
+</style>
