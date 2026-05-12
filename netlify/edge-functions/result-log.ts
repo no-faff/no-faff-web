@@ -241,6 +241,15 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
     });
   }
 
+  // Operator notification. The blob is already durable as of the
+  // store.set above, so an email failure does NOT change the
+  // response code: the client's contract is "did the server
+  // preserve my report", which is yes regardless. RESEND_API_KEY
+  // and NOTIFY_EMAIL are read at call time so the email can be
+  // turned on or off purely via the Netlify env panel without a
+  // redeploy.
+  await sendNotificationEmail(parsed, stored);
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -334,6 +343,54 @@ function truncate(value: string): string {
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// POSTs the just-stored payload to Resend so the operator gets one
+// email per accepted report. No-op if either env var is unset, so a
+// deployment with Resend not yet configured continues to write
+// blobs as before. Errors are logged to the function console and
+// swallowed: the report is already durable in Blobs storage and the
+// desktop client's success path must not depend on a third-party
+// mail provider's availability.
+//
+// Sender is the shared Resend onboarding address, which works with
+// an unverified domain. Switching to a custom From requires a
+// domain verified in Resend's dashboard.
+async function sendNotificationEmail(
+  payload: Record<string, unknown>,
+  stored: string,
+): Promise<void> {
+  const notifyEmail = Deno.env.get("NOTIFY_EMAIL");
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (!notifyEmail || !resendApiKey) return;
+
+  const op = (payload as { operation?: { kind?: string; outcome?: string } }).operation ?? {};
+  const app = (payload as { app?: { version?: string } }).app ?? {};
+  const outcome = op.outcome ?? "unknown";
+  const prefix = outcome === "failed" ? "[FAILED] " : "";
+  const subject = `${prefix}InstallerClean ${op.kind ?? "?"} ${outcome} (v${app.version ?? "?"})`;
+
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "InstallerClean <onboarding@resend.dev>",
+        to: notifyEmail,
+        subject,
+        text: stored,
+      }),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      console.error("result-log notify email rejected", resp.status, body.slice(0, 500));
+    }
+  } catch (err) {
+    console.error("result-log notify email threw", err);
+  }
 }
 
 export const config: Config = {
