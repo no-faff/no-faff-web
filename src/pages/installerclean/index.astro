@@ -563,7 +563,7 @@ const vtSlim =
       },
       {
         q: 'Will the app connect to the internet?',
-        a: 'No, never on its own. The app doesn\'t check for updates automatically, doesn\'t track usage, doesn\'t send any data anywhere. The "Check for updates" link in the About box opens the GitHub releases page in your browser when you click it. Your browser makes the request; the app does not.',
+        a: 'Only on a button you click. Two opt-in buttons make a single HTTPS request when clicked. "Check for updates" in the About box queries the GitHub releases API and tells you whether you have the latest version. "Send summary" on the completion screen opens a confirmation window showing the exact anonymous counts-and-labels JSON the app would POST to a No Faff endpoint; review it there and press Send to confirm or Cancel to back out. The app makes no other network calls. No automatic checks, no background usage tracking.',
       },
       {
         q: 'Why does it ask for Administrator?',
