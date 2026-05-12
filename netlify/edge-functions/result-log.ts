@@ -360,8 +360,11 @@ async function sendNotificationEmail(
   payload: Record<string, unknown>,
   stored: string,
 ): Promise<void> {
-  const notifyEmail = Deno.env.get("NOTIFY_EMAIL");
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  // Defensive trim: Netlify env-var pastes occasionally include a
+  // trailing newline from clipboard handling, which would make
+  // Resend reject the recipient as not-the-registered-address.
+  const notifyEmail = Deno.env.get("NOTIFY_EMAIL")?.trim();
+  const resendApiKey = Deno.env.get("RESEND_API_KEY")?.trim();
   if (!notifyEmail || !resendApiKey) return;
 
   const op = (payload as { operation?: { kind?: string; outcome?: string } }).operation ?? {};
@@ -386,7 +389,17 @@ async function sendNotificationEmail(
     });
     if (!resp.ok) {
       const body = await resp.text().catch(() => "");
-      console.error("result-log notify email rejected", resp.status, body.slice(0, 500));
+      // Length is logged (not the address) so a recipient mismatch
+      // between the Resend account and the configured NOTIFY_EMAIL
+      // is diagnosable from the function log without leaking the
+      // address into the log stream.
+      console.error(
+        "result-log notify email rejected",
+        resp.status,
+        "to-length",
+        notifyEmail.length,
+        body.slice(0, 500),
+      );
     }
   } catch (err) {
     console.error("result-log notify email threw", err);
