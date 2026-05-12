@@ -360,11 +360,8 @@ async function sendNotificationEmail(
   payload: Record<string, unknown>,
   stored: string,
 ): Promise<void> {
-  // Defensive trim: Netlify env-var pastes occasionally include a
-  // trailing newline from clipboard handling, which would make
-  // Resend reject the recipient as not-the-registered-address.
-  const notifyEmail = Deno.env.get("NOTIFY_EMAIL")?.trim();
-  const resendApiKey = Deno.env.get("RESEND_API_KEY")?.trim();
+  const notifyEmail = Deno.env.get("NOTIFY_EMAIL");
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
   if (!notifyEmail || !resendApiKey) return;
 
   const op = (payload as { operation?: { kind?: string; outcome?: string } }).operation ?? {};
