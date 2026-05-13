@@ -21,6 +21,11 @@ import allClearShot from '@assets/installerclean/screenshots/06a-scanned-again-a
 const downloadBase = 'https://github.com/no-faff/InstallerClean/releases/latest/download';
 const releasesPage = 'https://github.com/no-faff/InstallerClean/releases';
 
+// TODO (tag day, v1.8.1): replace the three vtSetup / vtPortable / vtSlim URLs below
+// with the v1.8.1 SHA-256 links from release-linux.sh's VT-pause step, and bump the
+// three engine counts inside the .vt-count spans further down to the v1.8.1 scan
+// results. Until then the URLs and counts point at v1.7.0 and the lead line reads
+// "v1.7.0".
 const vtSetup =
   'https://www.virustotal.com/gui/file/12a6584e2a20307fe5f7479146e776b153c263ec5cfa8f25e214d30f31d568f2';
 const vtPortable =
@@ -291,6 +296,8 @@ const vtSlim =
         </li>
       </ul>
 
+      {/* TODO (tag day, v1.8.1): bump "v1.7.0" below to "v1.8.1" and update the
+          engine-count range to whatever the v1.8.1 scans return. */}
       <p class="vt-lead">
         As of the v1.7.0 release, all three builds are clean on VirusTotal across 68 to 70
         antivirus engines. The links below open the live scans, so you can re-check whenever.
