@@ -259,12 +259,13 @@ const vtSlim =
             <span class="muted"
               >No version pings on startup, no usage tracking, no analytics. The app makes no
               network call until you click one of two opt-in buttons: "Check for updates" in
-              About queries GitHub's public releases API on click; "Send result log to No
-              Faff" on the completion screen reads a small JSON file the app wrote to
-              <code>%LOCALAPPDATA%\NoFaff\InstallerClean\last-run.json</code> and HTTPS-POSTs
-              it. The JSON contains counts and categorical labels only: no file paths, no
-              user names, no machine identifiers, no time-of-day. The file can be opened
-              from About to inspect before sending.</span
+              About queries GitHub's public releases API on click; "Send summary" on the
+              completion screen opens a confirmation window showing the exact JSON the app
+              would POST, then sends it only on a second click. The JSON contains counts and
+              categorical labels only: no file paths, no user names, no machine identifiers,
+              no time-of-day. The file lives at
+              <code>%LOCALAPPDATA%\NoFaff\InstallerClean\last-run.json</code> if you want to
+              inspect a copy on disk.</span
             >
           </div>
         </li>
