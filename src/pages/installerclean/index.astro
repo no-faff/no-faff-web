@@ -583,7 +583,7 @@ const vtSlim =
       },
       {
         q: 'Is it suitable for sysadmins or mass deployment?',
-        a: 'Yes. There is a separate <code>installerclean-cli.exe</code> for headless use, with three-state exit codes (0 success / 2 partial / 1 failure; 130 for Ctrl+C), per-run summary in the Windows Application event log, and the same single-instance mutex as the GUI.',
+        a: 'Yes. There is a separate <code>installerclean-cli.exe</code> for headless use. It returns distinct exit codes per outcome: 0 for full success, 2 for partial success, 1 for hard failure, 75 for transient conditions (another InstallerClean is already running, or Windows Installer reports a pending transaction; safe to retry), and 130 for Ctrl+C. The CLI also writes a per-run summary to the Windows Application event log and respects the same single-instance mutex as the GUI.',
       },
     ]}
   />
