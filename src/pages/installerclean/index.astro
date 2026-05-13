@@ -9,14 +9,14 @@ import DownloadCards from '@components/DownloadCards.astro';
 import FaqAccordion from '@components/FaqAccordion.astro';
 
 import icon from '@assets/installerclean/icon.png';
-import successShot from '@assets/installerclean/screenshots/10-moved-done-success.webp';
+import successShot from '@assets/installerclean/screenshots/04d-deleted-freed-success.webp';
 import smartScreenShot from '@assets/installerclean/screenshots/smartscreen.webp';
-import scanShot from '@assets/installerclean/screenshots/03-scan.webp';
-import mainShot from '@assets/installerclean/screenshots/04-main-window.webp';
-import keepShot from '@assets/installerclean/screenshots/05-keep-details.webp';
-import orphanShot from '@assets/installerclean/screenshots/06-delete-details.webp';
-import confirmShot from '@assets/installerclean/screenshots/08-delete.webp';
-import allClearShot from '@assets/installerclean/screenshots/12-all-clear.webp';
+import scanShot from '@assets/installerclean/screenshots/01-initial-scan.webp';
+import mainShot from '@assets/installerclean/screenshots/02-main-window.webp';
+import keepShot from '@assets/installerclean/screenshots/03a-details-registered.webp';
+import orphanShot from '@assets/installerclean/screenshots/03b-details-safe-to-delete.webp';
+import confirmShot from '@assets/installerclean/screenshots/04b-Delete-dialogue.webp';
+import allClearShot from '@assets/installerclean/screenshots/06a-scanned-again-all-clean.webp';
 
 const downloadBase = 'https://github.com/no-faff/InstallerClean/releases/latest/download';
 const releasesPage = 'https://github.com/no-faff/InstallerClean/releases';
@@ -46,7 +46,7 @@ const vtSlim =
     secondaryLabel="All three builds ↓"
     trustPills={['Windows 10 / 11', 'Free', 'Open source', 'No telemetry', 'Clean on VirusTotal']}
     heroImage={successShot}
-    heroImageAlt="InstallerClean after a successful clean: 965 MB cleared"
+    heroImageAlt="InstallerClean after a successful clean: 965 MB freed"
   />
 
   <Explainer title="What's in there?">
@@ -153,7 +153,7 @@ const vtSlim =
       <p>
         PatchCleaner has been the go-to free tool for cleaning <code>C:\Windows\Installer</code>
         for years and is still pulling around 7,000 downloads a week. But it hasn't been updated
-        since March 2016, it's closed source, and it filters Adobe products out by default. Adobe
+        since March 2016, it's closed source and it filters Adobe products out by default. Adobe
         is often the worst culprit for cache bloat, so on the machines that need cleanup most,
         PatchCleaner leaves a lot of removable files behind:
       </p>
@@ -171,7 +171,7 @@ const vtSlim =
         </figcaption>
       </figure>
       <p>
-        InstallerClean is built to replace it. Open source, actively maintained, and it detects
+        InstallerClean is built to replace it. Open source, actively maintained and it detects
         the superseded Adobe patches PatchCleaner filters out. (First shipped on 3 March 2026,
         exactly ten years to the day after PatchCleaner's last update.)
       </p>
@@ -437,26 +437,25 @@ const vtSlim =
     items={[
       {
         src: scanShot,
-        alt: 'Splash screen showing the scan in progress, having found 68 files to clean up',
+        alt: 'Splash screen showing the scan in progress',
         caption: [
           'A few seconds in.',
           'The scan reads the Windows Installer database and counts what can come off your disk.',
-          '68 files in this run.',
         ],
       },
       {
         src: mainShot,
-        alt: 'Main window showing 114 files still used and 68 files to clean up',
+        alt: 'Main window showing 116 files still used and 68 files to clean up',
         caption: [
           'The result, broken in two.',
-          '114 files Windows still uses, untouched.',
+          '116 files Windows still uses, untouched.',
           '68 it does not, ready to remove.',
           'Click Details on either side to drill in.',
         ],
       },
       {
         src: keepShot,
-        alt: 'Registered files window listing the 114 still-used installers and their installer-database metadata',
+        alt: 'Registered files window listing the 116 still-used installers and their installer-database metadata',
         caption: [
           'The "still used" details.',
           'Every kept file is shown with the product it belongs to, drawn from the same Windows Installer database the app uses to decide what is safe to remove.',
@@ -465,7 +464,7 @@ const vtSlim =
       },
       {
         src: orphanShot,
-        alt: 'Orphaned files window listing removable .msi files with reasons',
+        alt: 'Unused files window listing removable .msi files with their reason',
         caption: [
           'And the removable files, with the reason for each.',
           '"Orphaned" means the product was uninstalled and the installer file was left behind.',
@@ -504,7 +503,7 @@ const vtSlim =
       </figcaption>
       <Image
         src={confirmShot}
-        alt="Delete confirmation dialog showing 68 files (965 MB) will go to the Recycle Bin"
+        alt="Delete confirmation dialog showing 68 files (965.0 MB) will go to the Recycle Bin"
       />
     </figure>
 
@@ -549,7 +548,7 @@ const vtSlim =
       </figcaption>
       <Image
         src={allClearShot}
-        alt="All-clear overlay shown when nothing is removable on a subsequent scan"
+        alt="All-clean overlay shown when nothing is removable on a subsequent scan"
       />
     </figure>
   </section>
@@ -559,7 +558,7 @@ const vtSlim =
     items={[
       {
         q: 'Will I actually free up GBs of space?',
-        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> cleared. The app shows you exactly how much it can remove before you click anything; you can decide then.',
+        a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> freed. The app shows you exactly how much it can remove before you click anything; you can decide then.',
       },
       {
         q: 'Will the app connect to the internet?',
@@ -567,7 +566,7 @@ const vtSlim =
       },
       {
         q: 'Why does it ask for Administrator?',
-        a: 'Windows locks <code>C:\\Windows\\Installer</code> down so only administrators can touch it. Reading what is in the folder, asking Windows what is still needed, and moving or deleting files all need Administrator permission. There is no other way.',
+        a: 'Windows locks <code>C:\\Windows\\Installer</code> down so only administrators can touch it. Reading what is in the folder, asking Windows what is still needed and moving or deleting files all need Administrator permission. There is no other way.',
       },
       {
         q: 'Will Windows complain if I remove these files?',
