@@ -9,10 +9,18 @@ import { getStore } from "@netlify/blobs";
 // Privacy floor (each surfaced field reasoned through, not just
 // "looks fine"):
 //
-//   - totalRuns / totalBytesCleared / runs by outcome / runs by
+//   - totalRuns / totalBytesFreed / runs by outcome / runs by
 //     operation kind / runs by pending-reboot reason: pure counts
 //     with no user identifier, no per-machine trace, no temporal
 //     fingerprint.
+//
+//   - runsFreedNothing / runsFreedSomething / bytesFreedWhenNonZero
+//     (count, mean, max, min): the nothing-vs-something run split
+//     and a summary of operation.bytesFreed over the runs that freed
+//     something. Counts and the mean are aggregates; max and min are
+//     each one run's exact bytesFreed, but that figure is not an
+//     identifier and is surfaced with no country, OS or timestamp
+//     beside it, so an extreme value cannot pick out a machine.
 //
 //   - App version distribution: bucketed and capped to top-N so a
 //     single rare version (e.g. someone's local dev build) doesn't
@@ -77,10 +85,30 @@ type StoredRecord = {
   };
 };
 
+// Summary of operation.bytesFreed across the runs that freed > 0
+// bytes. count mirrors runsFreedSomething; it is repeated inside this
+// object so the block reads as a self-contained statistic. An empty
+// freed-something group yields zeroes (see summariseFreed).
+type BytesFreedStats = {
+  count: number;
+  mean: number;
+  max: number;
+  min: number;
+};
+
+type FreedBreakdown = {
+  runsFreedNothing: number;
+  runsFreedSomething: number;
+  bytesFreedWhenNonZero: BytesFreedStats;
+};
+
 type Stats = {
   generatedAt: string;
   totalRuns: number;
   totalBytesFreed: number;
+  runsFreedNothing: number;
+  runsFreedSomething: number;
+  bytesFreedWhenNonZero: BytesFreedStats;
   runsByOutcome: Record<string, number>;
   runsByOperation: Record<string, number>;
   pendingRebootDistribution: Record<string, number>;
@@ -117,11 +145,12 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   });
 }
 
-async function aggregate(): Promise<Stats> {
+export async function aggregate(): Promise<Stats> {
   const store = getStore(STORE_NAME);
 
   let totalRuns = 0;
   let totalBytesFreed = 0;
+  const bytesFreedPerRun: number[] = [];
   const runsByOutcome: Record<string, number> = {};
   const runsByOperation: Record<string, number> = {};
   const pendingRebootDistribution: Record<string, number> = {};
@@ -156,9 +185,10 @@ async function aggregate(): Promise<Stats> {
       totalRuns++;
 
       const op = record.operation ?? {};
-      if (typeof op.bytesFreed === "number" && Number.isFinite(op.bytesFreed)) {
-        totalBytesFreed += op.bytesFreed;
-      }
+      const bytesFreed =
+        typeof op.bytesFreed === "number" && Number.isFinite(op.bytesFreed) ? op.bytesFreed : 0;
+      totalBytesFreed += bytesFreed;
+      bytesFreedPerRun.push(bytesFreed);
       bump(runsByOutcome, op.outcome);
       bump(runsByOperation, op.kind);
       bump(moveDestinationKindDistribution, op.moveDestinationKind);
@@ -177,6 +207,7 @@ async function aggregate(): Promise<Stats> {
     generatedAt: new Date().toISOString(),
     totalRuns,
     totalBytesFreed,
+    ...summariseFreed(bytesFreedPerRun),
     runsByOutcome,
     runsByOperation,
     pendingRebootDistribution,
@@ -193,6 +224,35 @@ function bump(target: Record<string, number>, key: string | null | undefined): v
 function topN(counts: Record<string, number>, n: number): Record<string, number> {
   const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   return Object.fromEntries(entries.slice(0, n));
+}
+
+// Splits one bytesFreed value per run into freed-nothing (=== 0) and
+// freed-something (> 0) buckets, and summarises the freed-something
+// bucket. Single pass, so no Math.max(...hugeArray) call-stack risk.
+// An empty freed-something bucket returns zeroes: mean is guarded
+// against 0/0, and max / min never leak their Infinity seeds.
+export function summariseFreed(bytesFreedPerRun: number[]): FreedBreakdown {
+  let runsFreedSomething = 0;
+  let sum = 0;
+  let max = 0;
+  let min = Infinity;
+  for (const bytes of bytesFreedPerRun) {
+    if (bytes <= 0) continue;
+    runsFreedSomething++;
+    sum += bytes;
+    if (bytes > max) max = bytes;
+    if (bytes < min) min = bytes;
+  }
+  return {
+    runsFreedNothing: bytesFreedPerRun.length - runsFreedSomething,
+    runsFreedSomething,
+    bytesFreedWhenNonZero: {
+      count: runsFreedSomething,
+      mean: runsFreedSomething === 0 ? 0 : sum / runsFreedSomething,
+      max,
+      min: runsFreedSomething === 0 ? 0 : min,
+    },
+  };
 }
 
 export const config: Config = {
