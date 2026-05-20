@@ -11,7 +11,7 @@ vi.mock('@netlify/blobs', () => ({
   }),
 }));
 
-import { listRuns, timestampFromKey } from './installerclean-runs';
+import { listRuns, timestampFromKey } from '../../netlify/edge-functions/installerclean-runs';
 
 function key(ts: string, suffix = 'a1b2c3d4'): string {
   return `v1/${ts.replace(/[:.]/g, '-')}-${suffix}.json`;

@@ -14,7 +14,7 @@ vi.mock('@netlify/blobs', () => ({
   }),
 }));
 
-import { summariseFreed, aggregate } from './installerclean-stats';
+import { summariseFreed, aggregate } from '../../netlify/edge-functions/installerclean-stats';
 
 describe('summariseFreed', () => {
   it('returns zeroed stats when there are no runs', () => {
