@@ -10,8 +10,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DEFAULT_URL = 'https://nofaff.netlify.app/api/installerclean-runs';
-const url = process.env.REFRESH_URL ?? DEFAULT_URL;
+// Production once the chart branch lands on main. The branch preview is
+// listed as a fallback so the script works during the unmerged window;
+// remove it whenever the branch goes away.
+const URLS = process.env.REFRESH_URL
+  ? [process.env.REFRESH_URL]
+  : [
+      'https://nofaff.netlify.app/api/installerclean-runs',
+      'https://installerclean-chart--nofaff.netlify.app/api/installerclean-runs',
+    ];
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const slicePath = path.resolve(here, '..', 'src', 'pages', 'installerclean', 'slice.astro');
@@ -27,18 +34,26 @@ function friendlyDate(iso) {
 }
 
 let resp;
-try {
-  resp = await fetch(url, { headers: { Accept: 'application/json' } });
-} catch (err) {
-  console.error(`Could not reach ${url}: ${err.message}`);
-  process.exit(1);
+let usedUrl;
+for (const candidate of URLS) {
+  try {
+    const r = await fetch(candidate, { headers: { Accept: 'application/json' } });
+    if (r.ok) {
+      resp = r;
+      usedUrl = candidate;
+      break;
+    }
+    if (r.status !== 404) {
+      console.error(`${candidate} -> ${r.status} ${r.statusText}`);
+      process.exit(1);
+    }
+  } catch (err) {
+    console.error(`Could not reach ${candidate}: ${err.message}`);
+  }
 }
 
-if (!resp.ok) {
-  console.error(`${url} -> ${resp.status} ${resp.statusText}`);
-  if (resp.status === 404) {
-    console.error('Endpoint is not deployed at that URL yet. Override with REFRESH_URL=<branch-preview-url> if needed.');
-  }
+if (!resp) {
+  console.error('No URL returned data. Override with REFRESH_URL=<url> if needed.');
   process.exit(1);
 }
 
@@ -73,4 +88,4 @@ const after = text.slice(endIdx + END.length);
 const newText = before + lines.join('\n') + after;
 
 await fs.writeFile(slicePath, newText, 'utf8');
-console.log(`Updated ${path.relative(process.cwd(), slicePath)} with ${runs.length} reports (as of ${asOf}).`);
+console.log(`Updated ${path.relative(process.cwd(), slicePath)} with ${runs.length} reports (as of ${asOf}, from ${usedUrl}).`);
