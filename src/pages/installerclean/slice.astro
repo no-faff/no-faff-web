@@ -10,6 +10,134 @@ import doneShot from '@assets/installerclean/screenshots/04d-deleted-freed-succe
 
 const downloadPortable =
   'https://github.com/no-faff/InstallerClean/releases/latest/download/InstallerClean-portable.exe';
+
+// Opt-in reports from the InstallerClean Send button. Snapshot updated
+// by hand: paste fresh JSON from /api/installerclean-stats's per-record
+// sibling whenever the chart wants refreshing.
+type Run = { ts: string; gb: number; missing: number };
+const reportsAsOf = '20 May 2026';
+const runs: Run[] = [
+  { ts: '2026-05-12T22:50:07.222Z', gb: 16.8, missing: 0 },
+  { ts: '2026-05-13T01:46:56.560Z', gb: 0, missing: 3 },
+  { ts: '2026-05-13T09:08:45.003Z', gb: 0, missing: 2 },
+  { ts: '2026-05-13T12:49:45.377Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T13:49:52.776Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T13:57:59.299Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T14:08:37.456Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T15:48:49.087Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T15:57:21.089Z', gb: 36.7, missing: 0 },
+  { ts: '2026-05-13T16:05:12.833Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T17:15:21.037Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T17:39:43.150Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T18:27:59.224Z', gb: 0, missing: 0 },
+  { ts: '2026-05-13T19:22:53.239Z', gb: 32.6, missing: 0 },
+  { ts: '2026-05-14T07:02:01.806Z', gb: 0, missing: 0 },
+  { ts: '2026-05-14T10:39:30.515Z', gb: 0.9, missing: 0 },
+  { ts: '2026-05-14T11:33:12.955Z', gb: 0, missing: 0 },
+  { ts: '2026-05-14T12:30:47.773Z', gb: 0, missing: 0 },
+  { ts: '2026-05-14T13:52:37.753Z', gb: 0, missing: 0 },
+  { ts: '2026-05-14T18:31:35.558Z', gb: 5.8, missing: 15 },
+  { ts: '2026-05-15T08:17:02.127Z', gb: 0.2, missing: 0 },
+  { ts: '2026-05-15T08:24:12.471Z', gb: 4.7, missing: 0 },
+  { ts: '2026-05-20T05:41:58.012Z', gb: 6.3, missing: 0 },
+  { ts: '2026-05-20T11:13:38.601Z', gb: 162.1, missing: 0 },
+  { ts: '2026-05-20T12:30:36.694Z', gb: 19.9, missing: 0 },
+  { ts: '2026-05-20T15:59:02.394Z', gb: 0, missing: 0 },
+];
+
+const CHART_W = 960;
+const CHART_H = 320;
+const PX0 = 54;
+const PX1 = 938;
+const PY0 = 22;
+const PY1 = 268;
+const PW = PX1 - PX0;
+const PH = PY1 - PY0;
+
+function niceMax(v: number): number {
+  const ladder = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+  for (const c of ladder) if (c >= v) return c;
+  return Math.ceil(v / 1000) * 1000;
+}
+
+function labelsFor(yMax: number): number[] {
+  const sets: Record<number, number[]> = {
+    1: [0, 1],
+    2: [0, 1, 2],
+    5: [0, 1, 5],
+    10: [0, 1, 5, 10],
+    20: [0, 1, 5, 20],
+    50: [0, 1, 5, 25, 50],
+    100: [0, 1, 10, 50, 100],
+    200: [0, 1, 10, 50, 200],
+    500: [0, 1, 10, 100, 500],
+    1000: [0, 1, 10, 100, 1000],
+    2000: [0, 1, 10, 100, 1000, 2000],
+    5000: [0, 1, 10, 100, 1000, 5000],
+  };
+  return sets[yMax] ?? [0, 1, 10, 100, yMax];
+}
+
+function formatFreed(gb: number): string {
+  if (gb <= 0) return 'Nothing';
+  if (gb >= 1) {
+    const f = gb.toFixed(1);
+    return `${f.endsWith('.0') ? f.slice(0, -2) : f} GB`;
+  }
+  return `${Math.round(gb * 1024)} MB`;
+}
+
+function monthLabelFromIso(iso: string): string {
+  const d = new Date(iso);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+const wins = runs.filter((r) => r.gb > 0);
+const totalRuns = runs.length;
+const maxFreed = wins.length ? Math.max(...wins.map((r) => r.gb)) : 1;
+const yMax = niceMax(maxFreed);
+const yLabels = labelsFor(yMax);
+const scaleY = (gb: number) => Math.sqrt(Math.max(0, gb)) / Math.sqrt(yMax);
+const slotW = PW / runs.length;
+const barW = Math.min(slotW * 0.6, 22);
+
+const bars = runs.map((r, i) => {
+  const cx = PX0 + (i + 0.5) * slotW;
+  const win = r.gb > 0;
+  const h = win ? Math.max(6, scaleY(r.gb) * PH) : 4;
+  const y = PY1 - h;
+  return {
+    cx,
+    x: cx - barW / 2,
+    y,
+    h,
+    win,
+    missing: r.missing > 0,
+    dotY: y - 11,
+    tip: win ? `${formatFreed(r.gb)} freed` : 'Nothing to remove',
+  };
+});
+
+type MonthGroup = { label: string; start: number; end: number };
+const monthGroups: MonthGroup[] = [];
+runs.forEach((r, i) => {
+  const label = monthLabelFromIso(r.ts);
+  const last = monthGroups[monthGroups.length - 1];
+  if (last && last.label === label) last.end = i;
+  else monthGroups.push({ label, start: i, end: i });
+});
+
+let chartSummary: string;
+if (wins.length === 0) {
+  chartSummary = `${totalRuns} report${totalRuns === 1 ? '' : 's'} so far. None freed space yet.`;
+} else {
+  const min = Math.min(...wins.map((r) => r.gb));
+  const max = Math.max(...wins.map((r) => r.gb));
+  const range =
+    wins.length === 1 ? `at ${formatFreed(max)}` : `from ${formatFreed(min)} to ${formatFreed(max)}`;
+  chartSummary = `${wins.length} of the ${totalRuns} reports freed space, ${range}. The rest found a tidy folder.`;
+}
 ---
 
 <BaseLayout
@@ -304,14 +432,67 @@ const downloadPortable =
       </header>
 
       <figure class="chart-card">
-        <p class="chart-summary" data-summary>Loading the latest reports.</p>
-        <div class="chart-frame" data-chart></div>
+        <p class="chart-summary">{chartSummary}</p>
+        <div class="chart-frame">
+          <svg
+            viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+            role="img"
+            aria-label={`Bar chart of disk space freed across ${totalRuns} opt-in reports.`}
+          >
+            {
+              yLabels.map((v) => {
+                const y = PY1 - scaleY(v) * PH;
+                return (
+                  <>
+                    <line x1={PX0} y1={y} x2={PX1} y2={y} class="grid" />
+                    <text
+                      x={PX0 - 12}
+                      y={y}
+                      class="y-label"
+                      text-anchor="end"
+                      dominant-baseline="middle"
+                    >
+                      {v === 0 ? '0' : `${v} GB`}
+                    </text>
+                  </>
+                );
+              })
+            }
+            <line x1={PX0} y1={PY1} x2={PX1} y2={PY1} class="axis" />
+            {
+              bars.map((b) => (
+                <>
+                  <rect
+                    x={b.x}
+                    y={b.y}
+                    width={barW}
+                    height={b.h}
+                    rx="3"
+                    class={b.win ? 'bar bar-win' : 'bar bar-none'}
+                    data-tip={b.tip}
+                  />
+                  {b.missing && <circle cx={b.cx} cy={b.dotY} r="4.5" class="marker" />}
+                </>
+              ))
+            }
+            {
+              monthGroups.map((g) => {
+                const cx = PX0 + ((g.start + g.end + 1) / 2) * slotW;
+                return (
+                  <text x={cx} y={PY1 + 26} class="x-label" text-anchor="middle">
+                    {g.label}
+                  </text>
+                );
+              })
+            }
+          </svg>
+        </div>
         <div class="chart-tip" data-tooltip aria-hidden="true"></div>
       </figure>
 
       <p class="report-footnote">
         <span class="report-dot" aria-hidden="true"></span>
-        A yellow dot above a bar means Windows expected an installer file that was not on disk before the run started. Nothing about the cleanup caused or worsened that. If Windows later asks for the original installer for a piece of software, restore from the Recycle Bin if you Deleted, copy it back from your move folder if you Moved, or download the installer again from the vendor.
+        A yellow dot above a bar means Windows expected an installer file that was not on disk before the run started. Nothing about the cleanup caused or worsened that. If Windows later asks for the original installer for a piece of software, restore from the Recycle Bin if you Deleted, copy it back from your move folder if you Moved, or download the installer again from the vendor. Reports last refreshed {reportsAsOf}.
       </p>
     </div>
   </section>
@@ -948,179 +1129,11 @@ const downloadPortable =
 </style>
 
 <script>
-  type Run = { ts: string; gb: number; missing: number };
+  const chart = document.querySelector<HTMLElement>('.chart-frame');
+  const tip = document.querySelector<HTMLElement>('[data-tooltip]');
 
-  const RUNS_ENDPOINT = '/api/installerclean-runs';
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-
-  const SAMPLE_RUNS: Run[] = [
-    { ts: '2026-05-13T10:24:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-13T11:18:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-13T13:45:00.000Z', gb: 25.0, missing: 0 },
-    { ts: '2026-05-13T15:02:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-14T09:32:00.000Z', gb: 9.1, missing: 1 },
-    { ts: '2026-05-14T11:10:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-14T16:22:00.000Z', gb: 16.2, missing: 0 },
-    { ts: '2026-05-15T07:54:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-15T10:38:00.000Z', gb: 0, missing: 2 },
-    { ts: '2026-05-15T14:15:00.000Z', gb: 1.0, missing: 0 },
-    { ts: '2026-05-16T08:21:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-16T12:09:00.000Z', gb: 13.5, missing: 0 },
-    { ts: '2026-05-16T18:30:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-17T09:11:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-18T11:48:00.000Z', gb: 19.8, missing: 3 },
-    { ts: '2026-05-18T14:33:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-19T10:00:00.000Z', gb: 5.4, missing: 0 },
-    { ts: '2026-05-19T11:23:00.000Z', gb: 162.1, missing: 0 },
-    { ts: '2026-05-19T11:55:00.000Z', gb: 0.2, missing: 0 },
-    { ts: '2026-05-19T12:42:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-19T15:25:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-20T08:14:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-20T10:51:00.000Z', gb: 0, missing: 0 },
-    { ts: '2026-05-20T13:08:00.000Z', gb: 0, missing: 0 },
-  ];
-
-  const summaryEl = document.querySelector<HTMLElement>('[data-summary]');
-  const chartEl = document.querySelector<HTMLElement>('[data-chart]');
-  const tipEl = document.querySelector<HTMLElement>('[data-tooltip]');
-
-  if (summaryEl && chartEl && tipEl) {
-    void boot(summaryEl, chartEl, tipEl);
-  }
-
-  async function boot(summary: HTMLElement, chart: HTMLElement, tip: HTMLElement) {
-    const params = new URLSearchParams(window.location.search);
-    let runs: Run[] = [];
-
-    if (params.get('sample') === '1') {
-      runs = SAMPLE_RUNS;
-    } else {
-      try {
-        const resp = await fetch(RUNS_ENDPOINT, { headers: { Accept: 'application/json' } });
-        if (!resp.ok) throw new Error(resp.statusText);
-        const data = (await resp.json()) as { runs?: Run[] };
-        runs = Array.isArray(data.runs) ? data.runs : [];
-      } catch {
-        summary.textContent = 'Report data is unavailable just now.';
-        return;
-      }
-    }
-
-    if (runs.length === 0) {
-      summary.textContent = 'No reports yet.';
-      return;
-    }
-
-    render(summary, chart, tip, runs);
-  }
-
-  function render(summary: HTMLElement, chart: HTMLElement, tip: HTMLElement, runs: Run[]) {
-    const wins = runs.filter((r) => r.gb > 0);
-    const total = runs.length;
-    if (wins.length === 0) {
-      summary.textContent = `${total} report${total === 1 ? '' : 's'} so far. None freed space yet.`;
-    } else {
-      const min = Math.min(...wins.map((r) => r.gb));
-      const max = Math.max(...wins.map((r) => r.gb));
-      const range =
-        wins.length === 1 ? `at ${formatFreed(max)}` : `from ${formatFreed(min)} to ${formatFreed(max)}`;
-      summary.textContent = `${wins.length} of the ${total} reports freed space, ${range}. The rest found a tidy folder.`;
-    }
-
-    const W = 960;
-    const H = 320;
-    const PX0 = 54;
-    const PX1 = 938;
-    const PY0 = 22;
-    const PY1 = 268;
-    const PW = PX1 - PX0;
-    const PH = PY1 - PY0;
-    const maxFreed = wins.length ? Math.max(...wins.map((r) => r.gb)) : 1;
-    const yMax = niceMax(maxFreed);
-    const yLabels = labelsFor(yMax);
-    const scaleY = (gb: number) => Math.sqrt(Math.max(0, gb)) / Math.sqrt(yMax);
-
-    const slotW = PW / runs.length;
-    const barW = Math.min(slotW * 0.6, 22);
-
-    const svg = document.createElementNS(SVG_NS, 'svg');
-    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', `Bar chart of disk space freed across ${total} opt-in reports.`);
-
-    for (const v of yLabels) {
-      const y = PY1 - scaleY(v) * PH;
-      const line = document.createElementNS(SVG_NS, 'line');
-      line.setAttribute('x1', String(PX0));
-      line.setAttribute('y1', String(y));
-      line.setAttribute('x2', String(PX1));
-      line.setAttribute('y2', String(y));
-      line.setAttribute('class', 'grid');
-      svg.appendChild(line);
-      const text = document.createElementNS(SVG_NS, 'text');
-      text.setAttribute('x', String(PX0 - 12));
-      text.setAttribute('y', String(y));
-      text.setAttribute('class', 'y-label');
-      text.setAttribute('text-anchor', 'end');
-      text.setAttribute('dominant-baseline', 'middle');
-      text.textContent = v === 0 ? '0' : `${v} GB`;
-      svg.appendChild(text);
-    }
-
-    const axis = document.createElementNS(SVG_NS, 'line');
-    axis.setAttribute('x1', String(PX0));
-    axis.setAttribute('y1', String(PY1));
-    axis.setAttribute('x2', String(PX1));
-    axis.setAttribute('y2', String(PY1));
-    axis.setAttribute('class', 'axis');
-    svg.appendChild(axis);
-
-    runs.forEach((r, i) => {
-      const cx = PX0 + (i + 0.5) * slotW;
-      const win = r.gb > 0;
-      const h = win ? Math.max(6, scaleY(r.gb) * PH) : 4;
-      const y = PY1 - h;
-      const rect = document.createElementNS(SVG_NS, 'rect');
-      rect.setAttribute('x', String(cx - barW / 2));
-      rect.setAttribute('y', String(y));
-      rect.setAttribute('width', String(barW));
-      rect.setAttribute('height', String(h));
-      rect.setAttribute('rx', '3');
-      rect.setAttribute('class', win ? 'bar bar-win' : 'bar bar-none');
-      rect.setAttribute('data-tip', win ? `${formatFreed(r.gb)} freed` : 'Nothing to remove');
-      svg.appendChild(rect);
-      if (r.missing > 0) {
-        const dot = document.createElementNS(SVG_NS, 'circle');
-        dot.setAttribute('cx', String(cx));
-        dot.setAttribute('cy', String(y - 11));
-        dot.setAttribute('r', '4.5');
-        dot.setAttribute('class', 'marker');
-        svg.appendChild(dot);
-      }
-    });
-
-    type Group = { label: string; start: number; end: number };
-    const groups: Group[] = [];
-    runs.forEach((r, i) => {
-      const label = monthLabel(r.ts);
-      const last = groups[groups.length - 1];
-      if (last && last.label === label) last.end = i;
-      else groups.push({ label, start: i, end: i });
-    });
-    for (const g of groups) {
-      const cx = PX0 + ((g.start + g.end + 1) / 2) * slotW;
-      const text = document.createElementNS(SVG_NS, 'text');
-      text.setAttribute('x', String(cx));
-      text.setAttribute('y', String(PY1 + 26));
-      text.setAttribute('class', 'x-label');
-      text.setAttribute('text-anchor', 'middle');
-      text.textContent = g.label;
-      svg.appendChild(text);
-    }
-
-    chart.appendChild(svg);
-
-    svg.querySelectorAll<SVGRectElement>('.bar').forEach((bar) => {
+  if (chart && tip) {
+    chart.querySelectorAll<SVGRectElement>('.bar').forEach((bar) => {
       bar.addEventListener('pointerenter', () => {
         tip.textContent = bar.getAttribute('data-tip') ?? '';
         const b = bar.getBoundingClientRect();
@@ -1133,44 +1146,5 @@ const downloadPortable =
         tip.dataset.show = 'false';
       });
     });
-  }
-
-  function formatFreed(gb: number): string {
-    if (gb <= 0) return 'Nothing';
-    if (gb >= 1) {
-      const fixed = gb.toFixed(1);
-      return `${fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed} GB`;
-    }
-    return `${Math.round(gb * 1024)} MB`;
-  }
-
-  function niceMax(v: number): number {
-    const ladder = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
-    for (const c of ladder) if (c >= v) return c;
-    return Math.ceil(v / 1000) * 1000;
-  }
-
-  function labelsFor(yMax: number): number[] {
-    const sets: Record<number, number[]> = {
-      1: [0, 1],
-      2: [0, 1, 2],
-      5: [0, 1, 5],
-      10: [0, 1, 5, 10],
-      20: [0, 1, 5, 20],
-      50: [0, 1, 5, 25, 50],
-      100: [0, 1, 10, 50, 100],
-      200: [0, 1, 10, 50, 200],
-      500: [0, 1, 10, 100, 500],
-      1000: [0, 1, 10, 100, 1000],
-      2000: [0, 1, 10, 100, 1000, 2000],
-      5000: [0, 1, 10, 100, 1000, 5000],
-    };
-    return sets[yMax] ?? [0, 1, 10, 100, yMax];
-  }
-
-  function monthLabel(iso: string): string {
-    const d = new Date(iso);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
   }
 </script>
