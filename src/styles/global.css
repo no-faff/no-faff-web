@@ -1,3 +1,4 @@
+@import '@fontsource-variable/hanken-grotesk/index.css';
 @import '@fontsource-variable/inter/index.css';
 @import '@fontsource/alegreya-sans/400.css';
 @import '@fontsource/alegreya-sans/700.css';
@@ -5,8 +6,8 @@
 @import './reset.css';
 
 :root {
-  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Alegreya Sans', 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Menlo, monospace;
 }
 

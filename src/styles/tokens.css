@@ -96,3 +96,27 @@
 
   --hero-glow: none;
 }
+
+/* "Clean" — the InstallerClean redesign palette. Light, fresh, drawn from
+   the squeegee icon: sky blues, white sparkle, a glassy sheen. */
+:root {
+  --c-white: #ffffff;
+  --c-bg: #eef4fa;
+  --c-panel: #ffffff;
+  --c-panel-blue: #e6f1fc;
+  --c-ink: #0e2840;
+  --c-body: #43576b;
+  --c-muted: #74879a;
+  --c-line: #dde7f0;
+  --c-line-strong: #c6d5e3;
+  --c-blue: #1f6fe5;
+  --c-blue-deep: #0b4aa6;
+  --c-blue-tint: #d9e8fd;
+  --c-sky: #93c4ec;
+  --c-yellow: #fbbf24;
+  --c-yellow-deep: #c8860a;
+  --c-green: #15a34a;
+  --c-shadow-sm: 0 1px 2px rgba(14, 40, 64, 0.06), 0 2px 5px rgba(14, 40, 64, 0.05);
+  --c-shadow: 0 2px 8px rgba(14, 40, 64, 0.06), 0 18px 44px rgba(14, 40, 64, 0.12);
+  --c-shadow-blue: 0 12px 32px rgba(31, 111, 229, 0.28);
+}
