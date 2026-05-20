@@ -11,10 +11,11 @@ import doneShot from '@assets/installerclean/screenshots/04d-deleted-freed-succe
 const downloadPortable =
   'https://github.com/no-faff/InstallerClean/releases/latest/download/InstallerClean-portable.exe';
 
-// Opt-in reports from the InstallerClean Send button. Snapshot updated
-// by hand: paste fresh JSON from /api/installerclean-stats's per-record
-// sibling whenever the chart wants refreshing.
+// Opt-in reports from the InstallerClean Send button. Refresh with
+// `npm run refresh-reports`, which hits /api/installerclean-runs and
+// rewrites the block between the markers below.
 type Run = { ts: string; gb: number; missing: number };
+// reports-data-start
 const reportsAsOf = '20 May 2026';
 const runs: Run[] = [
   { ts: '2026-05-12T22:50:07.222Z', gb: 16.8, missing: 0 },
@@ -44,6 +45,7 @@ const runs: Run[] = [
   { ts: '2026-05-20T12:30:36.694Z', gb: 19.9, missing: 0 },
   { ts: '2026-05-20T15:59:02.394Z', gb: 0, missing: 0 },
 ];
+// reports-data-end
 
 const CHART_W = 960;
 const CHART_H = 320;
