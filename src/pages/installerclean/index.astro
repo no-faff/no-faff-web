@@ -227,17 +227,16 @@ if (wins.length === 0) {
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="path-bar" aria-label="Folder this app cleans">
-          <Icon name="lucide:folder" class="path-icon" aria-hidden="true" />
-          <span class="path-text">C:\Windows\Installer</span>
-        </p>
-        <h1 class="hero-title">Wipe it clean.</h1>
+        <h1 class="hero-title">
+          <span class="t-path">C:\Windows\Installer</span>
+          <span class="t-act">Wipe it clean.</span>
+        </h1>
         <p class="hero-sub">
-          Hidden folder on every Windows PC. Old installer files pile up; Windows never clears
-          them out; Disk Cleanup, CCleaner and BleachBit do not touch them. InstallerClean asks
-          Windows itself which ones are dead weight and removes only those. Some people free a
-          few GB, some free a hundred or more, some find a tidy folder already. One minute, no
-          commitment.
+          The folder caches the <span class="mono">.msi</span> and <span class="mono">.msp</span>
+          files Windows uses to repair and update installed software. On machines that run a lot
+          of <span class="mono">.msi</span>-based software, especially Acrobat, the cache can
+          quietly grow to tens of gigabytes of files Windows itself no longer needs.
+          InstallerClean asks Windows which ones, and offers to move or delete only those.
         </p>
         <div class="hero-cta">
           <a class="btn-primary" href={downloadPortable}>
@@ -268,18 +267,17 @@ if (wins.length === 0) {
 
       <div class="folder-prose">
         <p>
-          <span class="mono">C:\Windows\Installer</span> is a hidden folder Windows uses to keep
-          the original installer for everything you have ever installed via MSI: Office, Acrobat,
-          Visual Studio, half the things in your Programs list. It keeps every patch too. The
-          files stay there in case Windows needs to repair or remove something later. On most
-          machines this is fine. On a machine that has run Acrobat for a few years it can pass
-          100 GB.
+          On most machines no one ever notices the folder is there. On a machine that has been
+          running Acrobat or another <span class="mono">.msi</span>-heavy program for a few
+          years it can quietly pass 100 GB. You may have tried Disk Cleanup at that point and
+          seen no change; that is normal, because the only safe way to clean this folder is to
+          ask Windows itself which of its files are still needed, and no built-in tool does
+          that.
         </p>
 
         <p>
-          If you have searched for help with this folder you know how it usually goes. Disk
-          Cleanup does not touch it. CCleaner and BleachBit do not touch it. And in every thread
-          the most upvoted answer is the same.
+          If you have searched for help with this folder you know how it usually goes. In every
+          thread the most upvoted answer is the same.
         </p>
 
         <figure class="pull-quote">
@@ -317,8 +315,8 @@ if (wins.length === 0) {
             <span class="step-num">01</span>
             <h3>The scan finishes in a second or two</h3>
             <p>
-              Open the exe. It scans <span class="mono">C:\Windows\Installer</span> and shows
-              what is in use and what is not. No installer, no setup, no wait.
+              Double-click the exe. It scans <span class="mono">C:\Windows\Installer</span> and
+              shows what is in use and what is not.
             </p>
           </div>
           <Image
@@ -590,8 +588,8 @@ if (wins.length === 0) {
           If you have searched for this before you have probably already found <a
             href="https://www.homedev.com.au/free/patchcleaner"
             target="_blank"
-            rel="noopener">PatchCleaner</a> by John Crawford. Free, simple, and close to 900,000
-          downloads since 2015. Most of what InstallerClean does, PatchCleaner did first.
+            rel="noopener">PatchCleaner</a> by John Crawford. Free, simple, the go-to tool for
+          this for years. Most of what InstallerClean does, PatchCleaner did first.
         </p>
       </header>
 
@@ -612,11 +610,10 @@ if (wins.length === 0) {
           <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
         </blockquote>
 
-        <h3>It has been on pause since March 2016</h3>
+        <h3>It has not been updated since March 2016</h3>
         <p>
-          The developer wrote on a forum in late 2016 about a portable version he was planning,
-          and then moved on. The source is closed, so no one else has been able to pick it up. A
-          decade of Windows changes have happened around the 2016 binary.
+          The last release was 3 March 2016. The source is closed, so no one else has been able
+          to pick it up. A decade of Windows changes have happened around the 2016 binary.
         </p>
       </div>
 
@@ -708,18 +705,19 @@ scoop install installerclean</code></pre>
     <div class="wrap closing-inner">
       <h2>You might as well give it a minute</h2>
       <p>
-        If you are on Windows, this is worth running once and again in a blue moon. It does one
-        specific thing nothing else does (apart from PatchCleaner, which skips Adobe). Free, MIT
-        licensed, around 11,500 downloads, clean on VirusTotal across every engine. One person
-        this month freed 162 GB. Most people free a few GB, or nothing at all. Either way it is
-        a minute of your time to find out.
+        If you are on Windows and could use a bit of extra space, or even if you do not, you
+        might as well run it once, and again in a blue moon. It covers one specific thing
+        nothing else covers, apart from PatchCleaner, which skips Adobe. Free, open source,
+        around 11,500 downloads, clean on VirusTotal across every engine. One person this month
+        freed 162 GB. Most people free a few GB or nothing at all. Either way it is a minute of
+        your time to download it, run it and move on.
       </p>
       <a class="btn-primary" href={downloadPortable}>
         <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
         Download for Windows
       </a>
       <p class="closing-mini">
-        Download. Run. See what is removable. Click Move or Delete. Done.
+        Download, run, look at what is removable, click Move or Delete.
       </p>
     </div>
   </section>
@@ -765,34 +763,20 @@ scoop install installerclean</code></pre>
     align-items: center;
   }
 
-  .path-bar {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin: 0 0 1.4rem;
-    padding: 0.32rem 0.7rem 0.32rem 0.55rem;
-    background: var(--c-panel-blue);
-    border: 1px solid var(--c-sky);
-    border-radius: 7px;
-    font-family: var(--font-mono);
-    font-size: 0.92rem;
-    font-weight: 500;
-    color: var(--c-blue-deep);
-    box-shadow: var(--c-shadow-sm);
-  }
-  .path-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--c-blue);
-    flex-shrink: 0;
-  }
-  .path-text {
-    line-height: 1;
-    letter-spacing: 0;
-  }
-
   .hero-title {
-    margin: 0 0 1.4rem;
+    margin: 0 0 1.6rem;
+  }
+  .t-path {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1.18rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--c-blue-deep);
+    margin-bottom: 0.6rem;
+  }
+  .t-act {
+    display: block;
     font-family: var(--font-display);
     font-weight: 800;
     font-size: clamp(3rem, 5.4vw, 4.4rem);
