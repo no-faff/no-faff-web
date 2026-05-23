@@ -55,7 +55,7 @@ const builds = [
 const faqs = [
   {
     q: 'Will I actually free up GBs of space?',
-    a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One user <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a> freed. The app shows you exactly how much it can remove before you click anything; you can decide then.',
+    a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One person <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a>; another freed 162 GB. The app shows you exactly how much it can remove before you click anything, so you can decide then.',
   },
   {
     q: 'Why does Windows SmartScreen warn about the download?',
@@ -215,7 +215,7 @@ if (wins.length === 0) {
   const max = Math.max(...wins.map((r) => r.gb));
   const range =
     wins.length === 1 ? `at ${formatFreed(max)}` : `from ${formatFreed(min)} to ${formatFreed(max)}`;
-  chartSummary = `${wins.length} of the ${totalRuns} reports freed space, ${range}. The rest found a tidy folder.`;
+  chartSummary = `${wins.length} of the ${totalRuns} reports freed space, ${range}. The rest had a tidy folder already.`;
 }
 ---
 
@@ -224,31 +224,26 @@ if (wins.length === 0) {
   description="Clean out C:\Windows\Installer, the hidden Windows folder that fills with old installers. Free, open source, no ads or tracking. Windows 10 and 11."
 >
   <section class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          InstallerClean
+        <p class="path-bar" aria-label="Folder this app cleans">
+          <Icon name="lucide:folder" class="path-icon" aria-hidden="true" />
+          <span class="path-text">C:\Windows\Installer</span>
         </p>
-        <h1 class="hero-title">
-          <span class="t-path">C:\Windows\Installer</span>
-          <span class="t-act">Wipe it clean.</span>
-        </h1>
+        <h1 class="hero-title">Wipe it clean.</h1>
         <p class="hero-sub">
-          A hidden folder on every Windows PC quietly fills with old installers Windows never clears
-          out. InstallerClean asks Windows itself which ones are dead weight and removes only those.
-          The scan takes a second or two, and shows you exactly how much space you can reclaim.
+          Hidden folder on every Windows PC. Old installer files pile up; Windows never clears
+          them out; Disk Cleanup, CCleaner and BleachBit do not touch them. InstallerClean asks
+          Windows itself which ones are dead weight and removes only those. Some people free a
+          few GB, some free a hundred or more, some find a tidy folder already. One minute, no
+          commitment.
         </p>
         <div class="hero-cta">
           <a class="btn-primary" href={downloadPortable}>
             <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
             Download for Windows
           </a>
-          <a class="btn-ghost" href="#how">See how it works</a>
         </div>
         <ul class="trust">
           <li><Icon name="lucide:check" class="tick" aria-hidden="true" />Free, MIT open source</li>
@@ -259,108 +254,60 @@ if (wins.length === 0) {
       </div>
 
       <div class="hero-visual" aria-hidden="true">
-        <Image class="hero-icon" src={icon} alt="" width={760} loading="eager" />
+        <Image class="hero-icon" src={icon} alt="" width={1200} loading="eager" />
       </div>
     </div>
   </section>
 
-  <section class="folder" id="how">
+  <section class="folder">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          The search for help
-        </p>
-        <h2>If you have searched for help, you know how it goes</h2>
-        <p class="sec-intro">
-          <span class="mono">C:\Windows\Installer</span> is a hidden folder on every Windows PC. It
-          fills with old installers and patches, Windows never clears them out, and Disk Cleanup does
-          not touch them. So people go looking for help, and they get told the same few things.
-        </p>
+        <p class="eyebrow">Why this exists</p>
+        <h2>The folder nobody tells you to clean</h2>
       </header>
 
-      <div class="quotes">
-        <figure class="quote">
-          <p class="q-text">
-            The official Microsoft stance is leave it the hell alone. Far safer to just use the
-            built in windows disk cleanup utility.
-          </p>
-          <figcaption>
-            <span class="q-who">DrDan21</span><span class="q-where">r/WindowsHelp</span>
-          </figcaption>
-        </figure>
-        <figure class="quote">
-          <p class="q-text">No. Never safe to delete things in the windows folder.</p>
-          <figcaption>
-            <span class="q-who">tlasan1</span><span class="q-where">r/techsupport</span>
-          </figcaption>
-        </figure>
-        <figure class="quote">
-          <p class="q-text">don't mess with it.</p>
-          <p class="q-text q-reply">
-            They asked what they should do instead. The reply: I just told you.
-          </p>
-          <figcaption>
-            <span class="q-who">the reply to a 60 GB folder</span><span class="q-where">r/techsupport</span>
-          </figcaption>
-        </figure>
-        <figure class="quote">
-          <p class="q-text">
-            All of the threads I've found tend to recommend the same things which don't solve the
-            problem, and then go dead.
-          </p>
-          <figcaption>
-            <span class="q-who">ksparks519</span><span class="q-where">r/Windows10</span>
-          </figcaption>
-        </figure>
-      </div>
+      <div class="folder-prose">
+        <p>
+          <span class="mono">C:\Windows\Installer</span> is a hidden folder Windows uses to keep
+          the original installer for everything you have ever installed via MSI: Office, Acrobat,
+          Visual Studio, half the things in your Programs list. It keeps every patch too. The
+          files stay there in case Windows needs to repair or remove something later. On most
+          machines this is fine. On a machine that has run Acrobat for a few years it can pass
+          100 GB.
+        </p>
 
-      <div class="turn">
-        <p class="turn-eyebrow">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          So is it safe?
-        </p>
-        <h3>The warning is not wrong. It is just not the whole story.</h3>
         <p>
-          Deleting files from this folder by hand, going on names or dates, genuinely can break the
-          way Windows updates and uninstalls software. That much is fair.
+          If you have searched for help with this folder you know how it usually goes. Disk
+          Cleanup does not touch it. CCleaner and BleachBit do not touch it. And in every thread
+          the most upvoted answer is the same.
         </p>
+
+        <figure class="pull-quote">
+          <p class="pq-text">The official Microsoft stance is leave it the hell alone.</p>
+          <figcaption><span class="pq-who">DrDan21</span><span class="pq-where">r/WindowsHelp</span></figcaption>
+        </figure>
+
         <p>
-          What it misses: Windows itself keeps a record of which files in the folder are still
-          needed. InstallerClean reads that record. It removes only the installers for software you
-          have already uninstalled and the patches that newer ones have replaced. Everything still
-          in use is left exactly where it is.
-        </p>
-        <p>
-          And nothing goes the hard way. Delete sends files to the Recycle Bin. Move puts them
-          somewhere you choose. Nothing is touched until you confirm it.
+          That advice is right if it means "do not delete things in here by name and date". The
+          folder is owned by Windows, and going in blind really does break the way it updates and
+          removes software. What it skips is that Windows itself already knows which files in the
+          folder are still needed, and which are not. InstallerClean asks Windows that question.
+          It only flags installers for software you have already uninstalled, and patches that
+          newer ones have replaced. Everything still in use stays where it is. Move sends the
+          rest to a folder you choose. Delete sends them to the Recycle Bin. Nothing is touched
+          until you confirm.
         </p>
       </div>
     </div>
   </section>
 
-  <section class="howitworks">
+  <section class="howitworks" id="walkthrough">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          How it works
-        </p>
-        <h2>Run it. See it. Done.</h2>
+        <p class="eyebrow">How it works</p>
+        <h2>One minute, four screens</h2>
         <p class="sec-intro">
-          Four screens. The whole job, from double-click to space back on disk.
+          Double-click. Look at what is removable. Click Move or Delete. Done.
         </p>
       </header>
 
@@ -370,14 +317,14 @@ if (wins.length === 0) {
             <span class="step-num">01</span>
             <h3>The scan finishes in a second or two</h3>
             <p>
-              Double-click the exe. It opens, scans <span class="mono">C:\Windows\Installer</span>,
-              and shows what is in use and what is not. No installer, no setup, no wait.
+              Open the exe. It scans <span class="mono">C:\Windows\Installer</span> and shows
+              what is in use and what is not. No installer, no setup, no wait.
             </p>
           </div>
           <Image
             class="step-shot"
             src={scanShot}
-            alt="InstallerClean splash window with the scan in progress"
+            alt="InstallerClean scan in progress"
             loading="eager"
           />
         </li>
@@ -386,15 +333,14 @@ if (wins.length === 0) {
             <span class="step-num">02</span>
             <h3>See exactly what would be removed</h3>
             <p>
-              Every removable file listed with the reason: software you uninstalled, patches that
-              newer ones replaced. No guessing on filenames or dates. Nothing changes until you say
-              so.
+              Every removable file listed with the reason: software you uninstalled, or patches
+              that newer ones replaced. No guessing on filenames or dates.
             </p>
           </div>
           <Image
             class="step-shot"
             src={unusedShot}
-            alt="The details window listing the unused installer files with sizes and reasons"
+            alt="Details window listing removable installer files with sizes and reasons"
             loading="eager"
           />
         </li>
@@ -403,15 +349,15 @@ if (wins.length === 0) {
             <span class="step-num">03</span>
             <h3>Delete to the Bin, or Move somewhere safe</h3>
             <p>
-              Delete sends every file to the Recycle Bin. Move puts them in a folder you choose, so
-              you can leave them there a while and check nothing breaks before deleting them for
-              good. You confirm, then it commits.
+              Delete sends every file to the Recycle Bin. Move puts them in a folder you choose,
+              so you can keep them a while and check nothing breaks before deleting for good. You
+              confirm, then it commits.
             </p>
           </div>
           <Image
             class="step-shot"
             src={confirmShot}
-            alt="The Delete confirmation dialog showing the file count and the space about to come back"
+            alt="Delete confirmation dialog showing the file count and space about to be freed"
             loading="eager"
           />
         </li>
@@ -420,14 +366,14 @@ if (wins.length === 0) {
             <span class="step-num">04</span>
             <h3>Done</h3>
             <p>
-              You see how much came back, with the restore route in case anything is needed again.
-              Bookmark the page and run it whenever your disk gets tight.
+              You see how much came back, with the restore route in case you ever need it.
+              Bookmark the page and run it again in a year or two.
             </p>
           </div>
           <Image
             class="step-shot"
             src={doneShot}
-            alt="The completion screen with the amount of space freed and the restore hint"
+            alt="Completion screen with the amount of space freed and the restore hint"
             loading="eager"
           />
         </li>
@@ -435,78 +381,14 @@ if (wins.length === 0) {
     </div>
   </section>
 
-  <section class="predecessor">
-    <div class="predecessor-inner">
-      <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          The predecessor
-        </p>
-        <h2>PatchCleaner was the answer for a decade</h2>
-        <p class="sec-intro">
-          When this question first showed up online, the only good answer was John Crawford's <a
-            href="https://www.homedev.com.au/free/patchcleaner"
-            target="_blank"
-            rel="noopener">PatchCleaner</a>. Free, simple, and close to 900,000 downloads since
-          2015. Most of what InstallerClean does, PatchCleaner did first. Two things have changed
-          since.
-        </p>
-      </header>
-
-      <div class="prose">
-        <h3>It excludes Adobe by default</h3>
-        <p>
-          PatchCleaner was built around a list of installers it was confident it could safely
-          identify. Adobe's MSP patches did not match cleanly with what the tool was looking for,
-          so they were excluded by default. That was the right call in 2016. Today, on machines
-          with Adobe Acrobat, the Installer cache is mostly Adobe patches, and this is the comment
-          that keeps coming up:
-        </p>
-        <blockquote class="pull">
-          <p>
-            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the files
-            are "excluded by filters", so Patchcleaner doesn't seem to help.
-          </p>
-          <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
-        </blockquote>
-
-        <h3>It has been on pause since March 2016</h3>
-        <p>
-          The developer wrote on a forum in late 2016 about a portable version he was planning, and
-          then moved on. The source is closed, so nobody else could pick it up. A decade of Windows
-          changes have happened around it, and some antivirus engines have started to flag the 2016
-          binary. Nothing is actually wrong with the file, the flags are jumpy ML models reacting
-          to old, unsigned, single-developer code, but they are enough to scare people off.
-        </p>
-      </div>
-
-      <p class="close">
-        InstallerClean is the modern open-source take on the same idea. It detects the Adobe
-        patches PatchCleaner skips, it ships on .NET 10, the source is on GitHub, and VirusTotal
-        comes back clean across every engine.
-      </p>
-    </div>
-  </section>
-
   <section class="safety">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          Trust and transparency
-        </p>
+        <p class="eyebrow">Trust</p>
         <h2>Is it safe?</h2>
         <p class="sec-intro">
-          InstallerClean runs elevated and the binary is unsigned, so the cost a visitor pays is
-          trust. The signals below are real, all checkable from this page.
+          InstallerClean runs elevated and the .exe is not code-signed, so the real cost is
+          trust. Every signal below is honest and checkable from this page.
         </p>
       </header>
 
@@ -532,8 +414,8 @@ if (wins.length === 0) {
             <span class="claim-detail">
               No version pings on startup, no usage tracking, no analytics. The app makes no
               network call until you click one of two opt-in buttons. Check for updates queries
-              GitHub's releases API on click. Send summary opens a confirmation window showing the
-              exact JSON before any post.
+              GitHub's releases API on click. Send summary opens a confirmation window showing
+              the exact JSON before any post.
             </span>
           </div>
         </li>
@@ -542,7 +424,8 @@ if (wins.length === 0) {
           <div class="claim-body">
             <strong>No bundled extras.</strong>
             <span class="claim-detail">
-              No toolbars, no third-party offers, no upsells. The .exe does what it says and exits.
+              No toolbars, no third-party offers, no upsells. The .exe does what it says and
+              exits.
             </span>
           </div>
         </li>
@@ -559,8 +442,8 @@ if (wins.length === 0) {
       </ul>
 
       <p class="vt-lead">
-        All three builds in the current v1.8.1 release are clean on VirusTotal across 69 to 71
-        antivirus engines. The links below open the live scans, so you can re-check whenever.
+        All three builds in v1.8.1 are clean on VirusTotal across 69 to 71 antivirus engines.
+        The links below open the live scans, so you can re-check whenever.
       </p>
       <div class="vt-row">
         <a class="vt-link" href={vtSetup} target="_blank" rel="noopener">
@@ -620,18 +503,11 @@ if (wins.length === 0) {
   <section class="reports">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          Real reports
-        </p>
+        <p class="eyebrow">Real reports</p>
         <h2>What people have actually found</h2>
         <p class="sec-intro">
-          Each bar is one opt-in report from someone who ran InstallerClean and pressed the Send
-          button. Some freed a lot, some found a tidy folder.
+          Each bar is one opt-in report from someone who ran InstallerClean and pressed Send.
+          Some freed a lot. Some had a tidy folder already.
         </p>
       </header>
 
@@ -696,7 +572,58 @@ if (wins.length === 0) {
 
       <p class="report-footnote">
         <span class="report-dot" aria-hidden="true"></span>
-        A yellow dot above a bar means Windows expected an installer file that was not on disk before the run started. Nothing about the cleanup caused or worsened that. If Windows later asks for the original installer for a piece of software, restore from the Recycle Bin if you Deleted, copy it back from your move folder if you Moved, or download the installer again from the vendor. Reports last refreshed {reportsAsOf}.
+        A yellow dot above a bar means Windows expected an installer file that was not on disk
+        before the run started. Nothing about the cleanup caused or worsened that. If Windows
+        later asks for the original installer for a piece of software, restore from the Recycle
+        Bin if you Deleted, copy it back from your move folder if you Moved, or download the
+        installer again from the vendor. Reports last refreshed {reportsAsOf}.
+      </p>
+    </div>
+  </section>
+
+  <section class="predecessor">
+    <div class="predecessor-inner">
+      <header class="sec-head">
+        <p class="eyebrow">The predecessor</p>
+        <h2>PatchCleaner was the answer for a decade</h2>
+        <p class="sec-intro">
+          If you have searched for this before you have probably already found <a
+            href="https://www.homedev.com.au/free/patchcleaner"
+            target="_blank"
+            rel="noopener">PatchCleaner</a> by John Crawford. Free, simple, and close to 900,000
+          downloads since 2015. Most of what InstallerClean does, PatchCleaner did first.
+        </p>
+      </header>
+
+      <div class="prose">
+        <h3>It excludes Adobe by default</h3>
+        <p>
+          PatchCleaner was built around a list of installers it was confident it could safely
+          identify. Adobe's <span class="mono">.msp</span> patches did not match cleanly with
+          what the tool was looking for, so they were excluded by default. That was the right
+          call in 2016. Today, on machines with Acrobat installed, the Installer cache is mostly
+          Adobe patches, and this is the comment that keeps coming up:
+        </p>
+        <blockquote class="pull">
+          <p>
+            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the files
+            are "excluded by filters", so Patchcleaner doesn't seem to help.
+          </p>
+          <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
+        </blockquote>
+
+        <h3>It has been on pause since March 2016</h3>
+        <p>
+          The developer wrote on a forum in late 2016 about a portable version he was planning,
+          and then moved on. The source is closed, so no one else has been able to pick it up. A
+          decade of Windows changes have happened around the 2016 binary.
+        </p>
+      </div>
+
+      <p class="close">
+        InstallerClean is the modern open-source take on the same idea. It catches the Adobe
+        patches PatchCleaner skips, it ships on .NET 10, the source is on GitHub, and VirusTotal
+        comes back clean across every engine.
       </p>
     </div>
   </section>
@@ -704,14 +631,7 @@ if (wins.length === 0) {
   <section class="download" id="download">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          Download
-        </p>
+        <p class="eyebrow">Download</p>
         <h2>Three builds, choose one</h2>
         <p class="sec-intro">
           All three pass clean on every VirusTotal antivirus engine. The differences are size and
@@ -742,8 +662,8 @@ if (wins.length === 0) {
 
       <p class="smartscreen-note">
         Windows SmartScreen will say "Unknown publisher" on first run. Click <strong>More info</strong>,
-        then <strong>Run anyway</strong>. This is normal for unsigned open-source software, and the
-        VirusTotal scans above are the cross-check.
+        then <strong>Run anyway</strong>. This is normal for unsigned open-source software, and
+        the VirusTotal scans above are the cross-check.
       </p>
 
       <details class="scoop-block">
@@ -764,14 +684,7 @@ scoop install installerclean</code></pre>
   <section class="faq">
     <div class="wrap">
       <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          Common questions
-        </p>
+        <p class="eyebrow">Common questions</p>
         <h2>Anything else?</h2>
       </header>
 
@@ -791,51 +704,23 @@ scoop install installerclean</code></pre>
     </div>
   </section>
 
-  <section class="firstmove">
-    <div class="wrap">
-      <header class="sec-head">
-        <p class="eyebrow centred">
-          <svg class="spark" viewBox="0 0 32 32" aria-hidden="true"
-            ><path
-              d="M16 0c1.3 8.7 6.6 14 16 16-9.4 2-14.7 7.3-16 16-1.3-8.7-6.6-14-16-16 9.4-2 14.7-7.3 16-16Z"
-            ></path></svg
-          >
-          For anyone low on space
-        </p>
-        <h2>Start here. Before anything else.</h2>
-        <p class="sec-intro">
-          If you arrived here because you searched the folder name, you are already further along
-          than most. If you arrived because your disk is full and you do not know where to start,
-          you have landed in the right place anyway.
-        </p>
-      </header>
-
-      <div class="contrast">
-        <div class="vs-card">
-          <h3>Disk Cleanup</h3>
-          <p>Frees a few hundred megabytes from temp files and old updates. Does not touch this folder.</p>
-        </div>
-        <div class="vs-card">
-          <h3>A disk-tree visualiser</h3>
-          <p>Shows you where the gigabytes are. You still have to decide what is safe to delete.</p>
-        </div>
-        <div class="vs-card">
-          <h3>Uninstalling things</h3>
-          <p>Slower, less certain, and often leaves the installer files behind anyway.</p>
-        </div>
-      </div>
-
-      <div class="lead-out">
-        <p>
-          InstallerClean is the targeted move. One specific folder, with Windows itself deciding
-          what is dead weight. From download to space back on disk is about a minute. Worst case,
-          you find out you were already clean. No harm done.
-        </p>
-        <a class="btn-primary" href={downloadPortable}>
-          <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
-          Download for Windows
-        </a>
-      </div>
+  <section class="closing">
+    <div class="wrap closing-inner">
+      <h2>You might as well give it a minute</h2>
+      <p>
+        If you are on Windows, this is worth running once and again in a blue moon. It does one
+        specific thing nothing else does (apart from PatchCleaner, which skips Adobe). Free, MIT
+        licensed, around 11,500 downloads, clean on VirusTotal across every engine. One person
+        this month freed 162 GB. Most people free a few GB, or nothing at all. Either way it is
+        a minute of your time to find out.
+      </p>
+      <a class="btn-primary" href={downloadPortable}>
+        <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
+        Download for Windows
+      </a>
+      <p class="closing-mini">
+        Download. Run. See what is removable. Click Move or Delete. Done.
+      </p>
     </div>
   </section>
 
@@ -858,65 +743,60 @@ scoop install installerclean</code></pre>
     position: relative;
     overflow: hidden;
     background: var(--c-white);
-    padding: 4.5rem 0 5.5rem;
+    padding: 5rem 0 5.5rem;
   }
-  .hero::before {
-    content: '';
+  .hero-glow {
     position: absolute;
-    top: -20%;
-    right: -8%;
-    width: 62%;
-    height: 130%;
-    background: radial-gradient(46% 42% at 62% 40%, rgba(31, 111, 229, 0.16), transparent 72%);
+    top: -25%;
+    right: -12%;
+    width: 78%;
+    height: 150%;
+    background:
+      radial-gradient(48% 42% at 60% 42%, rgba(31, 111, 229, 0.22), transparent 70%),
+      radial-gradient(30% 28% at 65% 38%, rgba(147, 196, 236, 0.35), transparent 75%);
     pointer-events: none;
+    filter: blur(2px);
   }
   .hero-grid {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
-    gap: 3.5rem;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr);
+    gap: 3rem;
     align-items: center;
   }
 
-  .eyebrow {
+  .path-bar {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
+    gap: 0.45rem;
+    margin: 0 0 1.4rem;
+    padding: 0.32rem 0.7rem 0.32rem 0.55rem;
+    background: var(--c-panel-blue);
+    border: 1px solid var(--c-sky);
+    border-radius: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--c-blue-deep);
+    box-shadow: var(--c-shadow-sm);
+  }
+  .path-icon {
+    width: 14px;
+    height: 14px;
     color: var(--c-blue);
-    margin: 0 0 1.15rem;
-  }
-  .eyebrow.centred {
-    justify-content: center;
-  }
-  .spark {
-    width: 15px;
-    height: 15px;
-    fill: var(--c-yellow);
     flex-shrink: 0;
+  }
+  .path-text {
+    line-height: 1;
+    letter-spacing: 0;
   }
 
   .hero-title {
-    margin: 0 0 1.3rem;
-  }
-  .t-path {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 1.18rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--c-blue);
-    margin-bottom: 0.55rem;
-  }
-  .t-act {
-    display: block;
+    margin: 0 0 1.4rem;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(2.9rem, 5vw, 4.1rem);
-    line-height: 1.02;
+    font-size: clamp(3rem, 5.4vw, 4.4rem);
+    line-height: 1;
     letter-spacing: -0.04em;
     color: var(--c-ink);
   }
@@ -924,8 +804,8 @@ scoop install installerclean</code></pre>
     font-size: 1.12rem;
     line-height: 1.62;
     color: var(--c-body);
-    max-width: 33rem;
-    margin: 0 0 1.9rem;
+    max-width: 34rem;
+    margin: 0 0 2rem;
   }
 
   .hero-cta {
@@ -942,7 +822,7 @@ scoop install installerclean</code></pre>
     color: #fff;
     font-weight: 700;
     font-size: 1rem;
-    padding: 0.92rem 1.5rem;
+    padding: 0.95rem 1.55rem;
     border-radius: 11px;
     box-shadow: var(--c-shadow-blue);
     transition:
@@ -956,24 +836,6 @@ scoop install installerclean</code></pre>
   .btn-ic {
     width: 18px;
     height: 18px;
-  }
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    color: var(--c-ink);
-    font-weight: 600;
-    font-size: 1rem;
-    padding: 0.92rem 1.2rem;
-    border-radius: 11px;
-    border: 1px solid var(--c-line-strong);
-    background: var(--c-white);
-    transition:
-      border-color 0.15s,
-      background 0.15s;
-  }
-  .btn-ghost:hover {
-    border-color: var(--c-blue);
-    background: var(--c-blue-tint);
   }
 
   .trust {
@@ -1004,12 +866,12 @@ scoop install installerclean</code></pre>
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 420px;
+    min-height: 540px;
   }
   .hero-icon {
-    width: clamp(260px, 32vw, 360px);
+    width: clamp(360px, 48vw, 560px);
     height: auto;
-    filter: drop-shadow(0 26px 40px rgba(14, 40, 64, 0.3));
+    filter: drop-shadow(0 30px 60px rgba(14, 40, 64, 0.32));
   }
 
   /* ---------- folder section ---------- */
@@ -1020,16 +882,17 @@ scoop install installerclean</code></pre>
   }
   .sec-head {
     text-align: center;
-    max-width: 40rem;
+    max-width: 42rem;
     margin: 0 auto 3rem;
   }
   .sec-head h2 {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(1.9rem, 3vw, 2.5rem);
+    font-size: clamp(2rem, 3vw, 2.6rem);
     letter-spacing: -0.03em;
     color: var(--c-ink);
     margin: 0 0 0.8rem;
+    line-height: 1.12;
   }
   .sec-intro {
     font-size: 1.08rem;
@@ -1037,102 +900,78 @@ scoop install installerclean</code></pre>
     color: var(--c-body);
     margin: 0;
   }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-blue);
+    margin: 0 0 1.15rem;
+  }
   .mono {
     font-family: var(--font-mono);
     font-size: 0.92em;
     color: var(--c-blue-deep);
   }
 
-  .quotes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.4rem;
-    margin-bottom: 1.4rem;
+  .folder-prose {
+    max-width: 46rem;
+    margin: 0 auto;
   }
-  .quote {
+  .folder-prose p {
+    font-size: 1.06rem;
+    line-height: 1.7;
+    color: var(--c-body);
+    margin: 0 0 1.4rem;
+  }
+  .folder-prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .pull-quote {
     position: relative;
-    margin: 0;
-    background: var(--c-panel);
-    border: 1px solid var(--c-line);
-    border-radius: 16px;
-    box-shadow: var(--c-shadow-sm);
-    padding: 1.7rem 1.9rem 1.6rem 3.5rem;
+    margin: 2.2rem 0;
+    padding: 1.6rem 0 1.6rem 3rem;
+    border-left: 4px solid var(--c-blue);
   }
-  .quote::before {
+  .pull-quote::before {
     content: '\201C';
     position: absolute;
-    top: 0.7rem;
-    left: 1.4rem;
+    top: -0.4rem;
+    left: 1rem;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 3.6rem;
+    font-size: 4.6rem;
     line-height: 1;
     color: var(--c-blue-tint);
   }
-  .q-text {
-    font-size: 1.04rem;
-    line-height: 1.55;
+  .pq-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+    line-height: 1.35;
     color: var(--c-ink);
     margin: 0;
+    letter-spacing: -0.015em;
   }
-  .q-reply {
-    margin-top: 0.55rem;
-    color: var(--c-muted);
-  }
-  .quote figcaption {
-    margin-top: 1.1rem;
+  .pull-quote figcaption {
+    margin-top: 0.85rem;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.55rem;
+    gap: 0.6rem;
   }
-  .q-who {
+  .pq-who {
     font-weight: 700;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     color: var(--c-body);
   }
-  .q-where {
+  .pq-where {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     color: var(--c-muted);
-  }
-
-  .turn {
-    background: var(--c-blue-tint);
-    border: 1px solid var(--c-sky);
-    border-radius: 18px;
-    padding: 2.3rem 2.6rem;
-  }
-  .turn-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--c-blue-deep);
-    margin: 0 0 0.7rem;
-  }
-  .turn h3 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(1.35rem, 2.2vw, 1.7rem);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    color: var(--c-ink);
-    margin: 0 0 1rem;
-    max-width: 32rem;
-  }
-  .turn p {
-    font-size: 1.02rem;
-    line-height: 1.65;
-    color: var(--c-body);
-    margin: 0 0 0.9rem;
-    max-width: 53rem;
-  }
-  .turn p:last-child {
-    margin-bottom: 0;
   }
 
   /* ---------- how it works ---------- */
@@ -1146,13 +985,22 @@ scoop install installerclean</code></pre>
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: 4.5rem;
   }
   .step {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.55fr);
     gap: 3rem;
     align-items: center;
+  }
+  .step:nth-child(even) {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.85fr);
+  }
+  .step:nth-child(even) .step-text {
+    order: 2;
+  }
+  .step:nth-child(even) .step-shot {
+    order: 1;
   }
   .step-text {
     display: flex;
@@ -1175,14 +1023,14 @@ scoop install installerclean</code></pre>
     line-height: 1.2;
     color: var(--c-ink);
     margin: 0 0 0.9rem;
-    max-width: 26rem;
+    max-width: 24rem;
   }
   .step-text p {
     font-size: 1.02rem;
     line-height: 1.65;
     color: var(--c-body);
     margin: 0;
-    max-width: 28rem;
+    max-width: 24rem;
   }
   .step-shot {
     width: 100%;
@@ -1253,48 +1101,38 @@ scoop install installerclean</code></pre>
     color: var(--c-ink);
   }
 
-  /* ---------- first move (closing pitch) ---------- */
-  .firstmove {
+  /* ---------- closing ---------- */
+  .closing {
     background: var(--c-white);
     border-top: 1px solid var(--c-line);
     padding: 5rem 0 5.5rem;
   }
-  .contrast {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.4rem;
-    margin-bottom: 2.6rem;
-  }
-  .vs-card {
-    background: var(--c-panel);
-    border: 1px solid var(--c-line);
-    border-radius: 16px;
-    box-shadow: var(--c-shadow-sm);
-    padding: 1.5rem 1.6rem;
-  }
-  .vs-card h3 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.12rem;
-    color: var(--c-ink);
-    margin: 0 0 0.55rem;
-    line-height: 1.25;
-  }
-  .vs-card p {
-    font-size: 0.97rem;
-    line-height: 1.55;
-    color: var(--c-body);
-    margin: 0;
-  }
-  .lead-out {
+  .closing-inner {
+    max-width: 46rem;
     text-align: center;
   }
-  .lead-out p {
-    font-size: 1.12rem;
-    line-height: 1.65;
+  .closing-inner h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.9rem, 3vw, 2.4rem);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
     color: var(--c-ink);
+    margin: 0 0 1.2rem;
+  }
+  .closing-inner p {
+    font-size: 1.12rem;
+    line-height: 1.7;
+    color: var(--c-body);
+    margin: 0 auto 2rem;
     max-width: 38rem;
-    margin: 0 auto 1.8rem;
+  }
+  .closing-mini {
+    margin-top: 1.6rem !important;
+    font-family: var(--font-mono);
+    font-size: 0.92rem !important;
+    color: var(--c-muted) !important;
+    line-height: 1.55 !important;
   }
 
   /* ---------- reports (per-record bar chart) ---------- */
@@ -1792,18 +1630,35 @@ scoop install installerclean</code></pre>
   }
 
   @media (max-width: 880px) {
+    .hero {
+      padding: 3rem 0 3.5rem;
+    }
     .hero-grid {
       grid-template-columns: 1fr;
-      gap: 3.5rem;
+      gap: 2.5rem;
     }
-    .quotes {
-      grid-template-columns: 1fr;
+    .hero-visual {
+      min-height: auto;
+      order: -1;
+    }
+    .hero-icon {
+      width: clamp(240px, 64vw, 420px);
     }
     .step {
       grid-template-columns: 1fr;
     }
-    .contrast {
+    .step:nth-child(even) {
       grid-template-columns: 1fr;
+    }
+    .step:nth-child(even) .step-text {
+      order: 0;
+    }
+    .step:nth-child(even) .step-shot {
+      order: 0;
+    }
+    .step-text h3,
+    .step-text p {
+      max-width: 100%;
     }
     .chart-card {
       padding: 1.3rem 1.2rem 1.2rem;
