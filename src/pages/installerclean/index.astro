@@ -279,8 +279,28 @@ if (wins.length === 0) {
         </p>
 
         <p>
-          If you have searched for help with the folder you know how it usually goes. In every
-          thread the most upvoted answer is the same.
+          If you have searched for help with the folder you know how it usually goes. Someone
+          asks how to clean it. They are told to run Disk Cleanup. They try it. It frees up
+          <a
+            href="https://learn.microsoft.com/en-us/answers/questions/4238108/windows-installer-folder-has-occupied-180gb"
+            target="_blank"
+            rel="noopener">600 MB of a 180 GB folder</a>. The thread goes quiet.
+        </p>
+
+        <figure class="pull-quote">
+          <p class="pq-text">All of the threads I've found tend to recommend the same things
+          which don't solve the problem, and then go dead.</p>
+          <figcaption><span class="pq-who">ksparks519</span><span class="pq-where">r/Windows10</span></figcaption>
+        </figure>
+
+        <p>
+          Or they are told not to touch it at all. In one
+          <a
+            href="https://www.reddit.com/r/techsupport/comments/1hw4suq/my_windows_installer_folder_is_like_60gb_so_i/"
+            target="_blank"
+            rel="noopener">thread</a>, someone with a 60 GB Installer folder was told <em>"don't
+          mess with it."</em> When they asked what they should do instead, the reply was
+          <em>"I just told you."</em>
         </p>
 
         <figure class="pull-quote">
@@ -289,14 +309,37 @@ if (wins.length === 0) {
         </figure>
 
         <p>
-          That advice is right if it means "do not delete files in here by name and date".
+          The advice is right if it means "do not delete files in here by name and date".
           The folder is owned by Windows; going in blind really does break the way Windows
-          updates and removes software. What the advice skips is that Windows already keeps
-          a database of what is still needed and what is not. InstallerClean reads that
-          database and only flags installers for software you have already uninstalled, and
-          patches that newer ones have replaced. Everything in current use stays where it
-          is. Move sends the rest to a folder you choose; Delete sends them to the Recycle
-          Bin. Nothing is touched until you confirm.
+          updates and removes software. The advice is wrong if it means there is nothing
+          safe to remove. Windows already keeps a database of what is still needed and what
+          is not. InstallerClean reads that database and only flags installers for software
+          you have already uninstalled, and patches that newer ones have replaced.
+          Everything in current use stays where it is. Move sends the rest to a folder you
+          choose; Delete sends them to the Recycle Bin. Nothing is touched until you confirm.
+        </p>
+
+        <p>
+          The pain is loudest from sysadmins. One
+          <a
+            href="https://www.reddit.com/r/sysadmin/comments/1oxcrmh/acrobat_filling_up_the_cwindowsinstaller_folder/"
+            target="_blank"
+            rel="noopener">r/sysadmin thread</a> describes Adobe Acrobat as the recurring
+          culprit:
+        </p>
+
+        <figure class="pull-quote">
+          <p class="pq-text">I've had this issue on countless computers. The drive is full, I
+          check what is taking up the space, and it's always a 50 GB+ Windows Installer
+          folder, sometimes in the 100s.</p>
+          <figcaption><span class="pq-who">Loof27</span><span class="pq-where">r/sysadmin (87 upvotes)</span></figcaption>
+        </figure>
+
+        <p>
+          In the same thread, ten admins ask in the replies and DMs for the PowerShell script
+          another commenter mentioned having written. That script never gets shared. The
+          pattern is consistent across every thread: real demand, no maintained tool, the
+          conversation peters out. InstallerClean is the maintained tool.
         </p>
       </div>
     </div>
