@@ -65,7 +65,7 @@ const faqs = [
   },
   {
     q: 'Will the app connect to the internet?',
-    a: 'Only on a button you click. Two opt-in buttons make a single HTTPS request when clicked. <strong>Check for updates</strong> in the About box queries the GitHub releases API and tells you whether you have the latest version. <strong>Send summary</strong> on the completion screen opens a confirmation window showing the exact anonymous counts-and-labels JSON the app would POST to a No Faff endpoint; review it there and press Send to confirm or Cancel to back out. The app makes no other network calls. No automatic checks, no background usage tracking.',
+    a: 'Only on a button you click. Two opt-in buttons make a single HTTPS request when clicked. <strong>Check for updates</strong> in the About box asks GitHub whether there is a newer version. <strong>Send summary</strong> on the completion screen opens a window showing the exact JSON the app would send to a No Faff endpoint (counts and category labels only; no file paths, no user names, no machine identifiers); review it there and press Send to confirm or Cancel to back out. The app makes no other network calls. No background checks.',
   },
   {
     q: 'Why does it ask for Administrator?',
@@ -235,10 +235,11 @@ if (wins.length === 0) {
         </h1>
         <p class="hero-sub">
           The folder caches the <span class="mono">.msi</span> and <span class="mono">.msp</span>
-          files Windows uses to repair and update installed software. On machines that run a lot
-          of <span class="mono">.msi</span>-based software, especially Acrobat, the cache can
-          quietly grow to tens of gigabytes of files Windows itself no longer needs.
-          InstallerClean asks Windows which ones, and offers to move or delete only those.
+          files Windows uses to repair and update installed software. Over time it accumulates
+          installers for software you uninstalled and patches that newer ones replaced; on a
+          long-running machine that can run to tens of gigabytes. InstallerClean asks the
+          Windows Installer database which files are still needed, and offers to move or
+          delete only the rest.
         </p>
         <div class="hero-cta">
           <a class="btn-primary" href={downloadPortable}>
@@ -264,21 +265,21 @@ if (wins.length === 0) {
     <div class="wrap">
       <header class="sec-head">
         <p class="eyebrow">Why this exists</p>
-        <h2>The folder nobody tells you to clean</h2>
+        <h2>About <span class="mono">C:\Windows\Installer</span></h2>
       </header>
 
       <div class="folder-prose">
         <p>
-          On most machines no one ever notices the folder is there. On a machine that has been
-          running Acrobat or another <span class="mono">.msi</span>-heavy program for a few
-          years it can quietly pass 100 GB. You may have tried Disk Cleanup at that point and
-          seen no change; that is normal, because the only safe way to clean this folder is to
-          ask Windows itself which of its files are still needed, and no built-in tool does
-          that.
+          On most machines no one notices the folder is there. On a machine that has been
+          running for a few years, especially one with a lot of <span class="mono">.msi</span>-
+          based software, it can quietly pass 100 GB. Disk Cleanup leaves it alone; DISM
+          targets a different folder (<span class="mono">WinSxS</span>). The only safe way to
+          clean it is to read the Windows Installer database itself and act on what it says,
+          and no built-in tool does that.
         </p>
 
         <p>
-          If you have searched for help with this folder you know how it usually goes. In every
+          If you have searched for help with the folder you know how it usually goes. In every
           thread the most upvoted answer is the same.
         </p>
 
@@ -288,14 +289,14 @@ if (wins.length === 0) {
         </figure>
 
         <p>
-          That advice is right if it means "do not delete things in here by name and date". The
-          folder is owned by Windows, and going in blind really does break the way it updates and
-          removes software. What it skips is that Windows itself already knows which files in the
-          folder are still needed, and which are not. InstallerClean asks Windows that question.
-          It only flags installers for software you have already uninstalled, and patches that
-          newer ones have replaced. Everything still in use stays where it is. Move sends the
-          rest to a folder you choose. Delete sends them to the Recycle Bin. Nothing is touched
-          until you confirm.
+          That advice is right if it means "do not delete files in here by name and date".
+          The folder is owned by Windows; going in blind really does break the way Windows
+          updates and removes software. What the advice skips is that Windows already keeps
+          a database of what is still needed and what is not. InstallerClean reads that
+          database and only flags installers for software you have already uninstalled, and
+          patches that newer ones have replaced. Everything in current use stays where it
+          is. Move sends the rest to a folder you choose; Delete sends them to the Recycle
+          Bin. Nothing is touched until you confirm.
         </p>
       </div>
     </div>
@@ -305,9 +306,10 @@ if (wins.length === 0) {
     <div class="wrap">
       <header class="sec-head">
         <p class="eyebrow">How it works</p>
-        <h2>One minute, four screens</h2>
+        <h2>What you'll see</h2>
         <p class="sec-intro">
-          Double-click. Look at what is removable. Click Move or Delete. Done.
+          Launch, read the result, click Delete or Move. The whole thing is a minute on a
+          warm machine, less on a cold one.
         </p>
       </header>
 
@@ -315,10 +317,10 @@ if (wins.length === 0) {
         <li class="step">
           <div class="step-text">
             <span class="step-num">01</span>
-            <h3>The scan finishes in a second or two</h3>
+            <h3>It scans on launch</h3>
             <p>
-              Double-click the exe. It scans <span class="mono">C:\Windows\Installer</span> and
-              shows what is in use and what is not.
+              The scan runs as soon as the app opens. On most machines it finishes in a
+              second or two; on a heavily-used one it may take a few seconds longer.
             </p>
           </div>
           <Image
@@ -331,10 +333,12 @@ if (wins.length === 0) {
         <li class="step">
           <div class="step-text">
             <span class="step-num">02</span>
-            <h3>See exactly what would be removed</h3>
+            <h3>It tells you what is removable, and why</h3>
             <p>
-              Every removable file listed with the reason: software you uninstalled, or patches
-              that newer ones replaced. No guessing on filenames or dates.
+              The main window shows the total: how much is still in use, and how much is
+              removable. Open Details if you want the per-file list with each file's reason
+              (<em>Orphaned</em> means the software was uninstalled; <em>Superseded</em>
+              means a newer patch replaced it). Most people never need to open it.
             </p>
           </div>
           <Image
@@ -347,11 +351,12 @@ if (wins.length === 0) {
         <li class="step">
           <div class="step-text">
             <span class="step-num">03</span>
-            <h3>Delete to the Bin, or Move somewhere safe</h3>
+            <h3>Delete to the Recycle Bin, or Move to a folder you choose</h3>
             <p>
-              Delete sends every file to the Recycle Bin. Move puts them in a folder you choose,
-              so you can keep them a while and check nothing breaks before deleting for good. You
-              confirm, then it commits.
+              Delete sends the files to the Recycle Bin so you can restore from there if
+              anything breaks. Move puts them in a folder you choose, so you can keep them
+              a while and verify nothing breaks before deleting for good. A confirmation
+              dialog shows the count and size before either runs.
             </p>
           </div>
           <Image
@@ -366,8 +371,9 @@ if (wins.length === 0) {
             <span class="step-num">04</span>
             <h3>Done</h3>
             <p>
-              You see how much came back, with the restore route in case you ever need it.
-              Bookmark the page and run it again in a year or two.
+              The completion screen shows how much space was freed and the restore route in
+              case you ever need it. Run it again whenever you like; once a year or so is
+              plenty.
             </p>
           </div>
           <Image
@@ -387,8 +393,15 @@ if (wins.length === 0) {
         <p class="eyebrow">Trust</p>
         <h2>Is it safe?</h2>
         <p class="sec-intro">
-          InstallerClean runs elevated and the .exe is not code-signed, so the real cost is
-          trust. Every signal below is honest and checkable from this page.
+          Yes. The app only flags files that the Windows Installer database itself reports
+          as no longer needed; it does not guess based on filenames or dates. Delete sends
+          them to the Recycle Bin so you can restore from there; Move puts them in a folder
+          you choose so you can verify nothing breaks before deleting for good. Nothing
+          happens until you confirm.
+        </p>
+        <p class="sec-intro">
+          The app is unsigned because an EV signing certificate costs hundreds a year and
+          this project is donations-funded. The items below are what you can check yourself.
         </p>
       </header>
 
@@ -412,10 +425,11 @@ if (wins.length === 0) {
           <div class="claim-body">
             <strong>No automatic telemetry, no background network.</strong>
             <span class="claim-detail">
-              No version pings on startup, no usage tracking, no analytics. The app makes no
-              network call until you click one of two opt-in buttons. Check for updates queries
-              GitHub's releases API on click. Send summary opens a confirmation window showing
-              the exact JSON before any post.
+              No version pings on startup, no analytics, nothing in the background. The app
+              makes no network call until you click one of two opt-in buttons. Check for
+              updates queries GitHub's releases API. Send summary opens a window showing the
+              exact JSON the app would send (counts and category labels only), then waits
+              for you to confirm or cancel.
             </span>
           </div>
         </li>
@@ -584,46 +598,44 @@ if (wins.length === 0) {
   <section class="predecessor">
     <div class="predecessor-inner">
       <header class="sec-head">
-        <p class="eyebrow">The predecessor</p>
-        <h2>PatchCleaner was the answer for a decade</h2>
+        <p class="eyebrow">If you have heard of PatchCleaner</p>
+        <h2>About <a
+          href="https://www.homedev.com.au/free/patchcleaner"
+          target="_blank"
+          rel="noopener">PatchCleaner</a></h2>
         <p class="sec-intro">
-          If you have searched for this before you have probably already found <a
-            href="https://www.homedev.com.au/free/patchcleaner"
-            target="_blank"
-            rel="noopener">PatchCleaner</a> by John Crawford. Free, simple, the go-to tool for
-          this for years. Most of what InstallerClean does, PatchCleaner did first.
+          PatchCleaner by John Crawford is the other tool that does this. It is free and it
+          works. Worth mentioning here because if you searched for this folder you have
+          probably already found it. Two practical differences.
         </p>
       </header>
 
       <div class="prose">
-        <h3>It excludes Adobe by default</h3>
+        <h3>It excludes Adobe patches by default</h3>
         <p>
-          PatchCleaner was built around a list of installers it was confident it could safely
-          identify. Adobe's <span class="mono">.msp</span> patches did not match cleanly with
-          what the tool was looking for, so they were excluded by default. That was the right
-          call in 2016. Today, on machines with Acrobat installed, the Installer cache is mostly
-          Adobe patches, and this is the comment that keeps coming up:
+          PatchCleaner ships with a substring-exclude filter that, by default, leaves Adobe's
+          <span class="mono">.msp</span> patches in place. On machines where Adobe Acrobat
+          accumulates a lot of patch history, that can be a sizeable chunk of the cache:
         </p>
         <blockquote class="pull">
           <p>
-            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the files
-            are "excluded by filters", so Patchcleaner doesn't seem to help.
+            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the
+            files are "excluded by filters", so Patchcleaner doesn't seem to help.
           </p>
           <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
         </blockquote>
-
-        <h3>It has not been updated since March 2016</h3>
         <p>
-          The last release was 3 March 2016. The source is closed, so no one else has been able
-          to pick it up. A decade of Windows changes have happened around the 2016 binary.
+          InstallerClean has no exclude filter. It identifies superseded Adobe patches via
+          the Windows Installer patch-state field and offers them up alongside everything
+          else.
+        </p>
+
+        <h3>The last release was 3 March 2016</h3>
+        <p>
+          PatchCleaner has not been updated in ten years. The source is closed, so nobody
+          else has been able to pick it up.
         </p>
       </div>
-
-      <p class="close">
-        InstallerClean is the modern open-source take on the same idea. It catches the Adobe
-        patches PatchCleaner skips, it ships on .NET 10, the source is on GitHub, and VirusTotal
-        comes back clean across every engine.
-      </p>
     </div>
   </section>
 
@@ -705,21 +717,20 @@ scoop install installerclean</code></pre>
 
   <section class="closing">
     <div class="wrap closing-inner">
-      <h2>You might as well give it a minute</h2>
+      <h2>Worth running once</h2>
       <p>
-        If you are on Windows and could use a bit of extra space, or even if you do not, you
-        might as well run it once, and again in a blue moon. It covers one specific thing
-        nothing else covers, apart from PatchCleaner, which skips Adobe. Free, open source,
-        thousands of downloads, clean on VirusTotal across every engine. One person this month
-        freed 162 GB. Most people free a few GB or nothing at all. Either way it is a minute of
-        your time to download it, run it and move on.
+        If the folder has grown big on your machine you are in the right place. If it has
+        not, the scan tells you that quickly and you are done. It costs a minute either way.
+        Free, open source, clean on VirusTotal across every engine. One run in May 2026
+        freed 162 GB; most are a few GB or nothing at all. Run it once, and again in a year
+        or two if you feel like it.
       </p>
       <a class="btn-primary" href={downloadPortable}>
         <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
         Download for Windows
       </a>
       <p class="closing-mini">
-        Download, run, look at what is removable, click Move or Delete.
+        Download, run, read the result, click Delete or Move.
       </p>
     </div>
   </section>
