@@ -4,7 +4,7 @@ import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 import icon from '@assets/installerclean/icon.png';
 import scanShot from '@assets/installerclean/screenshots/01-initial-scan.webp';
-import unusedShot from '@assets/installerclean/screenshots/03b-details-unused.webp';
+import mainShot from '@assets/installerclean/screenshots/02-main-window.webp';
 import confirmShot from '@assets/installerclean/screenshots/04b-Delete-dialogue.webp';
 import doneShot from '@assets/installerclean/screenshots/04d-deleted-freed-success.webp';
 
@@ -39,7 +39,7 @@ const builds = [
     href: `${downloadBase}/InstallerClean-portable.exe`,
     shaHref: `${downloadBase}/InstallerClean-portable.exe.sha256`,
     blurb:
-      'A single file. Run it, use it, delete it. Nothing installed, nothing left behind. Drop it on a USB stick if you like.',
+      'No install, no uninstaller. Run it, use it, close it.',
     icon: 'lucide:zap',
   },
   {
@@ -49,7 +49,7 @@ const builds = [
     href: `${downloadBase}/InstallerClean-slim.exe`,
     shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
     blurb:
-      "Smallest download. Requires the .NET 10 Desktop Runtime already installed. (Pick Setup or Portable if you're not sure.)",
+      "Smallest download. Requires the .NET 10 Desktop Runtime (which you have if you have an up-to-date Visual Studio). Pick Setup or Portable if you're not sure.",
     icon: 'lucide:feather',
   },
 ];
@@ -57,7 +57,7 @@ const builds = [
 const faqs = [
   {
     q: 'Will I actually free up GBs of space?',
-    a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB. One person <a href="https://github.com/no-faff/InstallerClean/issues/12#issuecomment-4395580816" target="_blank" rel="noopener">reported 25 GB</a>; another freed 162 GB. The app shows you exactly how much it can remove before you click anything, so you can decide then.',
+    a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB; the reports chart above has examples ranging from nothing to 327 GB. The app shows you exactly how much it can remove before you click anything, so you can decide then.',
   },
   {
     q: 'Why does Windows SmartScreen warn about the download?',
@@ -77,7 +77,7 @@ const faqs = [
   },
   {
     q: 'What about that other big Windows folder, WinSxS?',
-    a: '<code>C:\\Windows\\WinSxS</code> is a different folder with different rules and InstallerClean does not touch it. Clean that one with Windows\'s own Disk Cleanup, or for sysadmins <code>Dism /Online /Cleanup-Image /StartComponentCleanup</code> from an elevated command prompt.',
+    a: '<code>C:\\Windows\\WinSxS</code> is a different folder with different rules and InstallerClean does not touch it. From an elevated command prompt, <code>Dism /Online /Cleanup-Image /StartComponentCleanup</code> is the supported way to clean it.',
   },
   {
     q: 'Does it work on Windows 7 or 8?',
@@ -94,7 +94,7 @@ const faqs = [
 // rewrites the block between the markers below.
 type Run = { ts: string; gb: number; missing: number };
 // reports-data-start
-const reportsAsOf = '20 May 2026';
+const reportsAsOf = '27 May 2026';
 const runs: Run[] = [
   { ts: '2026-05-12T22:50:07.222Z', gb: 16.8, missing: 0 },
   { ts: '2026-05-13T01:46:56.560Z', gb: 0, missing: 3 },
@@ -123,6 +123,11 @@ const runs: Run[] = [
   { ts: '2026-05-20T12:30:36.694Z', gb: 19.9, missing: 0 },
   { ts: '2026-05-20T15:59:02.394Z', gb: 0, missing: 0 },
   { ts: '2026-05-20T17:38:25.001Z', gb: 0, missing: 0 },
+  { ts: '2026-05-22T09:01:52.597Z', gb: 0, missing: 0 },
+  { ts: '2026-05-25T14:56:59.648Z', gb: 0, missing: 8 },
+  { ts: '2026-05-26T02:34:08.792Z', gb: 65.7, missing: 0 },
+  { ts: '2026-05-26T19:14:52.579Z', gb: 327.2, missing: 0 },
+  { ts: '2026-05-27T13:53:56.431Z', gb: 22.7, missing: 0 },
 ];
 // reports-data-end
 
@@ -230,16 +235,22 @@ if (wins.length === 0) {
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <h1 class="hero-title">
-          <span class="t-path">C:\Windows\Installer</span>
-          <span class="t-act">Wipe it clean.</span>
+          <span class="t-chip">C:\Windows\Installer</span>
+          <span class="t-headline">Windows fills this folder but never tidies it.</span>
         </h1>
         <p class="hero-sub">
-          The folder caches the <span class="mono">.msi</span> and <span class="mono">.msp</span>
-          files Windows uses to repair and update installed software. Over time it accumulates
-          installers for software you uninstalled and patches that newer ones replaced; on a
-          long-running machine that can run to tens of gigabytes. InstallerClean asks the
-          Windows Installer database which files are still needed, and offers to move or
-          delete only the rest.
+          It caches Windows Installer (<span class="mono">.msi</span>) files. Every app
+          installed this way leaves a copy of its installer here, plus another copy for
+          every patch on top. On a long-running machine that adds up to tens of
+          gigabytes, sometimes a lot more.
+        </p>
+        <p class="hero-sub">
+          InstallerClean asks Windows which of those files are still needed and offers to
+          delete the rest. It's free and safe (see below).
+        </p>
+        <p class="hero-sub hero-close">
+          Download the portable exe, run it, press Delete, confirm. That's it. It takes
+          seconds and everyone on Windows might as well run it once.
         </p>
         <div class="hero-cta">
           <a class="btn-primary" href={downloadPortable}>
@@ -248,7 +259,7 @@ if (wins.length === 0) {
           </a>
         </div>
         <ul class="trust">
-          <li><Icon name="lucide:check" class="tick" aria-hidden="true" />Free, MIT open source</li>
+          <li><Icon name="lucide:check" class="tick" aria-hidden="true" />MIT open source</li>
           <li><Icon name="lucide:check" class="tick" aria-hidden="true" />No ads or tracking</li>
           <li><Icon name="lucide:check" class="tick" aria-hidden="true" />Clean on VirusTotal</li>
           <li><Icon name="lucide:check" class="tick" aria-hidden="true" />Windows 10 and 11</li>
@@ -270,17 +281,32 @@ if (wins.length === 0) {
 
       <div class="folder-prose">
         <p>
-          On most machines no one notices the folder is there. On a machine that has been
+          <span class="mono">C:\Windows\Installer</span> is where Windows keeps a copy of
+          every <span class="mono">.msi</span> installer that has run on the machine, plus
+          the <span class="mono">.msp</span> patches that updated each one. The copies stay
+          around because Windows needs them to repair, update or uninstall the software
+          later. The folder is hidden by default and only administrators can open it.
+        </p>
+        <p>
+          Apps that come in via Windows Installer leave one
+          <span class="mono">.msi</span> per install and another <span class="mono">.msp</span>
+          for every patch on top. Office, Adobe Reader, runtimes like Visual C++
+          Redistributables and most enterprise software work this way. Patches don't
+          delete their predecessors. Uninstalling the software doesn't clear them out
+          either. Windows itself never goes in to tidy.
+        </p>
+        <p>
+          On most machines no one notices the folder is there. On a machine that's been
           running for a few years, especially one with a lot of <span class="mono">.msi</span>-
           based software, it can quietly pass 100 GB. Disk Cleanup leaves it alone; DISM
-          targets a different folder (<span class="mono">WinSxS</span>). The only safe way to
-          clean it is to read the Windows Installer database itself and act on what it says,
-          and no built-in tool does that.
+          targets a different folder (<span class="mono">WinSxS</span>). The only safe way
+          to clean it is to read the Windows Installer database itself and act on what it
+          says, and no built-in tool does that.
         </p>
 
         <p>
-          If you have searched for help with the folder you know how it usually goes. Someone
-          asks how to clean it. They are told to run Disk Cleanup. They try it. It frees up
+          If you've searched for help with the folder you know how it usually goes. Someone
+          asks how to clean it. They're told to run Disk Cleanup. They try it. It frees up
           <a
             href="https://learn.microsoft.com/en-us/answers/questions/4238108/windows-installer-folder-has-occupied-180gb"
             target="_blank"
@@ -294,7 +320,7 @@ if (wins.length === 0) {
         </figure>
 
         <p>
-          Or they are told not to touch it at all. In one
+          Or they're told not to touch it at all. In one
           <a
             href="https://www.reddit.com/r/techsupport/comments/1hw4suq/my_windows_installer_folder_is_like_60gb_so_i/"
             target="_blank"
@@ -309,12 +335,12 @@ if (wins.length === 0) {
         </figure>
 
         <p>
-          The advice is right if it means "do not delete files in here by name and date".
+          The advice is right if it means "don't delete files in here by name and date".
           The folder is owned by Windows; going in blind really does break the way Windows
-          updates and removes software. The advice is wrong if it means there is nothing
-          safe to remove. Windows already keeps a database of what is still needed and what
-          is not. InstallerClean reads that database and only flags installers for software
-          you have already uninstalled, and patches that newer ones have replaced.
+          updates and removes software. The advice is wrong if it means "there is nothing
+          safe to remove". Windows already keeps a database of what's still needed and
+          what isn't. InstallerClean reads that database and only flags installers for
+          software you've already uninstalled, and patches that newer ones have replaced.
           Everything in current use stays where it is. Move sends the rest to a folder you
           choose; Delete sends them to the Recycle Bin. Nothing is touched until you confirm.
         </p>
@@ -351,8 +377,7 @@ if (wins.length === 0) {
         <p class="eyebrow">How it works</p>
         <h2>What you'll see</h2>
         <p class="sec-intro">
-          Double-click the exe, click Delete (or Move), confirm. The Details views are
-          there if you want to look at the per-file list; most people don't need to.
+          Double-click the exe, click Delete (or Move), confirm.
         </p>
       </header>
 
@@ -362,8 +387,7 @@ if (wins.length === 0) {
             <span class="step-num">01</span>
             <h3>It scans on launch</h3>
             <p>
-              The scan runs as soon as the app opens. On most machines it finishes in a
-              second or two; on a heavily-used one it may take a few seconds longer.
+              The scan runs as soon as the app opens. Takes seconds.
             </p>
           </div>
           <Image
@@ -379,15 +403,15 @@ if (wins.length === 0) {
             <h3>It tells you what is removable, and why</h3>
             <p>
               The main window shows the total: how much is still in use, and how much is
-              removable. Open Details if you want the per-file list with each file's reason
-              (<em>Orphaned</em> means the software was uninstalled; <em>Superseded</em>
-              means a newer patch replaced it). Most people never need to open it.
+              removable. You don't need to, but you can click Details for the per-file list
+              of both groups, with the publisher, product name and signing certificate
+              pulled from each file's installer metadata.
             </p>
           </div>
           <Image
             class="step-shot"
-            src={unusedShot}
-            alt="Details window listing removable installer files with sizes and reasons"
+            src={mainShot}
+            alt="InstallerClean main window showing how much is still in use versus removable"
             loading="eager"
           />
         </li>
@@ -414,9 +438,9 @@ if (wins.length === 0) {
             <span class="step-num">04</span>
             <h3>Done</h3>
             <p>
-              The completion screen shows how much space was freed and the restore route in
-              case you ever need it. Run it again whenever you like; once a year or so is
-              plenty.
+              You see how much was freed. After a successful clean there's an optional
+              Send button. It appears once per machine, ever: a short summary so I can
+              tell whether IC is actually helping anyone.
             </p>
           </div>
           <Image
@@ -437,16 +461,35 @@ if (wins.length === 0) {
         <h2>Is it safe?</h2>
         <p class="sec-intro">
           Yes. The app only flags files that the Windows Installer database itself reports
-          as no longer needed; it does not guess based on filenames or dates. Delete sends
+          as no longer needed; it doesn't guess based on filenames or dates. Delete sends
           them to the Recycle Bin so you can restore from there; Move puts them in a folder
           you choose so you can verify nothing breaks before deleting for good. Nothing
           happens until you confirm.
         </p>
         <p class="sec-intro">
-          The app is unsigned because an EV signing certificate costs hundreds a year and
-          this project is donations-funded. The items below are what you can check yourself.
+          The app is unsigned because an EV signing certificate costs hundreds of pounds a
+          year and this project is donations-funded. The items below are what you can check
+          yourself.
         </p>
       </header>
+
+      <div class="trust-stats">
+        <div class="stat">
+          <p class="stat-num">~12,300</p>
+          <p class="stat-label">downloads across GitHub, MajorGeeks and Softpedia, no reports of harm</p>
+        </div>
+        <div class="stat">
+          <p class="stat-num">51</p>
+          <p class="stat-label">GitHub stars since the first release in February 2026</p>
+        </div>
+        <div class="stat">
+          <p class="stat-num">7 / 7</p>
+          <p class="stat-label">MajorGeeks voters rated it Geek-o-licious (their top rating)</p>
+        </div>
+      </div>
+      <p class="trust-asof">
+        As of 28 May 2026. Softpedia and MajorGeeks both run their own scans before listing.
+      </p>
 
       <ul class="claims">
         <li class="claim">
@@ -469,10 +512,11 @@ if (wins.length === 0) {
             <strong>No automatic telemetry, no background network.</strong>
             <span class="claim-detail">
               No version pings on startup, no analytics, nothing in the background. The app
-              makes no network call until you click one of two opt-in buttons. Check for
-              updates queries GitHub's releases API. Send summary opens a window showing the
-              exact JSON the app would send (counts and category labels only), then waits
-              for you to confirm or cancel.
+              only makes a network call when you click one of two buttons. Check for updates
+              queries GitHub's releases API. Send summary shows you exactly what the app
+              would send (counts, app version, your Windows family and architecture, an
+              outcome label; no file names, no usernames, no machine identifiers) and waits
+              for you to confirm or close the window.
             </span>
           </div>
         </li>
@@ -481,8 +525,7 @@ if (wins.length === 0) {
           <div class="claim-body">
             <strong>No bundled extras.</strong>
             <span class="claim-detail">
-              No toolbars, no third-party offers, no upsells. The .exe does what it says and
-              exits.
+              No toolbars, no third-party offers, no upsells. It does what it says on the tin.
             </span>
           </div>
         </li>
@@ -499,8 +542,8 @@ if (wins.length === 0) {
       </ul>
 
       <p class="vt-lead">
-        All three builds pass VirusTotal cleanly across every engine. The links
-        below open the live scans so you can re-check whenever.
+        All three builds pass VirusTotal cleanly across every engine. The links below open
+        the scans so you can re-check whenever.
       </p>
       <div class="vt-row">
         <a class="vt-link" href={vtSetup} target="_blank" rel="noopener">
@@ -520,40 +563,124 @@ if (wins.length === 0) {
         </a>
       </div>
 
-      <div class="reviewers">
-        <div class="reviewer reviewer-sp">
+      <p class="third-party">
+        <a
+          href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
+          target="_blank"
+          rel="noopener">Softpedia listing</a> ·
+        <a
+          href="https://www.majorgeeks.com/files/details/installerclean.html"
+          target="_blank"
+          rel="noopener">MajorGeeks listing</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="predecessor">
+    <div class="predecessor-inner">
+      <header class="sec-head">
+        <p class="eyebrow">If you've heard of PatchCleaner</p>
+        <h2>About <a
+          href="https://www.homedev.com.au/free/patchcleaner"
+          target="_blank"
+          rel="noopener">PatchCleaner</a></h2>
+        <p class="sec-intro">
+          PatchCleaner by John Crawford is the other tool that does this. It's free and it
+          works. Three things to know.
+        </p>
+      </header>
+
+      <div class="prose">
+        <h3>The last release was 3 March 2016</h3>
+        <p>
+          Ten years without an update. The
+          <a
+            href="https://www.homedev.com.au/free/patchcleaner"
+            target="_blank"
+            rel="noopener">developer's own page</a> lists 3/3/2016 as the release date
+          for v1.4.2, the current version.
+        </p>
+
+        <h3>The source is closed</h3>
+        <p>
+          So nobody has been able to pick it up and keep it going. You can't read what it
+          does, you can't fix what it gets wrong, you can't fork it.
+        </p>
+
+        <h3>It excludes Adobe patches by default</h3>
+        <p>
+          PatchCleaner ships with a substring-exclude filter that leaves Adobe's
+          <span class="mono">.msp</span> patches in place by default. On machines where
+          Adobe Acrobat has accumulated a lot of patch history, that can be a sizeable
+          chunk of the cache:
+        </p>
+        <blockquote class="pull">
           <p>
-            Independently certified by
-            <a
-              href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-              target="_blank"
-              rel="noopener">Softpedia</a>: 100% Free, no spyware, no adware, no viruses.
+            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the
+            files are "excluded by filters", so Patchcleaner doesn't seem to help.
           </p>
-          <a
-            href="https://www.softpedia.com/get/System/Hard-Disk-Utils/InstallerClean.shtml"
-            target="_blank"
-            rel="noopener"
-            class="sp-badge-link"
-            aria-label="View on Softpedia"
-          >
-            <img
-              src="/images/installerclean/badges/softpedia-100-free2.webp"
-              alt="Softpedia certification badge"
-              class="sp-badge"
-              width="91"
-              height="32"
-              loading="lazy"
-            />
-          </a>
-        </div>
-        <p class="reviewer">
-          Listed on
-          <a
-            href="https://www.majorgeeks.com/files/details/installerclean.html"
-            target="_blank"
-            rel="noopener">MajorGeeks</a> after their VM-based testing.
+          <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
+        </blockquote>
+        <p>
+          InstallerClean has no exclude filter. It identifies superseded Adobe patches via
+          the Windows Installer patch-state field and offers them up alongside everything
+          else.
         </p>
       </div>
+    </div>
+  </section>
+
+  <section class="download" id="download">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="eyebrow">Download</p>
+        <h2>Three builds, choose one</h2>
+        <p class="sec-intro">
+          All three pass clean on every VirusTotal antivirus engine.
+        </p>
+      </header>
+
+      <div class="builds">
+        {
+          builds.map((b) => (
+            <article class="build-card">
+              <Icon name={b.icon} class="build-ic" aria-hidden="true" />
+              <h3>{b.label}</h3>
+              <p class="build-size">{b.size}</p>
+              <p class="build-blurb">{b.blurb}</p>
+              <a class="btn-primary build-btn" href={b.href}>
+                <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
+                Download {b.filename}
+              </a>
+              <a class="sha-link" href={b.shaHref} target="_blank" rel="noopener">
+                SHA-256
+                <Icon name="lucide:arrow-up-right" class="sha-arrow" aria-hidden="true" />
+              </a>
+            </article>
+          ))
+        }
+      </div>
+
+      <p class="smartscreen-note">
+        Windows SmartScreen will say "Unknown publisher" on first run. Click <strong>More info</strong>,
+        then <strong>Run anyway</strong>. This is normal for unsigned open-source software, and
+        the VirusTotal scans above are the cross-check.
+      </p>
+
+      <details class="scoop-block">
+        <summary>Or install via the command line</summary>
+        <pre class="snippet"><code>winget install NoFaff.InstallerClean
+
+scoop bucket add no-faff https://github.com/no-faff/scoop-bucket
+scoop install installerclean</code></pre>
+      </details>
+
+      <p class="releases-link">
+        <a href={`${releasesPage}/latest`} target="_blank" rel="noopener">
+          Latest release on GitHub
+          <Icon name="lucide:arrow-up-right" class="link-arrow" aria-hidden="true" />
+        </a>
+      </p>
     </div>
   </section>
 
@@ -563,7 +690,7 @@ if (wins.length === 0) {
         <p class="eyebrow">Real reports</p>
         <h2>What people have actually found</h2>
         <p class="sec-intro">
-          Each bar is one opt-in report from someone who ran InstallerClean and pressed Send.
+          Each bar is one report from someone who ran InstallerClean and pressed Send.
           Some freed a lot. Some had a tidy folder already.
         </p>
       </header>
@@ -638,103 +765,6 @@ if (wins.length === 0) {
     </div>
   </section>
 
-  <section class="predecessor">
-    <div class="predecessor-inner">
-      <header class="sec-head">
-        <p class="eyebrow">If you have heard of PatchCleaner</p>
-        <h2>About <a
-          href="https://www.homedev.com.au/free/patchcleaner"
-          target="_blank"
-          rel="noopener">PatchCleaner</a></h2>
-        <p class="sec-intro">
-          PatchCleaner by John Crawford is the other tool that does this. It is free and it
-          works. Worth mentioning here because if you searched for this folder you have
-          probably already found it. Two practical differences.
-        </p>
-      </header>
-
-      <div class="prose">
-        <h3>It excludes Adobe patches by default</h3>
-        <p>
-          PatchCleaner ships with a substring-exclude filter that, by default, leaves Adobe's
-          <span class="mono">.msp</span> patches in place. On machines where Adobe Acrobat
-          accumulates a lot of patch history, that can be a sizeable chunk of the cache:
-        </p>
-        <blockquote class="pull">
-          <p>
-            I've downloaded Patchcleaner to delete the orphaned .msp files... 29 GB of the
-            files are "excluded by filters", so Patchcleaner doesn't seem to help.
-          </p>
-          <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
-        </blockquote>
-        <p>
-          InstallerClean has no exclude filter. It identifies superseded Adobe patches via
-          the Windows Installer patch-state field and offers them up alongside everything
-          else.
-        </p>
-
-        <h3>The last release was 3 March 2016</h3>
-        <p>
-          PatchCleaner has not been updated in ten years. The source is closed, so nobody
-          else has been able to pick it up.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <section class="download" id="download">
-    <div class="wrap">
-      <header class="sec-head">
-        <p class="eyebrow">Download</p>
-        <h2>Three builds, choose one</h2>
-        <p class="sec-intro">
-          All three pass clean on every VirusTotal antivirus engine. The differences are size and
-          whether you want a Start Menu shortcut.
-        </p>
-      </header>
-
-      <div class="builds">
-        {
-          builds.map((b) => (
-            <article class="build-card">
-              <Icon name={b.icon} class="build-ic" aria-hidden="true" />
-              <h3>{b.label}</h3>
-              <p class="build-size">{b.size}</p>
-              <p class="build-blurb">{b.blurb}</p>
-              <a class="btn-primary build-btn" href={b.href}>
-                <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
-                Download {b.filename}
-              </a>
-              <a class="sha-link" href={b.shaHref} target="_blank" rel="noopener">
-                SHA-256
-                <Icon name="lucide:arrow-up-right" class="sha-arrow" aria-hidden="true" />
-              </a>
-            </article>
-          ))
-        }
-      </div>
-
-      <p class="smartscreen-note">
-        Windows SmartScreen will say "Unknown publisher" on first run. Click <strong>More info</strong>,
-        then <strong>Run anyway</strong>. This is normal for unsigned open-source software, and
-        the VirusTotal scans above are the cross-check.
-      </p>
-
-      <details class="scoop-block">
-        <summary>Or install via Scoop</summary>
-        <pre class="snippet"><code>scoop bucket add no-faff https://github.com/no-faff/scoop-bucket
-scoop install installerclean</code></pre>
-      </details>
-
-      <p class="releases-link">
-        <a href={releasesPage} target="_blank" rel="noopener">
-          All releases on GitHub
-          <Icon name="lucide:arrow-up-right" class="link-arrow" aria-hidden="true" />
-        </a>
-      </p>
-    </div>
-  </section>
-
   <section class="faq">
     <div class="wrap">
       <header class="sec-head">
@@ -762,11 +792,11 @@ scoop install installerclean</code></pre>
     <div class="wrap closing-inner">
       <h2>Worth running once</h2>
       <p>
-        If the folder has grown big on your machine you are in the right place. If it has
-        not, the scan tells you that quickly and you are done. It costs a minute either way.
-        Free, open source, clean on VirusTotal across every engine. One run in May 2026
-        freed 162 GB; most are a few GB or nothing at all. Run it once, and again in a year
-        or two if you feel like it.
+        If the folder has grown big on your machine you're in the right place. If it
+        hasn't, the scan tells you that quickly and you're done. It takes less than a
+        minute either way. Free, open source, clean on VirusTotal across every engine.
+        Some machines have nothing in there to free; others have a few GB, tens of GB,
+        sometimes more. One run in May 2026 freed 327 GB.
       </p>
       <a class="btn-primary" href={downloadPortable}>
         <Icon name="lucide:arrow-down-to-line" class="btn-ic" aria-hidden="true" />
@@ -775,6 +805,7 @@ scoop install installerclean</code></pre>
       <p class="closing-mini">
         Download, run, read the result, click Delete or Move.
       </p>
+      <p class="closing-mini closing-mini-tag">That's it.</p>
     </div>
   </section>
 
@@ -820,32 +851,42 @@ scoop install installerclean</code></pre>
   }
 
   .hero-title {
-    margin: 0 0 1.6rem;
+    margin: 0 0 1.4rem;
   }
-  .t-path {
-    display: block;
+  .t-chip {
+    display: inline-block;
     font-family: var(--font-mono);
-    font-size: 1.18rem;
+    font-size: 0.96rem;
     font-weight: 500;
-    letter-spacing: -0.005em;
+    padding: 0.3rem 0.7rem;
+    background: var(--c-panel-blue);
+    border: 1px solid var(--c-sky);
+    border-radius: 8px;
     color: var(--c-blue-deep);
-    margin-bottom: 0.6rem;
+    margin-bottom: 1.1rem;
   }
-  .t-act {
+  .t-headline {
     display: block;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(3rem, 5.4vw, 4.4rem);
-    line-height: 1;
-    letter-spacing: -0.04em;
+    font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
     color: var(--c-ink);
   }
   .hero-sub {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     line-height: 1.62;
     color: var(--c-body);
     max-width: 34rem;
-    margin: 0 0 2rem;
+    margin: 0 0 1.1rem;
+  }
+  .hero-sub:last-of-type {
+    margin-bottom: 2rem;
+  }
+  .hero-close {
+    font-weight: 500;
+    color: var(--c-ink);
   }
 
   .hero-cta {
@@ -1174,6 +1215,10 @@ scoop install installerclean</code></pre>
     color: var(--c-muted) !important;
     line-height: 1.55 !important;
   }
+  .closing-mini-tag {
+    margin-top: 0.35rem !important;
+    color: var(--c-ink) !important;
+  }
 
   /* ---------- reports (per-record bar chart) ---------- */
   .reports {
@@ -1391,43 +1436,56 @@ scoop install installerclean</code></pre>
     color: var(--c-muted);
   }
 
-  .reviewers {
+  .trust-stats {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.6rem;
-    align-items: center;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.2rem;
     max-width: 56rem;
-    margin: 0 auto;
+    margin: 0 auto 0.6rem;
+  }
+  .stat {
+    padding: 1.4rem 1.4rem;
     background: var(--c-panel-blue);
     border: 1px solid var(--c-sky);
     border-radius: 14px;
-    padding: 1.4rem 1.6rem;
+    text-align: center;
   }
-  .reviewer {
-    margin: 0;
-    font-size: 0.98rem;
-    line-height: 1.6;
+  .stat-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+    letter-spacing: -0.02em;
     color: var(--c-ink);
+    margin: 0 0 0.45rem;
+    line-height: 1;
   }
-  .reviewer a {
-    color: var(--c-blue);
-    border-bottom: 1px solid var(--c-blue-tint);
-  }
-  .reviewer a:hover {
-    border-bottom-color: var(--c-blue);
-  }
-  .reviewer-sp {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 1rem;
-  }
-  .reviewer-sp p {
+  .stat-label {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--c-body);
     margin: 0;
   }
-  .sp-badge {
-    display: block;
-    height: auto;
+  .trust-asof {
+    text-align: center;
+    max-width: 56rem;
+    margin: 0 auto 2.4rem;
+    font-size: 0.86rem;
+    color: var(--c-muted);
+  }
+  .third-party {
+    text-align: center;
+    max-width: 56rem;
+    margin: 0 auto;
+    font-size: 0.92rem;
+    color: var(--c-muted);
+  }
+  .third-party a {
+    color: var(--c-body);
+    border-bottom: 1px solid var(--c-line-strong);
+  }
+  .third-party a:hover {
+    color: var(--c-blue);
+    border-bottom-color: var(--c-blue);
   }
 
   /* ---------- download ---------- */
@@ -1514,6 +1572,10 @@ scoop install installerclean</code></pre>
   .scoop-block {
     max-width: 56rem;
     margin: 0 auto 1.4rem;
+    text-align: center;
+  }
+  .scoop-block[open] {
+    text-align: left;
   }
   .scoop-block summary {
     cursor: pointer;
@@ -1521,6 +1583,7 @@ scoop install installerclean</code></pre>
     color: var(--c-blue);
     padding: 0.5rem 0;
     list-style: none;
+    display: inline-block;
   }
   .scoop-block summary::-webkit-details-marker {
     display: none;
@@ -1709,13 +1772,8 @@ scoop install installerclean</code></pre>
     .builds {
       grid-template-columns: 1fr;
     }
-    .reviewers {
+    .trust-stats {
       grid-template-columns: 1fr;
-    }
-    .reviewer-sp {
-      grid-template-columns: 1fr;
-      justify-items: center;
-      text-align: center;
     }
   }
 </style>
