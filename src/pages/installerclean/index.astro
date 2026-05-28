@@ -709,18 +709,15 @@ scoop install installerclean</code></pre>
               yLabels.map((v) => {
                 const y = PY1 - scaleY(v) * PH;
                 return (
-                  <>
-                    <line x1={PX0} y1={y} x2={PX1} y2={y} class="grid" />
-                    <text
-                      x={PX0 - 12}
-                      y={y}
-                      class="y-label"
-                      text-anchor="end"
-                      dominant-baseline="middle"
-                    >
-                      {v === 0 ? '0' : `${v} GB`}
-                    </text>
-                  </>
+                  <text
+                    x={PX0 - 12}
+                    y={y}
+                    class="y-label"
+                    text-anchor="end"
+                    dominant-baseline="middle"
+                  >
+                    {v === 0 ? '0' : `${v} GB`}
+                  </text>
                 );
               })
             }
@@ -757,11 +754,6 @@ scoop install installerclean</code></pre>
         </div>
         <div class="chart-tip" data-tooltip aria-hidden="true"></div>
       </figure>
-
-      <p class="chart-takeaway">
-        Every machine is different. InstallerClean shows you exactly how much it can
-        remove on yours before you click anything, so you can decide then.
-      </p>
 
       <p class="report-footnote">
         <span class="report-dot" aria-hidden="true"></span>
@@ -1252,22 +1244,11 @@ scoop install installerclean</code></pre>
     margin: 0 0 1.2rem;
     max-width: 56rem;
   }
-  .chart-takeaway {
-    font-size: 1.02rem;
-    line-height: 1.6;
-    color: var(--c-body);
-    margin: 1.6rem auto 0;
-    max-width: 56rem;
-  }
   .chart-frame :global(svg) {
     display: block;
     width: 100%;
     height: auto;
     overflow: visible;
-  }
-  .chart-frame :global(.grid) {
-    stroke: var(--c-line);
-    stroke-width: 1;
   }
   .chart-frame :global(.axis) {
     stroke: var(--c-line-strong);
