@@ -132,69 +132,31 @@ const runs: Run[] = [
 ];
 // reports-data-end
 
-// Histogram geometry. Fixed freed-amount buckets so the chart never crunches
-// as runs accumulate, and the zero-freed runs become one honest "Nothing"
-// bar instead of invisible stubs. The y-axis is a linear run count, printed
-// on top of each bar so the chart needs no hover to read.
-const CHART_W = 960;
-const CHART_H = 300;
-const PADX = 36;
-const TOP = 36;
-const BASE = 250;
-const LABEL_Y = 280;
-const PLOT_H = BASE - TOP;
-
-function formatFreed(gb: number): string {
-  if (gb <= 0) return 'Nothing';
-  if (gb >= 1) {
-    const f = gb.toFixed(1);
-    return `${f.endsWith('.0') ? f.slice(0, -2) : f} GB`;
-  }
-  return `${Math.round(gb * 1024)} MB`;
+// Reports table, computed from the opt-in runs so it matches the README table
+// (InstallerClean repo, non-repo-files/refresh-reports-table.mjs) cell for cell:
+// the smallest freed value stays sub-GB precise, everything else rounds to whole GB.
+function fmtGb(gb: number): string {
+  const v = gb < 10 ? Math.round(gb * 10) / 10 : Math.round(gb);
+  return `${v} GB`;
 }
 
-const wins = runs.filter((r) => r.gb > 0);
 const totalRuns = runs.length;
-const maxFreed = wins.length ? Math.max(...wins.map((r) => r.gb)) : 1;
+const freed = runs
+  .filter((r) => r.gb > 0)
+  .map((r) => r.gb)
+  .sort((a, b) => a - b);
+const nothingPct = Math.round(((totalRuns - freed.length) / totalRuns) * 100);
+const freedPct = 100 - nothingPct;
 
-const bucketDefs: { label: string; in: (gb: number) => boolean }[] = [
-  { label: 'Nothing', in: (g) => g <= 0 },
-  { label: 'Under 1 GB', in: (g) => g > 0 && g < 1 },
-  { label: '1-10 GB', in: (g) => g >= 1 && g < 10 },
-  { label: '10-100 GB', in: (g) => g >= 10 && g < 100 },
-  { label: 'Over 100 GB', in: (g) => g >= 100 },
-];
-const bucketCounts = bucketDefs.map((b) => runs.filter((r) => b.in(r.gb)).length);
-const maxBucketCount = Math.max(1, ...bucketCounts);
-const colW = (CHART_W - PADX * 2) / bucketDefs.length;
-const barW = Math.min(colW * 0.58, 104);
-
-const histo = bucketDefs.map((b, i) => {
-  const count = bucketCounts[i];
-  const cx = PADX + (i + 0.5) * colW;
-  const h = (count / maxBucketCount) * PLOT_H;
-  return {
-    label: b.label,
-    count,
-    cx,
-    x: cx - barW / 2,
-    y: BASE - h,
-    h,
-    freed: i > 0,
-  };
-});
-
-const histoAria = `Histogram of how much disk space ${totalRuns} runs freed, grouped into five buckets from Nothing to over 100 GB.`;
-
-let chartSummary: string;
-if (wins.length === 0) {
-  chartSummary = `${totalRuns} run${totalRuns === 1 ? '' : 's'} so far. None freed space yet.`;
-} else {
-  const min = Math.min(...wins.map((r) => r.gb));
-  const max = Math.max(...wins.map((r) => r.gb));
-  const range =
-    wins.length === 1 ? `at ${formatFreed(max)}` : `from ${formatFreed(min)} to ${formatFreed(max)}`;
-  chartSummary = `${wins.length} of the ${totalRuns} runs freed space, ${range}. The rest had a tidy folder already.`;
+let smallest = '-';
+let median = '-';
+let largest = '-';
+if (freed.length > 0) {
+  const mid = Math.floor(freed.length / 2);
+  const med = freed.length % 2 ? freed[mid] : (freed[mid - 1] + freed[mid]) / 2;
+  smallest = fmtGb(freed[0]);
+  median = fmtGb(med);
+  largest = fmtGb(freed[freed.length - 1]);
 }
 ---
 
@@ -661,52 +623,39 @@ scoop install installerclean</code></pre>
       <header class="sec-head">
         <p class="eyebrow">Real reports</p>
         <h2>How much space people have actually freed</h2>
-        <p class="sec-intro">
-          Each bar is one report from someone who ran InstallerClean and pressed Send.
-          A clean Windows install has nothing to remove; a machine that's run Acrobat,
-          Office or other heavy desktop software can have tens of GB.
-        </p>
+        <p class="sec-intro">What's in there to clear varies a lot by machine: one that's run years of updates and heavy software like Acrobat, Office or big dev tools can be holding tens of GB.</p>
       </header>
 
-      <figure class="chart-card">
-        <p class="chart-summary">{chartSummary}</p>
-        <div class="chart-frame">
-          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} role="img" aria-label={histoAria}>
-            <line x1={PADX} y1={BASE} x2={CHART_W - PADX} y2={BASE} class="axis" />
-            {
-              histo.map((b) => (
-                <>
-                  {b.count > 0 && (
-                    <rect
-                      x={b.x}
-                      y={b.y}
-                      width={barW}
-                      height={b.h}
-                      rx="4"
-                      class={b.freed ? 'hbar-freed' : 'hbar-nothing'}
-                    />
-                  )}
-                  <text x={b.cx} y={b.y - 9} class="hbar-count" text-anchor="middle">
-                    {b.count}
-                  </text>
-                  <text x={b.cx} y={LABEL_Y} class="x-label" text-anchor="middle">
-                    {b.label}
-                  </text>
-                </>
-              ))
-            }
-          </svg>
-        </div>
-        {
-          wins.length > 0 && (
-            <p class="chart-callout">
-              Biggest single clean-up: <strong>{formatFreed(maxFreed)}</strong>
-            </p>
-          )
-        }
+      <figure class="reports-table-card">
+        <figcaption class="reports-lead">Across the {totalRuns} reports people have been kind enough to send in (thanks 🙏) since v1.8.0 added the option:</figcaption>
+        <table class="reports-table">
+          <thead>
+            <tr>
+              <th scope="col">Outcome</th>
+              <th scope="col">Share</th>
+              <th scope="col">Smallest</th>
+              <th scope="col">Median</th>
+              <th scope="col">Largest</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Nothing to remove</th>
+              <td>{nothingPct}%</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <th scope="row">Freed space</th>
+              <td>{freedPct}%</td>
+              <td>{smallest}</td>
+              <td>{median}</td>
+              <td>{largest}</td>
+            </tr>
+          </tbody>
+        </table>
       </figure>
-
-      <p class="report-footnote">Reports last refreshed {reportsAsOf}.</p>
     </div>
   </section>
 
@@ -1165,73 +1114,54 @@ scoop install installerclean</code></pre>
     color: var(--c-ink) !important;
   }
 
-  /* ---------- reports (per-record bar chart) ---------- */
+  /* ---------- reports (per-run dot strip) ---------- */
   .reports {
     background: var(--c-bg);
     border-top: 1px solid var(--c-line);
     padding: 5rem 0 5.5rem;
   }
-  .chart-card {
-    position: relative;
+  .reports-table-card {
     margin: 0;
     background: var(--c-panel);
     border: 1px solid var(--c-line);
     border-radius: 18px;
     box-shadow: var(--c-shadow-sm);
-    padding: 1.7rem 2rem 1.6rem;
+    padding: 1.7rem 2rem 1.9rem;
+    overflow-x: auto;
   }
-  .chart-summary {
+  .reports-lead {
     font-size: 1.02rem;
     line-height: 1.55;
     color: var(--c-body);
-    margin: 0 0 1.2rem;
+    margin: 0 0 1.3rem;
     max-width: 56rem;
   }
-  .chart-frame :global(svg) {
-    display: block;
+  .reports-table {
     width: 100%;
-    height: auto;
-    overflow: visible;
+    border-collapse: collapse;
+    font-size: 1.02rem;
+    color: var(--c-body);
   }
-  .chart-frame :global(.axis) {
-    stroke: var(--c-line-strong);
-    stroke-width: 1.4;
+  .reports-table th,
+  .reports-table td {
+    text-align: left;
+    padding: 0.72rem 0.9rem;
+    border-bottom: 1px solid var(--c-line);
+    white-space: nowrap;
   }
-  .chart-frame :global(.x-label) {
-    fill: var(--c-body);
-    font-family: var(--font-sans);
-    font-size: 14px;
+  .reports-table thead th {
+    font-weight: 700;
+    border-bottom: 1.5px solid var(--c-line-strong);
+  }
+  .reports-table tbody th {
     font-weight: 600;
   }
-  .chart-frame :global(.hbar-count) {
-    fill: var(--c-ink);
-    font-family: var(--font-sans);
-    font-size: 17px;
-    font-weight: 700;
+  .reports-table tbody tr:last-child th,
+  .reports-table tbody tr:last-child td {
+    border-bottom: none;
   }
-  .chart-frame :global(.hbar-freed) {
-    fill: var(--c-blue);
-  }
-  .chart-frame :global(.hbar-nothing) {
-    fill: var(--c-sky);
-  }
-  .chart-callout {
-    margin: 1.4rem 0 0;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--c-line);
-    font-size: 1.05rem;
-    color: var(--c-body);
-  }
-  .chart-callout strong {
-    color: var(--c-blue-deep);
-    font-weight: 700;
-  }
-  .report-footnote {
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: var(--c-body);
-    margin: 1.6rem auto 0;
-    max-width: 56rem;
+  .reports-table td {
+    font-variant-numeric: tabular-nums;
   }
   /* ---------- safety ---------- */
   .safety {
@@ -1665,7 +1595,7 @@ scoop install installerclean</code></pre>
     .step-text p {
       max-width: 100%;
     }
-    .chart-card {
+    .reports-table-card {
       padding: 1.3rem 1.2rem 1.2rem;
     }
     .vt-row {
