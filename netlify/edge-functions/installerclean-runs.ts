@@ -2,10 +2,11 @@ import type { Config, Context } from "@netlify/edge-functions";
 import { getStore } from "@netlify/blobs";
 
 // Per-record companion to /api/installerclean-stats. Walks every blob
-// in the installerclean-results store under the v1/ prefix and returns
-// one row per accepted report: the receive timestamp recovered from the
-// blob key, bytesFreed converted to GB to one decimal, and the
-// missingFromDiskCount as-is. Rows come back oldest first.
+// in the installerclean-results store across all schema-version
+// prefixes and returns one row per accepted report: the receive
+// timestamp recovered from the blob key, bytesFreed converted to GB to
+// one decimal, and the missingFromDiskCount as-is. Rows come back
+// oldest first.
 //
 // The opt-in reports the upstream client sends are counts-only; there
 // is no machine identifier, no path, no user name, no IP. Full
@@ -14,14 +15,17 @@ import { getStore } from "@netlify/blobs";
 const STORE_NAME = "installerclean-results";
 const CACHE_MAX_AGE_SECONDS = 300;
 
-// Key shape produced by netlify/edge-functions/result-log.ts is
-// `v1/<ISO with [:.] -> ->`-`<8 hex>.json`. Reversing that recovers
-// the receive timestamp without depending on Blob list metadata.
+// Key shape produced by netlify/edge-functions/result-log.ts is a
+// version prefix (`v1/`, `v2/`, or `v<n>-unknown/` for a version the
+// write side does not yet validate) followed by the ISO timestamp
+// (with [:.] replaced by -) and an 8-hex suffix. Matching every
+// version prefix means a future schema bump's reports are aggregated
+// rather than silently dropped, which is the bug this endpoint carried
+// when it matched only `v1/`.
 const KEY_PATTERN =
-  /^v1\/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z-[0-9a-f]+\.json$/;
+  /^v\d+(?:-unknown)?\/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z-[0-9a-f]+\.json$/;
 
 type StoredRecord = {
-  schemaVersion?: number;
   scan?: { missingFromDiskCount?: number };
   operation?: { bytesFreed?: number };
 };
@@ -62,7 +66,7 @@ export async function listRuns(): Promise<RunsResponse> {
   const store = getStore(STORE_NAME);
   const runs: Run[] = [];
 
-  for await (const page of store.list({ prefix: "v1/", paginate: true })) {
+  for await (const page of store.list({ paginate: true })) {
     for (const entry of page.blobs) {
       const ts = timestampFromKey(entry.key);
       if (!ts) continue;
@@ -81,8 +85,12 @@ export async function listRuns(): Promise<RunsResponse> {
       } catch {
         continue;
       }
-      if (record.schemaVersion !== 1) continue;
 
+      // No schemaVersion gate. bytesFreed and missingFromDiskCount sit
+      // at the same path in every schema shipped (the v2 bump only
+      // added obsoletedCount and re-split supersededCount), and both
+      // are read defensively below. Gating on a known-version set is
+      // what made this endpoint silently drop every v1.8.2 report.
       const bytesFreed = nonNegFinite(record.operation?.bytesFreed);
       const missing = nonNegFinite(record.scan?.missingFromDiskCount);
       runs.push({ ts, gb: roundToOneDecimal(bytesFreed / 1e9), missing });

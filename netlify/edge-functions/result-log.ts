@@ -19,7 +19,7 @@ import { getStore } from "@netlify/blobs";
 // still goes back so a slightly-newer client doesn't see "server
 // error" for what is really a deployment lag.
 
-const ALLOWED_VERSIONS = new Set([1]);
+const ALLOWED_VERSIONS = new Set([1, 2]);
 const MAX_BODY_BYTES = 64 * 1024;
 const STORE_NAME = "installerclean-results";
 
@@ -54,8 +54,8 @@ const MOVE_DESTINATION_KINDS = new Set([
 // any other key are rejected so an attacker cannot pad
 // `body.app.extraJunk = "x".repeat(60_000)` into a stored blob. The
 // top-level allowlist is enforced for every schemaVersion (not only
-// the ones validateSchema1 understands); the per-object allowlists
-// run inside validateSchema1 because the published schema for an
+// the ones validateReport understands); the per-object allowlists
+// run inside validateReport because the published schema for an
 // unknown version is by definition unknown.
 const ALLOWED_TOP = new Set(["schemaVersion", "app", "os", "scan", "operation"]);
 const ALLOWED_APP = new Set(["version"]);
@@ -64,6 +64,7 @@ const ALLOWED_SCAN = new Set([
   "registeredCount",
   "orphanedCount",
   "supersededCount",
+  "obsoletedCount",
   "missingFromDiskCount",
   "pendingReboot",
 ]);
@@ -198,12 +199,12 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
     });
   }
 
-  // Schema-version 1 is checked field-by-field. Unknown versions skip
-  // the field-level validation (stored under v<n>-unknown/) so a
+  // Known schema versions are checked field-by-field. Unknown versions
+  // skip the field-level validation (stored under v<n>-unknown/) so a
   // forward-compatible client deployment doesn't 400 against an older
   // function.
-  if (schemaVersion === 1) {
-    const error = validateSchema1(parsed);
+  if (ALLOWED_VERSIONS.has(schemaVersion)) {
+    const error = validateReport(parsed, schemaVersion);
     if (error) {
       return new Response(error, {
         status: 400,
@@ -215,7 +216,7 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   const rawUserAgent = req.headers.get("User-Agent") ?? "";
   const userAgent = USER_AGENT_PATTERN.test(rawUserAgent) ? rawUserAgent : "invalid";
 
-  const versionPrefix = ALLOWED_VERSIONS.has(schemaVersion) ? "v1" : `v${schemaVersion}-unknown`;
+  const versionPrefix = ALLOWED_VERSIONS.has(schemaVersion) ? `v${schemaVersion}` : `v${schemaVersion}-unknown`;
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const suffix = crypto.randomUUID().split("-")[0];
   const key = `${versionPrefix}/${timestamp}-${suffix}.json`;
@@ -256,10 +257,11 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   });
 }
 
-function validateSchema1(body: Record<string, unknown>): string | null {
+function validateReport(body: Record<string, unknown>, version: number): string | null {
   // Top-level allowlist runs above this function so unknown
   // schemaVersions are also filtered. Per-object allowlists below
-  // are gated on knowing the v1 shape.
+  // apply to the shared v1/v2 shape; the only structural difference is
+  // scan.obsoletedCount, which schema 2 adds and schema 1 omits.
 
   const app = body.app;
   if (!isPlainObject(app)) return "app must be an object";
@@ -277,13 +279,17 @@ function validateSchema1(body: Record<string, unknown>): string | null {
   if (!isPlainObject(scan)) return "scan must be an object";
   const scanUnknown = unknownKey(scan, ALLOWED_SCAN);
   if (scanUnknown) return `unknown key in scan: ${truncate(scanUnknown)}`;
-  for (const key of [
+  const scanNumericKeys = [
     "durationMs",
     "registeredCount",
     "orphanedCount",
     "supersededCount",
     "missingFromDiskCount",
-  ]) {
+  ];
+  // Schema 2 adds obsoletedCount (PatchState=4 split out of
+  // supersededCount). Required from v2 on, absent in v1.
+  if (version >= 2) scanNumericKeys.push("obsoletedCount");
+  for (const key of scanNumericKeys) {
     const value = (scan as Record<string, unknown>)[key];
     if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
       return `scan.${key} must be a non-negative finite number`;

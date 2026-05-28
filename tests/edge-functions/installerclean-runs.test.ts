@@ -13,8 +13,8 @@ vi.mock('@netlify/blobs', () => ({
 
 import { listRuns, timestampFromKey } from '../../netlify/edge-functions/installerclean-runs';
 
-function key(ts: string, suffix = 'a1b2c3d4'): string {
-  return `v1/${ts.replace(/[:.]/g, '-')}-${suffix}.json`;
+function key(ts: string, suffix = 'a1b2c3d4', prefix = 'v1'): string {
+  return `${prefix}/${ts.replace(/[:.]/g, '-')}-${suffix}.json`;
 }
 
 function record(bytesFreed: number, missing = 0, schemaVersion = 1): string {
@@ -33,9 +33,18 @@ describe('timestampFromKey', () => {
     );
   });
 
-  it('returns null for keys that do not match the v1 shape', () => {
-    expect(timestampFromKey('v2/2026-05-13T14-23-45-678Z-a3f9c2b1.json')).toBeNull();
+  it('recovers timestamps from any version prefix', () => {
+    expect(timestampFromKey('v2/2026-05-13T14-23-45-678Z-a3f9c2b1.json')).toBe(
+      '2026-05-13T14:23:45.678Z',
+    );
+    expect(timestampFromKey('v2-unknown/2026-05-13T14-23-45-678Z-a3f9c2b1.json')).toBe(
+      '2026-05-13T14:23:45.678Z',
+    );
+  });
+
+  it('returns null for keys that do not match the timestamp shape', () => {
     expect(timestampFromKey('v1/not-a-timestamp.json')).toBeNull();
+    expect(timestampFromKey('notaversion/2026-05-13T14-23-45-678Z-a3f9c2b1.json')).toBeNull();
   });
 });
 
@@ -78,13 +87,21 @@ describe('listRuns', () => {
     ]);
   });
 
-  it('skips records that are not schemaVersion 1', async () => {
+  it('includes records from every schema-version prefix', async () => {
+    // v1 report under v1/, v2 report under v2-unknown/ (where the write
+    // side files a version it does not yet validate). Both must be
+    // aggregated; gating on v1 only is what dropped every v1.8.2 report.
     blobState.blobs.set(key('2026-05-13T14:23:45.678Z'), record(1_000_000_000));
-    blobState.blobs.set(key('2026-05-13T15:00:00.000Z', 'b2c3d4e5'), record(1_000_000_000, 0, 2));
+    blobState.blobs.set(
+      key('2026-05-13T15:00:00.000Z', 'b2c3d4e5', 'v2-unknown'),
+      record(2_000_000_000, 0, 2),
+    );
 
     const out = await listRuns();
-    expect(out.runs).toHaveLength(1);
-    expect(out.runs[0].ts).toBe('2026-05-13T14:23:45.678Z');
+    expect(out.runs).toEqual([
+      { ts: '2026-05-13T14:23:45.678Z', gb: 1.0, missing: 0 },
+      { ts: '2026-05-13T15:00:00.000Z', gb: 2.0, missing: 0 },
+    ]);
   });
 
   it('treats missing or non-finite bytesFreed and missing counts as zero', async () => {
@@ -96,7 +113,7 @@ describe('listRuns', () => {
     expect(out.runs).toEqual([{ ts: '2026-05-13T14:23:45.678Z', gb: 0, missing: 0 }]);
   });
 
-  it('skips blobs whose key does not match the v1 timestamp shape', async () => {
+  it('skips blobs whose key does not match the timestamp shape', async () => {
     blobState.blobs.set('v1/not-a-timestamp.json', record(5_000_000_000));
     blobState.blobs.set(key('2026-05-13T14:23:45.678Z'), record(1_000_000_000));
     const out = await listRuns();
