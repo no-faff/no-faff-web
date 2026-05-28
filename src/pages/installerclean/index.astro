@@ -56,10 +56,6 @@ const builds = [
 
 const faqs = [
   {
-    q: 'Will I actually free up GBs of space?',
-    a: 'Depends on your machine. A clean Windows 11 install with no extra software has nothing to remove. A long-running computer that has run Acrobat, Office or other heavy desktop software can have tens of GB; the reports chart above has examples ranging from nothing to 327 GB. The app shows you exactly how much it can remove before you click anything, so you can decide then.',
-  },
-  {
     q: 'Why does Windows SmartScreen warn about the download?',
     a: 'Standard "Unknown publisher" warning Windows shows for any unsigned download that has not built up a reputation yet. Click <strong>More info</strong>, then <strong>Run anyway</strong>. EV code-signing certificates would skip the warning, but they cost hundreds a year plus a hardware token, and the project would rather stay free. The source is on GitHub, SHA-256 hashes ship alongside each binary, and VirusTotal links are in the safety section above.',
   },
@@ -196,7 +192,7 @@ const barW = Math.min(slotW * 0.6, 22);
 const bars = runs.map((r, i) => {
   const cx = PX0 + (i + 0.5) * slotW;
   const win = r.gb > 0;
-  const h = win ? Math.max(6, scaleY(r.gb) * PH) : 4;
+  const h = win ? Math.max(6, scaleY(r.gb) * PH) : 0;
   const y = PY1 - h;
   return {
     cx,
@@ -205,7 +201,7 @@ const bars = runs.map((r, i) => {
     h,
     win,
     missing: r.missing > 0,
-    dotY: y - 11,
+    dotY: (win ? y : PY1) - 11,
     tip: win ? `${formatFreed(r.gb)} freed` : 'Nothing to remove',
   };
 });
@@ -221,13 +217,13 @@ runs.forEach((r, i) => {
 
 let chartSummary: string;
 if (wins.length === 0) {
-  chartSummary = `${totalRuns} report${totalRuns === 1 ? '' : 's'} so far. None freed space yet.`;
+  chartSummary = `${totalRuns} run${totalRuns === 1 ? '' : 's'} so far. None freed space yet.`;
 } else {
   const min = Math.min(...wins.map((r) => r.gb));
   const max = Math.max(...wins.map((r) => r.gb));
   const range =
     wins.length === 1 ? `at ${formatFreed(max)}` : `from ${formatFreed(min)} to ${formatFreed(max)}`;
-  chartSummary = `${wins.length} of the ${totalRuns} reports freed space, ${range}. The rest had a tidy folder already.`;
+  chartSummary = `${wins.length} of the ${totalRuns} runs freed space, ${range}. The rest had a tidy folder already.`;
 }
 ---
 
@@ -693,10 +689,11 @@ scoop install installerclean</code></pre>
     <div class="wrap">
       <header class="sec-head">
         <p class="eyebrow">Real reports</p>
-        <h2>What people have actually found</h2>
+        <h2>How much space people have actually freed</h2>
         <p class="sec-intro">
           Each bar is one report from someone who ran InstallerClean and pressed Send.
-          Some freed a lot. Some had a tidy folder already.
+          A clean Windows install has nothing to remove; a machine that's run Acrobat,
+          Office or other heavy desktop software can have tens of GB.
         </p>
       </header>
 
@@ -731,15 +728,17 @@ scoop install installerclean</code></pre>
             {
               bars.map((b) => (
                 <>
-                  <rect
-                    x={b.x}
-                    y={b.y}
-                    width={barW}
-                    height={b.h}
-                    rx="3"
-                    class={b.win ? 'bar bar-win' : 'bar bar-none'}
-                    data-tip={b.tip}
-                  />
+                  {b.win && (
+                    <rect
+                      x={b.x}
+                      y={b.y}
+                      width={barW}
+                      height={b.h}
+                      rx="3"
+                      class="bar bar-win"
+                      data-tip={b.tip}
+                    />
+                  )}
                   {b.missing && <circle cx={b.cx} cy={b.dotY} r="4.5" class="marker" />}
                 </>
               ))
@@ -759,13 +758,19 @@ scoop install installerclean</code></pre>
         <div class="chart-tip" data-tooltip aria-hidden="true"></div>
       </figure>
 
+      <p class="chart-takeaway">
+        Every machine is different. InstallerClean shows you exactly how much it can
+        remove on yours before you click anything, so you can decide then.
+      </p>
+
       <p class="report-footnote">
         <span class="report-dot" aria-hidden="true"></span>
-        A yellow dot above a bar means Windows expected an installer file that was not on disk
-        before the run started. Nothing about the cleanup caused or worsened that. If Windows
-        later asks for the original installer for a piece of software, restore from the Recycle
-        Bin if you Deleted, copy it back from your move folder if you Moved, or download the
-        installer again from the vendor. Reports last refreshed {reportsAsOf}.
+        A yellow dot above a bar means Windows expected an installer file that was already
+        missing from the folder before the run started. InstallerClean didn't remove it, it
+        only noticed it while scanning, and the cleanup neither caused nor worsened it. If
+        Windows ever needs that installer (to change or remove the program), download it again
+        from the vendor and run it: that refills the cache and you keep all your settings.
+        Reports last refreshed {reportsAsOf}.
       </p>
     </div>
   </section>
@@ -1247,6 +1252,13 @@ scoop install installerclean</code></pre>
     margin: 0 0 1.2rem;
     max-width: 56rem;
   }
+  .chart-takeaway {
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--c-body);
+    margin: 1.6rem auto 0;
+    max-width: 56rem;
+  }
   .chart-frame :global(svg) {
     display: block;
     width: 100%;
@@ -1280,9 +1292,6 @@ scoop install installerclean</code></pre>
   }
   .chart-frame :global(.bar-win) {
     fill: var(--c-blue);
-  }
-  .chart-frame :global(.bar-none) {
-    fill: var(--c-line-strong);
   }
   .chart-frame :global(.marker) {
     fill: var(--c-yellow);
