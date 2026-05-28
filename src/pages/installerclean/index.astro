@@ -69,7 +69,7 @@ const faqs = [
   },
   {
     q: 'Will Windows complain if I remove these files?',
-    a: 'Not normally. InstallerClean only removes files Windows itself reports as no-longer-needed via its own installer-database API. The rare exception is a machine whose Installer database is out of date, usually after a previous uninstall that did not complete cleanly. On those, a later attempt to uninstall some product might fail with Windows asking for the original installer. This has not been reported on InstallerClean across many thousands of downloads, but the recovery is simple: <ul><li><strong>If you Deleted:</strong> restore the files from the Recycle Bin. They go back to <code>C:\\Windows\\Installer</code> automatically and the uninstall succeeds.</li><li><strong>If you Moved:</strong> copy the files from your move folder back into <code>C:\\Windows\\Installer</code> and the uninstall succeeds.</li><li><strong>No copy anywhere:</strong> download the installer again from the vendor and run it. That refills the cache and the uninstall succeeds.</li></ul>',
+    a: 'Not normally. InstallerClean only removes files Windows itself reports as no-longer-needed, so it will not cause this. And if a needed installer file ever goes missing from <code>C:\\Windows\\Installer</code> for any reason (an old cleaner, a manual delete, anything), the fix is the same and simple: download the installer for that program from the vendor and run it. It refills the cache, any later uninstall or repair then succeeds, and you keep all your settings with no data lost. Even the worst case anyone could picture here is a one-minute re-download.',
   },
   {
     q: 'What about that other big Windows folder, WinSxS?',
@@ -200,8 +200,6 @@ const bars = runs.map((r, i) => {
     y,
     h,
     win,
-    missing: r.missing > 0,
-    dotY: (win ? y : PY1) - 11,
     tip: win ? `${formatFreed(r.gb)} freed` : 'Nothing to remove',
   };
 });
@@ -736,7 +734,6 @@ scoop install installerclean</code></pre>
                       data-tip={b.tip}
                     />
                   )}
-                  {b.missing && <circle cx={b.cx} cy={b.dotY} r="4.5" class="marker" />}
                 </>
               ))
             }
@@ -755,15 +752,7 @@ scoop install installerclean</code></pre>
         <div class="chart-tip" data-tooltip aria-hidden="true"></div>
       </figure>
 
-      <p class="report-footnote">
-        <span class="report-dot" aria-hidden="true"></span>
-        A yellow dot above a bar means Windows expected an installer file that was already
-        missing from the folder before the run started. InstallerClean didn't remove it, it
-        only noticed it while scanning, and the cleanup neither caused nor worsened it. If
-        Windows ever needs that installer (to change or remove the program), download it again
-        from the vendor and run it: that refills the cache and you keep all your settings.
-        Reports last refreshed {reportsAsOf}.
-      </p>
+      <p class="report-footnote">Reports last refreshed {reportsAsOf}.</p>
     </div>
   </section>
 
@@ -1274,11 +1263,6 @@ scoop install installerclean</code></pre>
   .chart-frame :global(.bar-win) {
     fill: var(--c-blue);
   }
-  .chart-frame :global(.marker) {
-    fill: var(--c-yellow);
-    stroke: var(--c-panel);
-    stroke-width: 1.5;
-  }
   .chart-tip {
     position: absolute;
     left: 0;
@@ -1316,16 +1300,6 @@ scoop install installerclean</code></pre>
     margin: 1.6rem auto 0;
     max-width: 56rem;
   }
-  .report-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--c-yellow);
-    margin-right: 0.45rem;
-    vertical-align: 1px;
-  }
-
   /* ---------- safety ---------- */
   .safety {
     background: var(--c-white);
