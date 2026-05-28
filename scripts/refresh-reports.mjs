@@ -31,7 +31,10 @@ let resp;
 let usedUrl;
 for (const candidate of URLS) {
   try {
-    const r = await fetch(candidate, { headers: { Accept: 'application/json' } });
+    // Unique query param bypasses the endpoint's 5-min cache so a
+    // manual refresh always gets the current tally.
+    const bust = (candidate.includes('?') ? '&' : '?') + 'nocache=' + Date.now();
+    const r = await fetch(candidate + bust, { headers: { Accept: 'application/json' } });
     if (r.ok) {
       resp = r;
       usedUrl = candidate;
