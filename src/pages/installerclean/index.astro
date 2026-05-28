@@ -731,9 +731,16 @@ scoop install installerclean</code></pre>
                       height={b.h}
                       rx="3"
                       class="bar bar-win"
-                      data-tip={b.tip}
                     />
                   )}
+                  <rect
+                    x={b.cx - slotW / 2}
+                    y={PY1 - PH}
+                    width={slotW}
+                    height={PH}
+                    class="bar-hit"
+                    data-tip={b.tip}
+                  />
                 </>
               ))
             }
@@ -1263,6 +1270,9 @@ scoop install installerclean</code></pre>
   .chart-frame :global(.bar-win) {
     fill: var(--c-blue);
   }
+  .chart-frame :global(.bar-hit) {
+    fill: transparent;
+  }
   .chart-tip {
     position: absolute;
     left: 0;
@@ -1752,16 +1762,15 @@ scoop install installerclean</code></pre>
   const tip = document.querySelector<HTMLElement>('[data-tooltip]');
 
   if (chart && tip) {
-    chart.querySelectorAll<SVGRectElement>('.bar').forEach((bar) => {
-      bar.addEventListener('pointerenter', () => {
-        tip.textContent = bar.getAttribute('data-tip') ?? '';
-        const b = bar.getBoundingClientRect();
+    chart.querySelectorAll<SVGRectElement>('.bar-hit').forEach((hit) => {
+      hit.addEventListener('pointermove', (e) => {
+        tip.textContent = hit.getAttribute('data-tip') ?? '';
         const c = chart.getBoundingClientRect();
-        tip.style.left = `${b.left - c.left + b.width / 2}px`;
-        tip.style.top = `${b.top - c.top}px`;
+        tip.style.left = `${e.clientX - c.left}px`;
+        tip.style.top = `${e.clientY - c.top}px`;
         tip.dataset.show = 'true';
       });
-      bar.addEventListener('pointerleave', () => {
+      hit.addEventListener('pointerleave', () => {
         tip.dataset.show = 'false';
       });
     });
