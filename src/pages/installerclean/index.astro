@@ -132,38 +132,17 @@ const runs: Run[] = [
 ];
 // reports-data-end
 
+// Histogram geometry. Fixed freed-amount buckets so the chart never crunches
+// as runs accumulate, and the zero-freed runs become one honest "Nothing"
+// bar instead of invisible stubs. The y-axis is a linear run count, printed
+// on top of each bar so the chart needs no hover to read.
 const CHART_W = 960;
-const CHART_H = 320;
-const PX0 = 54;
-const PX1 = 938;
-const PY0 = 22;
-const PY1 = 268;
-const PW = PX1 - PX0;
-const PH = PY1 - PY0;
-
-function niceMax(v: number): number {
-  const ladder = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
-  for (const c of ladder) if (c >= v) return c;
-  return Math.ceil(v / 1000) * 1000;
-}
-
-function labelsFor(yMax: number): number[] {
-  const sets: Record<number, number[]> = {
-    1: [0, 1],
-    2: [0, 1, 2],
-    5: [0, 1, 5],
-    10: [0, 1, 5, 10],
-    20: [0, 1, 5, 20],
-    50: [0, 1, 5, 25, 50],
-    100: [0, 1, 10, 50, 100],
-    200: [0, 1, 10, 50, 200],
-    500: [0, 1, 10, 100, 500],
-    1000: [0, 1, 10, 100, 1000],
-    2000: [0, 1, 10, 100, 1000, 2000],
-    5000: [0, 1, 10, 100, 1000, 5000],
-  };
-  return sets[yMax] ?? [0, 1, 10, 100, yMax];
-}
+const CHART_H = 300;
+const PADX = 36;
+const TOP = 36;
+const BASE = 250;
+const LABEL_Y = 280;
+const PLOT_H = BASE - TOP;
 
 function formatFreed(gb: number): string {
   if (gb <= 0) return 'Nothing';
@@ -174,44 +153,38 @@ function formatFreed(gb: number): string {
   return `${Math.round(gb * 1024)} MB`;
 }
 
-function monthLabelFromIso(iso: string): string {
-  const d = new Date(iso);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
-
 const wins = runs.filter((r) => r.gb > 0);
 const totalRuns = runs.length;
 const maxFreed = wins.length ? Math.max(...wins.map((r) => r.gb)) : 1;
-const yMax = niceMax(maxFreed);
-const yLabels = labelsFor(yMax);
-const scaleY = (gb: number) => Math.sqrt(Math.max(0, gb)) / Math.sqrt(yMax);
-const slotW = PW / runs.length;
-const barW = Math.min(slotW * 0.6, 22);
 
-const bars = runs.map((r, i) => {
-  const cx = PX0 + (i + 0.5) * slotW;
-  const win = r.gb > 0;
-  const h = win ? Math.max(6, scaleY(r.gb) * PH) : 0;
-  const y = PY1 - h;
+const bucketDefs: { label: string; in: (gb: number) => boolean }[] = [
+  { label: 'Nothing', in: (g) => g <= 0 },
+  { label: 'Under 1 GB', in: (g) => g > 0 && g < 1 },
+  { label: '1-10 GB', in: (g) => g >= 1 && g < 10 },
+  { label: '10-100 GB', in: (g) => g >= 10 && g < 100 },
+  { label: 'Over 100 GB', in: (g) => g >= 100 },
+];
+const bucketCounts = bucketDefs.map((b) => runs.filter((r) => b.in(r.gb)).length);
+const maxBucketCount = Math.max(1, ...bucketCounts);
+const colW = (CHART_W - PADX * 2) / bucketDefs.length;
+const barW = Math.min(colW * 0.58, 104);
+
+const histo = bucketDefs.map((b, i) => {
+  const count = bucketCounts[i];
+  const cx = PADX + (i + 0.5) * colW;
+  const h = (count / maxBucketCount) * PLOT_H;
   return {
+    label: b.label,
+    count,
     cx,
     x: cx - barW / 2,
-    y,
+    y: BASE - h,
     h,
-    win,
-    tip: win ? `${formatFreed(r.gb)} freed` : 'Nothing to remove',
+    freed: i > 0,
   };
 });
 
-type MonthGroup = { label: string; start: number; end: number };
-const monthGroups: MonthGroup[] = [];
-runs.forEach((r, i) => {
-  const label = monthLabelFromIso(r.ts);
-  const last = monthGroups[monthGroups.length - 1];
-  if (last && last.label === label) last.end = i;
-  else monthGroups.push({ label, start: i, end: i });
-});
+const histoAria = `Histogram of how much disk space ${totalRuns} runs freed, grouped into five buckets from Nothing to over 100 GB.`;
 
 let chartSummary: string;
 if (wins.length === 0) {
@@ -698,65 +671,39 @@ scoop install installerclean</code></pre>
       <figure class="chart-card">
         <p class="chart-summary">{chartSummary}</p>
         <div class="chart-frame">
-          <svg
-            viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-            role="img"
-            aria-label={`Bar chart of disk space freed across ${totalRuns} opt-in reports.`}
-          >
+          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} role="img" aria-label={histoAria}>
+            <line x1={PADX} y1={BASE} x2={CHART_W - PADX} y2={BASE} class="axis" />
             {
-              yLabels.map((v) => {
-                const y = PY1 - scaleY(v) * PH;
-                return (
-                  <text
-                    x={PX0 - 12}
-                    y={y}
-                    class="y-label"
-                    text-anchor="end"
-                    dominant-baseline="middle"
-                  >
-                    {v === 0 ? '0' : `${v} GB`}
-                  </text>
-                );
-              })
-            }
-            <line x1={PX0} y1={PY1} x2={PX1} y2={PY1} class="axis" />
-            {
-              bars.map((b) => (
+              histo.map((b) => (
                 <>
-                  {b.win && (
+                  {b.count > 0 && (
                     <rect
                       x={b.x}
                       y={b.y}
                       width={barW}
                       height={b.h}
-                      rx="3"
-                      class="bar bar-win"
+                      rx="4"
+                      class={b.freed ? 'hbar-freed' : 'hbar-nothing'}
                     />
                   )}
-                  <rect
-                    x={b.cx - slotW / 2}
-                    y={PY1 - PH}
-                    width={slotW}
-                    height={PH}
-                    class="bar-hit"
-                    data-tip={b.tip}
-                  />
+                  <text x={b.cx} y={b.y - 9} class="hbar-count" text-anchor="middle">
+                    {b.count}
+                  </text>
+                  <text x={b.cx} y={LABEL_Y} class="x-label" text-anchor="middle">
+                    {b.label}
+                  </text>
                 </>
               ))
             }
-            {
-              monthGroups.map((g) => {
-                const cx = PX0 + ((g.start + g.end + 1) / 2) * slotW;
-                return (
-                  <text x={cx} y={PY1 + 26} class="x-label" text-anchor="middle">
-                    {g.label}
-                  </text>
-                );
-              })
-            }
           </svg>
         </div>
-        <div class="chart-tip" data-tooltip aria-hidden="true"></div>
+        {
+          wins.length > 0 && (
+            <p class="chart-callout">
+              Biggest single clean-up: <strong>{formatFreed(maxFreed)}</strong>
+            </p>
+          )
+        }
       </figure>
 
       <p class="report-footnote">Reports last refreshed {reportsAsOf}.</p>
@@ -1250,58 +1197,34 @@ scoop install installerclean</code></pre>
     stroke: var(--c-line-strong);
     stroke-width: 1.4;
   }
-  .chart-frame :global(.y-label),
   .chart-frame :global(.x-label) {
-    fill: var(--c-muted);
-    font-family: var(--font-sans);
-    font-size: 13px;
-  }
-  .chart-frame :global(.x-label) {
-    font-weight: 600;
     fill: var(--c-body);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
   }
-  .chart-frame :global(.bar) {
-    transition: opacity 120ms ease-out;
-    cursor: default;
+  .chart-frame :global(.hbar-count) {
+    fill: var(--c-ink);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 700;
   }
-  .chart-frame :global(.bar:hover) {
-    opacity: 0.82;
-  }
-  .chart-frame :global(.bar-win) {
+  .chart-frame :global(.hbar-freed) {
     fill: var(--c-blue);
   }
-  .chart-frame :global(.bar-hit) {
-    fill: transparent;
+  .chart-frame :global(.hbar-nothing) {
+    fill: var(--c-sky);
   }
-  .chart-tip {
-    position: absolute;
-    left: 0;
-    top: 0;
-    transform: translate(-50%, calc(-100% - 10px));
-    padding: 0.3rem 0.7rem;
-    background: var(--c-ink);
-    color: var(--c-white);
-    border-radius: 7px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 120ms ease-out;
-    box-shadow: 0 6px 18px rgba(14, 40, 64, 0.18);
+  .chart-callout {
+    margin: 1.4rem 0 0;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--c-line);
+    font-size: 1.05rem;
+    color: var(--c-body);
   }
-  .chart-tip[data-show='true'] {
-    opacity: 1;
-  }
-  .chart-tip::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    bottom: -3px;
-    width: 7px;
-    height: 7px;
-    background: var(--c-ink);
-    transform: translateX(-50%) rotate(45deg);
+  .chart-callout strong {
+    color: var(--c-blue-deep);
+    font-weight: 700;
   }
   .report-footnote {
     font-size: 0.95rem;
@@ -1756,23 +1679,3 @@ scoop install installerclean</code></pre>
     }
   }
 </style>
-
-<script>
-  const chart = document.querySelector<HTMLElement>('.chart-frame');
-  const tip = document.querySelector<HTMLElement>('[data-tooltip]');
-
-  if (chart && tip) {
-    chart.querySelectorAll<SVGRectElement>('.bar-hit').forEach((hit) => {
-      hit.addEventListener('pointermove', (e) => {
-        tip.textContent = hit.getAttribute('data-tip') ?? '';
-        const c = chart.getBoundingClientRect();
-        tip.style.left = `${e.clientX - c.left}px`;
-        tip.style.top = `${e.clientY - c.top}px`;
-        tip.dataset.show = 'true';
-      });
-      hit.addEventListener('pointerleave', () => {
-        tip.dataset.show = 'false';
-      });
-    });
-  }
-</script>
