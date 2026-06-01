@@ -1,12 +1,13 @@
 import type { Config, Context } from "@netlify/edge-functions";
 import { getStore } from "@netlify/blobs";
 
-// Per-record companion to /api/installerclean-stats. Walks every blob
-// in the installerclean-results store across all schema-version
-// prefixes and returns one row per accepted report: the receive
-// timestamp recovered from the blob key, bytesFreed converted to GB to
-// one decimal, and the missingFromDiskCount as-is. Rows come back
-// oldest first.
+// Walks every blob in the installerclean-results store across all
+// schema-version prefixes and returns one row per accepted report: the
+// receive timestamp recovered from the blob key, bytesFreed converted
+// to GB to one decimal, and the missingFromDiskCount as-is. Rows come
+// back oldest first. Feeds the build-time chart + README table refresh
+// (scripts/refresh-reports.mjs); the full per-field dataset is the
+// gated /api/installerclean-export.
 //
 // The opt-in reports the upstream client sends are counts-only; there
 // is no machine identifier, no path, no user name, no IP. Full

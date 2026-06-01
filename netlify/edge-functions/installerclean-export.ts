@@ -3,9 +3,8 @@ import { getStore } from "@netlify/blobs";
 
 // Authenticated full export of the InstallerClean opt-in reports.
 // Companion to the public /api/installerclean-runs (which returns only
-// { ts, gb, missing } per report) and /api/installerclean-stats (coarse
-// aggregates, schema-1 only). This endpoint returns every stored field
-// of every report across all schema-version prefixes, for the
+// { ts, gb, missing } per report). This endpoint returns every stored
+// field of every report across all schema-version prefixes, for the
 // operator's own tooling to pull into a single local file and query.
 //
 // Why gated, when the stored bodies are PII-free by construction
@@ -28,8 +27,7 @@ const STORE_NAME = "installerclean-results";
 // validate) then the ISO timestamp with [:.] replaced by - and an
 // 8-hex suffix. Matching every version prefix means a schema bump's
 // reports export rather than being silently dropped, the same contract
-// /api/installerclean-runs holds and the opposite of the v1-only
-// /api/installerclean-stats.
+// /api/installerclean-runs holds.
 const KEY_PATTERN =
   /^v\d+(?:-unknown)?\/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z-[0-9a-f]+\.json$/;
 
