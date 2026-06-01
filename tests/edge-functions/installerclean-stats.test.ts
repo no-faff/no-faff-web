@@ -77,12 +77,19 @@ describe('aggregate', () => {
     blobState.blobs.clear();
   });
 
-  it('counts only schemaVersion 1 records', async () => {
-    blobState.blobs.set('v1/a.json', record(3072));
-    blobState.blobs.set('v1/b.json', record(0));
-    blobState.blobs.set('v1/c.json', record(1024, 2));
+  it('counts records of every schema version, not v1 alone', async () => {
+    // The fields this endpoint reads (kind, outcome, bytesFreed,
+    // pendingReboot, app.version, moveDestinationKind) are identical
+    // across schema 1 and 2; schema 2's only change was splitting
+    // obsoletedCount out of supersededCount, neither of which is read
+    // here. So every version is counted: a v1-only filter silently
+    // dropped the entire v1.8.0+ population.
+    blobState.blobs.set('v1/a.json', record(3072, 1));
+    blobState.blobs.set('v2/b.json', record(0, 2));
+    blobState.blobs.set('v2-unknown/c.json', record(1024, 2));
     const stats = await aggregate();
-    expect(stats.totalRuns).toBe(2);
+    expect(stats.totalRuns).toBe(3);
+    expect(stats.totalBytesFreed).toBe(4096);
   });
 
   it('reports the freed-nothing and freed-something split', async () => {

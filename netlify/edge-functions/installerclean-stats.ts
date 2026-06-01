@@ -157,13 +157,21 @@ export async function aggregate(): Promise<Stats> {
   const moveDestinationKindDistribution: Record<string, number> = {};
   const appVersionCounts: Record<string, number> = {};
 
-  // store.list({ paginate: true }) returns an async iterator over
-  // pages; iterate every blob under v1/. Schema 2 / 3 / etc keys
-  // live under v<n>/ prefixes and are not included here so a future
-  // schema bump lands without retrofitting this aggregator first.
-  // When v2 ships, add a parallel branch with its own field-mapping
-  // rather than reading both shapes at once.
-  for await (const page of store.list({ prefix: "v1/", paginate: true })) {
+  // Iterate every blob across all version prefixes (v1/, v2/, and the
+  // v<n>-unknown/ fallback the write side mints for a version newer
+  // than its allowlist). The fields read below (operation.kind /
+  // outcome / bytesFreed / moveDestinationKind, scan.pendingReboot,
+  // app.version) are identical across schema 1 and 2; schema 2's only
+  // structural change was splitting obsoletedCount out of
+  // supersededCount, neither of which this aggregator reads. A
+  // previous prefix: "v1/" + `schemaVersion !== 1` filter silently
+  // excluded the entire v1.8.0+ (schema-2) population, so totalRuns
+  // and every distribution under-counted; anything keying a display
+  // off this endpoint would have shown numbers matching nothing else.
+  // If a future schema bump changes one of the read fields, branch on
+  // schemaVersion for that field rather than reintroducing a prefix
+  // filter that drops whole populations.
+  for await (const page of store.list({ paginate: true })) {
     for (const entry of page.blobs) {
       let raw: string | null;
       try {
@@ -180,7 +188,9 @@ export async function aggregate(): Promise<Stats> {
         continue;
       }
 
-      if (record.schemaVersion !== 1) continue;
+      // A finite version >= 1 marks a real stored report; reject a
+      // stray non-report blob without pinning to a single version.
+      if (typeof record.schemaVersion !== "number" || record.schemaVersion < 1) continue;
 
       totalRuns++;
 
