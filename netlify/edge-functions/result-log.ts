@@ -19,7 +19,11 @@ import { getStore } from "@netlify/blobs";
 // still goes back so a slightly-newer client doesn't see "server
 // error" for what is really a deployment lag.
 
-const ALLOWED_VERSIONS = new Set([1, 2]);
+// Schema 3 adds the optional per-error `codes` HRESULT histogram and the
+// IFileOperation-era delete categories (see ALLOWED_ERROR_CATEGORY). A
+// version outside this set is stored under v<n>-unknown/ and still 200s,
+// so a client that ships ahead of this deploy never loses a report.
+const ALLOWED_VERSIONS = new Set([1, 2, 3]);
 const MAX_BODY_BYTES = 64 * 1024;
 const STORE_NAME = "installerclean-results";
 
@@ -77,7 +81,15 @@ const ALLOWED_OPERATION = new Set([
   "errors",
   "moveDestinationKind",
 ]);
-const ALLOWED_ERROR = new Set(["category", "count"]);
+const ALLOWED_ERROR = new Set(["category", "count", "codes"]);
+
+// Optional per-error HRESULT histogram (schema 3+, delete only). Keys are
+// the shell HRESULT formatted exactly as the client renders it for
+// display: 0x followed by eight uppercase hex digits. Values are per-code
+// file counts. One error bucket can hold files that failed with different
+// codes, so it is a map, not a single code. Bounded like the errors array.
+const HRESULT_KEY_PATTERN = /^0x[0-9A-F]{8}$/;
+const MAX_ERROR_CODES = 100;
 
 // Architecture suffix from RuntimeInformation.OSArchitecture mirrors
 // .NET's Architecture enum names; the four family labels come from
@@ -104,11 +116,17 @@ const ALLOWED_OS = new Set([
 
 // Categories are the C# runtime type names of FileOperationError's
 // subclasses in InstallerClean.Core.Models. Anything else rejects.
+// ShellRefused is the SHFileOperation-era recycle failure that clients up
+// to v1.8.2 emit; RecycleFailed and PermanentlyDeleted are its
+// IFileOperation-era successors from v1.8.3 on. All three stay accepted so
+// reports from both client generations validate.
 const ALLOWED_ERROR_CATEGORY = new Set([
   "MissingSourceFile",
   "AccessDenied",
   "DestinationCollision",
   "ShellRefused",
+  "RecycleFailed",
+  "PermanentlyDeleted",
   "SourceIsReparsePoint",
   "IOFailure",
   "UnknownError",
@@ -257,7 +275,7 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   });
 }
 
-function validateReport(body: Record<string, unknown>, version: number): string | null {
+export function validateReport(body: Record<string, unknown>, version: number): string | null {
   // Top-level allowlist runs above this function so unknown
   // schemaVersions are also filtered. Per-object allowlists below
   // apply to the shared v1/v2 shape; the only structural difference is
@@ -326,6 +344,29 @@ function validateReport(body: Record<string, unknown>, version: number): string 
     }
     if (typeof entry.count !== "number" || !Number.isFinite(entry.count) || entry.count < 0) {
       return "operation.errors[].count must be a non-negative finite number";
+    }
+    // codes is optional (only recycle-failure categories carry it) and is
+    // shape-validated when present: a plain object of bounded size, hex
+    // HRESULT keys, non-negative finite counts. No free-form bytes reach
+    // the store, matching the allowlist discipline of every other field.
+    const codes = entry.codes;
+    if (codes !== undefined) {
+      if (!isPlainObject(codes)) {
+        return "operation.errors[].codes must be an object";
+      }
+      const codeKeys = Object.keys(codes);
+      if (codeKeys.length > MAX_ERROR_CODES) {
+        return `operation.errors[].codes capped at ${MAX_ERROR_CODES} entries`;
+      }
+      for (const codeKey of codeKeys) {
+        if (!HRESULT_KEY_PATTERN.test(codeKey)) {
+          return `operation.errors[].codes key must be a 0xNNNNNNNN HRESULT: ${truncate(codeKey)}`;
+        }
+        const codeCount = codes[codeKey];
+        if (typeof codeCount !== "number" || !Number.isFinite(codeCount) || codeCount < 0) {
+          return "operation.errors[].codes values must be non-negative finite numbers";
+        }
+      }
     }
   }
   const dest = op.moveDestinationKind;

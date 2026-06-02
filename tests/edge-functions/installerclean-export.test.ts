@@ -108,6 +108,28 @@ describe('exportReports', () => {
     expect(failed.key).toContain('v2/');
   });
 
+  it('preserves the schema-3 per-error codes map through export', async () => {
+    // The export spreads the literal stored body, so the codes
+    // histogram lands losslessly in reports.json for analysis; this
+    // pins that contract against a future "tidy the payload" change.
+    blobState.blobs.set(
+      key('2026-06-02T10:00:00.000Z', 'eeeeeeee', 'v3'),
+      record({
+        schemaVersion: 3,
+        operation: {
+          kind: 'delete',
+          outcome: 'failed',
+          bytesFreed: 0,
+          errors: [{ category: 'RecycleFailed', count: 2, codes: { '0x80004005': 2 } }],
+        },
+      }),
+    );
+
+    const out = await exportReports();
+    const r = out.reports[0] as Record<string, any>;
+    expect(r.operation.errors[0].codes).toEqual({ '0x80004005': 2 });
+  });
+
   it('skips blobs with unparseable JSON or a non-conforming key', async () => {
     blobState.blobs.set(key('2026-05-28T10:45:26.039Z'), record());
     blobState.blobs.set(key('2026-05-28T11:00:00.000Z', 'dddddddd'), '{ not json');
