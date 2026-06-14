@@ -69,7 +69,7 @@ const faqs = [
   },
   {
     q: 'Will Windows complain if I remove these files?',
-    a: 'Not normally. InstallerClean only removes files Windows itself reports as no-longer-needed, so it will not cause this. And if a needed installer file ever goes missing from <code>C:\\Windows\\Installer</code> for any reason (an old cleaner, a manual delete, anything), the fix is the same and simple: download the installer for that program from the vendor and run it. It refills the cache, any later uninstall or repair then succeeds, and you keep all your settings with no data lost. Even the worst case anyone could picture here is a one-minute re-download.',
+    a: 'Not normally. InstallerClean only removes files Windows itself reports as no longer needed, so it cannot be the cause. If a needed installer file does go missing from <code>C:\\Windows\\Installer</code> by some other means (an old cleaner, a manual delete), the fix is usually simple: download the installer for that program from its maker and run it over your existing install, using the version you have if you can. That usually puts the file back and leaves your settings alone. It is not always that simple, though, and Microsoft is more cautious in its own guidance, which the <a href="https://github.com/no-faff/InstallerClean#recovery" target="_blank" rel="noopener">README</a> lays out in full.',
   },
   {
     q: 'What about that other big Windows folder, WinSxS?',
@@ -482,7 +482,7 @@ if (freed.length > 0) {
         <li class="claim">
           <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
           <div class="claim-body">
-            <strong>No automatic telemetry, no background network.</strong>
+            <strong>No telemetry, no background network.</strong>
             <span class="claim-detail">
               No version pings on startup, no analytics, nothing in the background. The app
               only makes a network call when you click one of two buttons. Check for updates
@@ -498,7 +498,7 @@ if (freed.length > 0) {
           <div class="claim-body">
             <strong>No bundled extras.</strong>
             <span class="claim-detail">
-              No toolbars, no third-party offers, no upsells. It does what it says on the tin.
+              No toolbars, no bundled software, no adware. It does what it says on the tin.
             </span>
           </div>
         </li>
@@ -580,12 +580,13 @@ if (freed.length > 0) {
           does, you can't fix what it gets wrong, you can't fork it.
         </p>
 
-        <h3>It excludes Adobe patches by default</h3>
+        <h3>It leaves Adobe patches alone by default</h3>
         <p>
-          PatchCleaner ships with a substring-exclude filter that leaves Adobe's
-          <span class="mono">.msp</span> patches in place by default. On machines where
-          Adobe Acrobat has accumulated a lot of patch history, that can be a sizeable
-          chunk of the cache:
+          And for a fair reason: PatchCleaner's orphan check misread Adobe's
+          <span class="mono">.msp</span> patches, and deleting them broke Adobe's updates, so
+          it ships with a filter that excludes them. You can switch the filter off, but out of
+          the box, on machines where Adobe Acrobat has piled up patch history, that can be most
+          of the cache:
         </p>
         <blockquote class="pull">
           <p>
@@ -595,9 +596,9 @@ if (freed.length > 0) {
           <span class="pull-cite">HeatherBunny1111, r/techsupport</span>
         </blockquote>
         <p>
-          InstallerClean has no exclude filter. It identifies superseded Adobe patches via
-          the Windows Installer patch-state field and offers them up alongside everything
-          else.
+          InstallerClean reads the Windows Installer patch-state instead of guessing, so it can
+          tell which Adobe patches have genuinely been superseded and clears those safely, with
+          no blanket filter.
         </p>
       </div>
     </div>
