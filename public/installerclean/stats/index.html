@@ -102,6 +102,7 @@
   .release-meta { font-size: 13px; color: var(--muted); }
   .release-total { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); }
   .release-total b { display: block; color: var(--ink); font-size: 22px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .release-split { font-size: 12.5px; color: var(--muted); margin: -10px 0 16px; }
 
   /* -- footer -- */
   .footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); line-height: 1.65; }
@@ -286,11 +287,12 @@
       <div class="release-meta" id="relMeta"></div>
       <div class="release-total"><b id="relTotal"></b>downloads, all channels</div>
     </div>
+    <div class="release-split" id="relBreakdown"></div>
   </div>
 
   <div class="card">
     <div class="card-head">
-      <div class="card-title">Downloads per asset</div>
+      <div class="card-title">GitHub downloads per asset</div>
       <div class="card-note" id="assetNote"></div>
     </div>
     <div class="chart"><canvas id="chartAssets"></canvas></div>
@@ -525,10 +527,22 @@ function relBaseline(key, series) {
   const v = valueAt(series, relPublishedT);
   return v === null ? 0 : v;
 }
-const relTotal = sumAssets(latestRelease) +
-  Math.max(0, sp - relBaseline("softpedia", softSeries)) +
-  Math.max(0, mg - relBaseline("majorgeeks", mgSeries));
+const ghTotal = sumAssets(latestRelease);
+const spContrib = Math.max(0, sp - relBaseline("softpedia", softSeries));
+const mgContrib = Math.max(0, mg - relBaseline("majorgeeks", mgSeries));
+const relTotal = ghTotal + spContrib + mgContrib;
 document.getElementById("relTotal").textContent = fmt(relTotal);
+
+// The per-asset chart can only break down GitHub: Softpedia and MajorGeeks each
+// expose a single whole-channel total with no per-file split, so their growth
+// since this release shipped joins the all-channels figure but cannot be tied to
+// an asset. State that, so the GitHub-only bars need not sum to the headline.
+const relExtra = [];
+if (spContrib > 0) relExtra.push("Softpedia " + fmt(spContrib));
+if (mgContrib > 0) relExtra.push("MajorGeeks " + fmt(mgContrib));
+document.getElementById("relBreakdown").textContent = relExtra.length
+  ? "= GitHub " + fmt(ghTotal) + " + " + relExtra.join(" + ") + "  (external counts are whole-channel, not per asset)"
+  : "";
 
 // -- shared chart styling --
 Chart.defaults.color = COL.muted;
