@@ -16,10 +16,8 @@ const downloadPortable = `${downloadBase}/InstallerClean-portable.exe`;
 // the Stage 2 VT pause; the line shape is sed-load-bearing.
 const VT_SETUP_HASH = 'fec25099f77130d07cdc4ab297493ef1e019bca5d8a46c4bb0f6155d1f90ffef';
 const VT_PORTABLE_HASH = '06ae738da40c7a4c6092f5c2decc91de6f572b0cf34f94e8ae39493d1be0ef0d';
-const VT_SLIM_HASH = 'c817e2180e01db0dce737c51071bcadfe368845399b09a689dc54da64c507911';
 const vtSetup = `https://www.virustotal.com/gui/file/${VT_SETUP_HASH}`;
 const vtPortable = `https://www.virustotal.com/gui/file/${VT_PORTABLE_HASH}`;
-const vtSlim = `https://www.virustotal.com/gui/file/${VT_SLIM_HASH}`;
 
 const builds = [
   {
@@ -41,16 +39,6 @@ const builds = [
     blurb:
       'No install, no uninstaller. Run it, use it, close it.',
     icon: 'lucide:zap',
-  },
-  {
-    label: 'Slim',
-    filename: 'InstallerClean-slim.exe',
-    size: '2 MB',
-    href: `${downloadBase}/InstallerClean-slim.exe`,
-    shaHref: `${downloadBase}/InstallerClean-slim.exe.sha256`,
-    blurb:
-      "Smallest download. Requires the .NET 10 Desktop Runtime (which you have if you have an up-to-date Visual Studio). Pick Setup or Portable if you're not sure.",
-    icon: 'lucide:feather',
   },
 ];
 
@@ -522,7 +510,7 @@ if (freed.length > 0) {
       </ul>
 
       <p class="vt-lead">
-        All three builds pass VirusTotal cleanly across every engine. The links below open
+        Both builds pass VirusTotal cleanly across every engine. The links below open
         the scans so you can re-check whenever.
       </p>
       <div class="vt-row">
@@ -534,11 +522,6 @@ if (freed.length > 0) {
         <a class="vt-link" href={vtPortable} target="_blank" rel="noopener">
           <span class="vt-build">Portable</span>
           <span class="vt-count">0/68</span>
-          <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
-        </a>
-        <a class="vt-link" href={vtSlim} target="_blank" rel="noopener">
-          <span class="vt-build">Slim</span>
-          <span class="vt-count">0/71</span>
           <Icon name="lucide:arrow-up-right" class="vt-arrow" aria-hidden="true" />
         </a>
       </div>
