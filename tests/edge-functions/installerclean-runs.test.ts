@@ -119,4 +119,19 @@ describe('listRuns', () => {
     const out = await listRuns();
     expect(out.runs).toEqual([{ ts: '2026-05-13T14:23:45.678Z', gb: 1.0, missing: 0 }]);
   });
+
+  it('with `since` returns only reports at or after that timestamp (inclusive)', async () => {
+    // Inclusive so the caller's newest-known report comes back in the
+    // overlap window and the client-side dedupe can collapse it; reports
+    // strictly older are not re-read.
+    blobState.blobs.set(key('2026-05-13T10:00:00.000Z', 'aaaaaaaa'), record(1_000_000_000));
+    blobState.blobs.set(key('2026-05-14T10:00:00.000Z', 'bbbbbbbb'), record(2_000_000_000));
+    blobState.blobs.set(key('2026-05-15T10:00:00.000Z', 'cccccccc'), record(3_000_000_000));
+
+    const out = await listRuns('2026-05-14T10:00:00.000Z');
+    expect(out.runs.map((r) => r.ts)).toEqual([
+      '2026-05-14T10:00:00.000Z',
+      '2026-05-15T10:00:00.000Z',
+    ]);
+  });
 });

@@ -138,4 +138,18 @@ describe('exportReports', () => {
     const out = await exportReports();
     expect(out.count).toBe(1);
   });
+
+  it('with `since` returns only reports at or after that timestamp (inclusive)', async () => {
+    // The incremental puller passes its newest-held timestamp (minus a
+    // skew margin); older reports it already holds are not re-read.
+    blobState.blobs.set(key('2026-05-13T10:00:00.000Z', 'aaaaaaaa', 'v2'), record());
+    blobState.blobs.set(key('2026-05-28T00:31:35.277Z', '9a5e37a1', 'v2-unknown'), record());
+    blobState.blobs.set(key('2026-05-28T10:45:26.039Z', 'b7703544', 'v2'), record());
+
+    const out = await exportReports('2026-05-28T00:31:35.277Z');
+    expect(out.reports.map((r) => r.ts)).toEqual([
+      '2026-05-28T00:31:35.277Z',
+      '2026-05-28T10:45:26.039Z',
+    ]);
+  });
 });

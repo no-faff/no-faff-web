@@ -61,9 +61,15 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
     });
   }
 
+  // Optional incremental fetch: ?since=<ISO timestamp> returns only
+  // reports at or after that instant, so a puller that already holds the
+  // back-catalogue reads only what is new. ISO-8601 UTC sorts
+  // lexicographically, so the comparison is a plain string compare.
+  const since = new URL(req.url).searchParams.get("since") ?? undefined;
+
   let body: ExportResponse;
   try {
-    body = await exportReports();
+    body = await exportReports(since);
   } catch (err) {
     console.error("installerclean-export failed", err);
     return new Response("Aggregation error", {
@@ -83,37 +89,75 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   });
 }
 
-export async function exportReports(): Promise<ExportResponse> {
-  const store = getStore(STORE_NAME);
-  const reports: ExportEntry[] = [];
+// Netlify Blobs exposes no batch read, so each body is its own request.
+// Reading them one-at-a-time made the walk O(N) sequential round-trips,
+// which under the full-body aggregation began exceeding the edge
+// function's wall-clock limit and 500ing. A bounded worker pool keeps a
+// fixed number of reads in flight: wall-clock O(N / POOL) without opening
+// an unbounded number of connections at once.
+const FETCH_POOL = 24;
 
+async function fetchBodies<T>(
+  keys: string[],
+  read: (key: string) => Promise<T | null>,
+): Promise<T[]> {
+  const out: (T | null)[] = new Array(keys.length).fill(null);
+  let cursor = 0;
+  async function worker(): Promise<void> {
+    for (;;) {
+      const i = cursor++;
+      if (i >= keys.length) return;
+      out[i] = await read(keys[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(FETCH_POOL, keys.length) }, worker));
+  return out.filter((v): v is T => v !== null);
+}
+
+export async function exportReports(since?: string): Promise<ExportResponse> {
+  const store = getStore(STORE_NAME);
+
+  // store.list is metadata-only and paginated, so enumerating keys stays
+  // cheap even at thousands of reports; only the per-key body reads cost.
+  // With `since` set, bodies are read for new reports alone: the store is
+  // immutable and append-only (result-log.ts only ever writes a fresh
+  // key, never rewrites or deletes), so a report already pulled never
+  // needs reading again.
+  const keys: string[] = [];
   for await (const page of store.list({ paginate: true })) {
     for (const entry of page.blobs) {
       const ts = timestampFromKey(entry.key);
       if (!ts) continue;
-
-      let raw: string | null;
-      try {
-        raw = await store.get(entry.key, { type: "text" });
-      } catch {
-        continue;
-      }
-      if (!raw) continue;
-
-      let record: Record<string, unknown>;
-      try {
-        record = JSON.parse(raw) as Record<string, unknown>;
-      } catch {
-        continue;
-      }
-
-      // ts and key first, then the literal stored body. The body's own
-      // keys (schemaVersion, app, os, scan, operation) are the
-      // write-side allowlist, so the spread cannot introduce a ts/key
-      // collision with attacker-controlled names.
-      reports.push({ ts, key: entry.key, ...record });
+      if (since && ts < since) continue;
+      keys.push(entry.key);
     }
   }
+
+  const reports = await fetchBodies<ExportEntry>(keys, async (key): Promise<ExportEntry | null> => {
+    const ts = timestampFromKey(key);
+    if (!ts) return null;
+
+    let raw: string | null;
+    try {
+      raw = await store.get(key, { type: "text" });
+    } catch {
+      return null;
+    }
+    if (!raw) return null;
+
+    let record: Record<string, unknown>;
+    try {
+      record = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+
+    // ts and key first, then the literal stored body. The body's own
+    // keys (schemaVersion, app, os, scan, operation) are the write-side
+    // allowlist, so the spread cannot introduce a ts/key collision with
+    // attacker-controlled names.
+    return { ts, key, ...record };
+  });
 
   reports.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
   return { generatedAt: new Date().toISOString(), count: reports.length, reports };
