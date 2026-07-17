@@ -407,15 +407,14 @@ const latest = snapshots[snapshots.length - 1];
 const latestRelease = latest.releases[0];
 const nowMs = Date.parse(latest.timestamp);
 
-function closestAtOrBefore(list, t) {
-  let best = null;
-  for (const s of list) {
-    const ts = Date.parse(s.timestamp);
-    if (ts <= t && (best === null || ts > Date.parse(best.timestamp))) best = s;
-  }
-  return best;
-}
-const weekAgo = closestAtOrBefore(snapshots.slice(0, -1), nowMs - 7 * 86400 * 1000);
+// Local calendar days. The tz offset stored in history.json is the one the
+// counts were collected at, so a day boundary here is the boundary the user
+// lives on rather than UTC's, and growth spanning a UTC midnight is attributed
+// to the date they would call it.
+const DAY_MS = 86400000;
+const tzMs = (DATA.tz_offset_minutes || 0) * 60000;
+const localDate = t => new Date(t + tzMs).toISOString().slice(0, 10);
+const localMidnight = d => Date.parse(d + "T00:00:00Z") - tzMs;
 
 // An external channel's series is its declared anchor points (treated as
 // ground truth) followed by every later snapshot value; valueAt interpolates
@@ -462,11 +461,27 @@ const ext = latest.external || {};
 const sp = ext.softpedia || 0;
 const mg = ext.majorgeeks || 0;
 const grand = gh + sp + mg;
-let weekGrand = null;
-if (weekAgo) {
-  const we = weekAgo.external || {};
-  weekGrand = githubTotal(weekAgo) + (we.softpedia || 0) + (we.majorgeeks || 0);
+
+// The headline delta covers the seven whole local days ending yesterday. Today
+// is left out because it is still accruing: counting it drops the figure at
+// every midnight and walks it back up through the day, so two visits compare
+// two different-sized windows. Each channel is read boundary to boundary off
+// the same interpolated series the daily bars are cut from, so the pill covers
+// exactly the last seven full bars of the daily chart.
+const todayStart = localMidnight(localDate(nowMs));
+const weekStart = todayStart - 7 * DAY_MS;
+// Clamped to the series start, so a channel younger than the window contributes
+// the growth actually measured rather than its whole lifetime total; and to
+// zero, so a channel restating its count downwards cannot subtract from the
+// others (the daily bars clamp the same way, which is why the pill only ever
+// rises).
+function growthOver(series, from, to) {
+  if (!series.length || series[0].t > to) return 0;
+  return Math.max(0, valueAt(series, to) - valueAt(series, Math.max(from, series[0].t)));
 }
+const weekDelta = githubSeries.length && githubSeries[0].t <= weekStart
+  ? [githubSeries, mgSeries, softSeries].reduce((a, s) => a + growthOver(s, weekStart, todayStart), 0)
+  : null;
 
 document.getElementById("updated").textContent = "Updated " +
   new Date(latest.timestamp).toLocaleString("en-GB",
@@ -474,20 +489,22 @@ document.getElementById("updated").textContent = "Updated " +
 
 document.getElementById("heroNum").textContent = fmt(grand);
 const heroDelta = document.getElementById("heroDelta");
-if (weekGrand !== null) {
-  const d = grand - weekGrand;
+if (weekDelta !== null) {
   heroDelta.innerHTML =
     '<svg viewBox="0 0 12 12" fill="none"><path d="M2.6 7.7 L6 3.9 L9.4 7.7" ' +
     'stroke="currentColor" stroke-width="1.9" stroke-linecap="round" ' +
-    'stroke-linejoin="round"/></svg>' + (d >= 0 ? "+" : "") + fmt(d) + " in 7 days";
+    'stroke-linejoin="round"/></svg>+' + fmt(weekDelta) + " in the 7 days to yesterday";
 } else {
   heroDelta.style.display = "none";
 }
 
 // -- channel split bar + stat cards --
+// One order drives both, so the bar's segments and the cards below it always
+// read left to right in the same order.
+const CHAN_ORDER = [["github", gh], ["majorgeeks", mg], ["softpedia", sp]];
 const splitbar = document.getElementById("splitbar");
 const statsEl = document.getElementById("stats");
-for (const [key, val] of [["github", gh], ["majorgeeks", mg], ["softpedia", sp]]) {
+for (const [key, val] of CHAN_ORDER) {
   if (grand > 0 && val > 0) {
     const seg = document.createElement("span");
     seg.style.width = (val / grand * 100) + "%";
@@ -495,8 +512,7 @@ for (const [key, val] of [["github", gh], ["majorgeeks", mg], ["softpedia", sp]]
     splitbar.appendChild(seg);
   }
 }
-for (const key of ["github", "softpedia", "majorgeeks"]) {
-  const val = { github: gh, softpedia: sp, majorgeeks: mg }[key];
+for (const [key, val] of CHAN_ORDER) {
   const share = grand > 0 ? Math.round(val / grand * 100) : 0;
   const el = document.createElement("div");
   el.className = "stat";
@@ -620,14 +636,7 @@ new Chart(document.getElementById("chartTotal"), {
   },
 });
 
-// -- daily downloads: per local calendar day, the rise in each channel. The
-// tz offset stored in history.json buckets a day's growth on the local date
-// the user sees, so growth spanning a UTC midnight is attributed correctly. --
-const DAY_MS = 86400000;
-const tzMs = (DATA.tz_offset_minutes || 0) * 60000;
-const localDate = t => new Date(t + tzMs).toISOString().slice(0, 10);
-const localMidnight = d => Date.parse(d + "T00:00:00Z") - tzMs;
-
+// -- daily downloads: per local calendar day, the rise in each channel. --
 function dailyBars(series) {
   if (!series.length) return [];
   const out = [];
@@ -761,7 +770,11 @@ const splitTickPlugin = {
 // so they stay crisp and never reflow. ABOVE_TOTAL clears the total text (11px
 // drawn 6px above the bar); a column whose pills would overlap the column to its
 // left is lifted above it, stairstepping a run of adjacent events apart.
-const ANN = { PAD_X: 6, PILL_H: 17, GAP: 3, ABOVE_TOTAL: 22, TOP_MARGIN: 6 };
+const ANN = { PAD_X: 6, PILL_H: 17, GAP: 3, ABOVE_TOTAL: 22, TOP_MARGIN: 6, EDGE_MARGIN: 4,
+              FONT: "600 11px 'Inter', ui-sans-serif, sans-serif" };
+// One font for measuring and for drawing: a pill measured in a different face
+// than it is drawn in reserves the wrong width.
+const pillWidth = (ctx, e) => Math.ceil(ctx.measureText(e.tag).width) + 2 * ANN.PAD_X;
 function roundedRect(ctx, x, y, w, h, r) {
   r = Math.min(r, h / 2, w / 2);
   ctx.beginPath();
@@ -788,10 +801,10 @@ const annTagPlugin = {
       });
     });
     ctx.save();
-    ctx.font = "600 11px 'Inter', ui-sans-serif, sans-serif";
+    ctx.font = ANN.FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const pillW = e => Math.ceil(ctx.measureText(e.tag).width) + 2 * ANN.PAD_X;
+    const pillW = e => pillWidth(ctx, e);
     let prev = null;
     for (let i = 0; i < slots.length; i++) {
       const k = slots[i];
@@ -820,6 +833,19 @@ const annTagPlugin = {
     ctx.restore();
   },
 };
+
+// The widest pill any bar of a chart can carry, for the layout room a chart
+// must keep clear of the canvas edge. Measured on the target canvas in the
+// pill's own font, before Chart.js takes the context over.
+function widestPill(canvasId, ann) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  ctx.save();
+  ctx.font = ANN.FONT;
+  let w = 0;
+  for (const k in ann) for (const e of ann[k]) w = Math.max(w, pillWidth(ctx, e));
+  ctx.restore();
+  return w;
+}
 
 // Build every channel's daily bars over one shared, sorted set of dates. The
 // bar datasets must be index-aligned: stacking and index-mode tooltips both
@@ -937,6 +963,16 @@ function makePagedChart(canvasId, cfg) {
     ? Math.max(24, ANN.ABOVE_TOTAL + cfg.annMaxStack * ANN.PILL_H + (cfg.annMaxStack - 1) * ANN.GAP + ANN.TOP_MARGIN)
     : 24;
 
+  // And right-hand room for the widest event pill. A pill is centred on its
+  // bar, so one on the newest bar (always the right-hand slot) hangs half its
+  // width past that bar's centre, where the canvas edge would slice it. Half
+  // the slot pitch already covers part of that overhang, but the pitch is only
+  // known once the chart has laid out, so reserve the full half-pill: the cost
+  // is a little white space, the alternative is a clipped release tag.
+  const padRight = () => cfg.annotations
+    ? Math.ceil(widestPill(canvasId, cfg.annotations) / 2) + ANN.EDGE_MARGIN
+    : 0;
+
   const chart = new Chart(document.getElementById(canvasId), {
     type: "bar",
     data: { labels: [], datasets: CH.map(key => ({
@@ -945,7 +981,7 @@ function makePagedChart(canvasId, cfg) {
     })) },
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: padTop } },
+      layout: { padding: { top: padTop, right: padRight() } },
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: legendOpts,
@@ -996,6 +1032,17 @@ function makePagedChart(canvasId, cfg) {
   prev.addEventListener("click", () => show(page + 1));
   next.addEventListener("click", () => show(page - 1));
   show(0);
+
+  // Inter arrives over the network and swaps in, so a first load measures and
+  // draws its canvas text in whatever face is standing in. Re-measure and
+  // redraw once the real one is in: a width reserved in the fallback's metrics
+  // is the one way the newest bar's pill could still meet the canvas edge.
+  if (cfg.annotations && document.fonts) {
+    document.fonts.ready.then(() => {
+      chart.options.layout.padding.right = padRight();
+      chart.update();
+    });
+  }
   return chart;
 }
 
