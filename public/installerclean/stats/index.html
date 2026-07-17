@@ -415,6 +415,7 @@ const DAY_MS = 86400000;
 const tzMs = (DATA.tz_offset_minutes || 0) * 60000;
 const localDate = t => new Date(t + tzMs).toISOString().slice(0, 10);
 const localMidnight = d => Date.parse(d + "T00:00:00Z") - tzMs;
+const addDays = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * DAY_MS).toISOString().slice(0, 10);
 
 // An external channel's series is its declared anchor points (treated as
 // ground truth) followed by every later snapshot value; valueAt interpolates
@@ -455,6 +456,39 @@ const githubAt = t => { const v = valueAt(githubSeries, t); return v === null ? 
 const softAt = t => valueAt(softSeries, t) || 0;
 const mgAt = t => valueAt(mgSeries, t) || 0;
 
+// -- per-day rises: for each channel, the growth over each local calendar day.
+// The daily chart draws these and the headline's seven-day figure sums them, so
+// both read off one set of numbers. A day is measured end to end, and the
+// snapshots either end of it rarely land on midnight, so the rise is an
+// interpolation and gets rounded to the download it stands for. --
+function dailyBars(series) {
+  if (!series.length) return [];
+  const out = [];
+  const firstDay = localDate(series[0].t);
+  let cursor = localMidnight(firstDay);
+  const end = localMidnight(localDate(series[series.length - 1].t));
+  let prev = series[0].v;
+  while (cursor <= end) {
+    const day = localDate(cursor);
+    const eod = Math.min(localMidnight(day) + DAY_MS - 1, series[series.length - 1].t);
+    if (eod >= series[0].t) {
+      const v = valueAt(series, eod);
+      if (v !== null) {
+        const rise = Math.max(0, v - prev);
+        if (rise > 0 || day !== firstDay) out.push({ x: day, y: Math.round(rise) });
+        prev = v;
+      }
+    }
+    cursor += DAY_MS;
+  }
+  return out;
+}
+const dailyByChannel = {
+  github: dailyBars(githubSeries),
+  majorgeeks: dailyBars(mgSeries),
+  softpedia: dailyBars(softSeries),
+};
+
 // -- headline numbers --
 const gh = githubTotal(latest);
 const ext = latest.external || {};
@@ -462,26 +496,19 @@ const sp = ext.softpedia || 0;
 const mg = ext.majorgeeks || 0;
 const grand = gh + sp + mg;
 
-// The headline delta covers the seven whole local days ending yesterday: the
-// span the daily chart's last seven full bars cover. Today is left out because
-// it is still accruing, and a window with a part-day on the end sinks at every
-// midnight and climbs back through the day, so two visits are reading two
-// different-sized windows. Each channel is read boundary to boundary off the
-// same interpolated series those bars are cut from, so the pill and the bars
-// under it tell the same story (to within each bar's rounding).
-const todayStart = localMidnight(localDate(nowMs));
-const weekStart = todayStart - 7 * DAY_MS;
-// Clamped to the series start, so a channel younger than the window contributes
-// the growth actually measured rather than booking its whole lifetime total as
-// this week's; and clamped at zero, so a channel restating its count downwards
-// cannot eat into the others. The daily bars clamp both ways too, and it is why
-// the figure can never come out negative: hence the fixed "+" and up arrow.
-function growthOver(series, from, to) {
-  if (!series.length || series[0].t > to) return 0;
-  return Math.max(0, valueAt(series, to) - valueAt(series, Math.max(from, series[0].t)));
-}
-const weekDelta = githubSeries.length && githubSeries[0].t <= weekStart
-  ? [githubSeries, mgSeries, softSeries].reduce((a, s) => a + growthOver(s, weekStart, todayStart), 0)
+// The headline delta is the daily chart's last seven whole bars, added up: add
+// the seven numbers printed above them and you land on this figure, because it
+// is made of nothing else. Today is left out because it is still accruing, and
+// a window with a part-day on the end sinks at every midnight and climbs back
+// through the day, so two visits read two different-sized windows.
+const weekDays = Array.from({ length: 7 }, (_, i) => addDays(localDate(nowMs), -(i + 1)));
+// Hidden rather than shown short: until the record is seven whole days old, its
+// oldest day starts at the first snapshot rather than at midnight, so the window
+// would quietly be missing part of a day.
+const weekDelta = githubSeries.length && localDate(githubSeries[0].t) < weekDays[6]
+  ? Object.values(dailyByChannel).flat()
+      .filter(p => weekDays.includes(p.x))
+      .reduce((a, p) => a + p.y, 0)
   : null;
 
 document.getElementById("updated").textContent = "Updated " +
@@ -636,30 +663,6 @@ new Chart(document.getElementById("chartTotal"), {
     },
   },
 });
-
-// -- daily downloads: per local calendar day, the rise in each channel. --
-function dailyBars(series) {
-  if (!series.length) return [];
-  const out = [];
-  const firstDay = localDate(series[0].t);
-  let cursor = localMidnight(firstDay);
-  const end = localMidnight(localDate(series[series.length - 1].t));
-  let prev = series[0].v;
-  while (cursor <= end) {
-    const day = localDate(cursor);
-    const eod = Math.min(localMidnight(day) + DAY_MS - 1, series[series.length - 1].t);
-    if (eod >= series[0].t) {
-      const v = valueAt(series, eod);
-      if (v !== null) {
-        const rise = Math.max(0, v - prev);
-        if (rise > 0 || day !== firstDay) out.push({ x: day, y: Math.round(rise) });
-        prev = v;
-      }
-    }
-    cursor += DAY_MS;
-  }
-  return out;
-}
 
 // The stack total drawn above each bar. Aggregated by bar index from the
 // rendered bar positions so it tracks the top of the stack even when the legend
@@ -848,16 +851,11 @@ function widestPill(canvasId, ann) {
   return w;
 }
 
-// Build every channel's daily bars over one shared, sorted set of dates. The
-// bar datasets must be index-aligned: stacking and index-mode tooltips both
-// pair datasets by position, so a day missing from one channel is carried as
-// an explicit zero rather than left absent. Leaving it absent shifts every
-// later point of that dataset onto the wrong day.
-const dailyByChannel = {
-  github: dailyBars(githubSeries),
-  majorgeeks: dailyBars(mgSeries),
-  softpedia: dailyBars(softSeries),
-};
+// Lay the per-day rises out over one shared, sorted set of dates. The bar
+// datasets must be index-aligned: stacking and index-mode tooltips both pair
+// datasets by position, so a day missing from one channel is carried as an
+// explicit zero rather than left absent. Leaving it absent shifts every later
+// point of that dataset onto the wrong day.
 const dailyDates = [...new Set(
   Object.values(dailyByChannel).flat().map(d => d.x)
 )].sort();
@@ -869,9 +867,6 @@ function alignedBars(key) {
 // The three channels in stacking order (GitHub on the bottom).
 const CH = ["github", "majorgeeks", "softpedia"];
 
-function addDays(d, n) {
-  return new Date(Date.parse(d + "T00:00:00Z") + n * DAY_MS).toISOString().slice(0, 10);
-}
 function dayLabel(d) {
   const [y, mo, da] = d.split("-").map(Number);
   return new Date(Date.UTC(y, mo - 1, da)).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
