@@ -462,19 +462,20 @@ const sp = ext.softpedia || 0;
 const mg = ext.majorgeeks || 0;
 const grand = gh + sp + mg;
 
-// The headline delta covers the seven whole local days ending yesterday. Today
-// is left out because it is still accruing: counting it drops the figure at
-// every midnight and walks it back up through the day, so two visits compare
-// two different-sized windows. Each channel is read boundary to boundary off
-// the same interpolated series the daily bars are cut from, so the pill covers
-// exactly the last seven full bars of the daily chart.
+// The headline delta covers the seven whole local days ending yesterday: the
+// span the daily chart's last seven full bars cover. Today is left out because
+// it is still accruing, and a window with a part-day on the end sinks at every
+// midnight and climbs back through the day, so two visits are reading two
+// different-sized windows. Each channel is read boundary to boundary off the
+// same interpolated series those bars are cut from, so the pill and the bars
+// under it tell the same story (to within each bar's rounding).
 const todayStart = localMidnight(localDate(nowMs));
 const weekStart = todayStart - 7 * DAY_MS;
 // Clamped to the series start, so a channel younger than the window contributes
-// the growth actually measured rather than its whole lifetime total; and to
-// zero, so a channel restating its count downwards cannot subtract from the
-// others (the daily bars clamp the same way, which is why the pill only ever
-// rises).
+// the growth actually measured rather than booking its whole lifetime total as
+// this week's; and clamped at zero, so a channel restating its count downwards
+// cannot eat into the others. The daily bars clamp both ways too, and it is why
+// the figure can never come out negative: hence the fixed "+" and up arrow.
 function growthOver(series, from, to) {
   if (!series.length || series[0].t > to) return 0;
   return Math.max(0, valueAt(series, to) - valueAt(series, Math.max(from, series[0].t)));
