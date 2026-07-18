@@ -511,9 +511,17 @@ const weekDelta = githubSeries.length && localDate(githubSeries[0].t) < weekDays
       .reduce((a, p) => a + p.y, 0)
   : null;
 
+// Every clock on this page reads in GMT, named as such. Two reasons to fix it
+// rather than render in the viewer's zone: the page is public, so a stamp that
+// means something different to each reader is no reference at all; and GMT does
+// not shift under daylight saving, so a stamp read in July and one read in
+// January are on the same clock. UTC is the same time; GMT is what it is called
+// in the English this page is written in.
+const gmtStamp = t => new Date(t).toISOString().slice(11, 16) + " GMT";
 document.getElementById("updated").textContent = "Updated " +
-  new Date(latest.timestamp).toLocaleString("en-GB",
-    { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  new Date(latest.timestamp).toLocaleDateString("en-GB",
+    { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) +
+  ", " + gmtStamp(latest.timestamp);
 
 document.getElementById("heroNum").textContent = fmt(grand);
 const heroDelta = document.getElementById("heroDelta");
@@ -554,9 +562,11 @@ for (const [key, val] of CHAN_ORDER) {
 
 // -- latest release header --
 document.getElementById("relTag").textContent = latestRelease.tag;
+// GMT like every other instant here, so the publication date is the same date
+// for every reader rather than a day out either side of a boundary.
 document.getElementById("relMeta").textContent = "Published " +
   new Date(latestRelease.published).toLocaleDateString("en-GB",
-    { day: "numeric", month: "long", year: "numeric" });
+    { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 document.getElementById("assetNote").textContent = latestRelease.tag;
 
 // All-channels total for the latest release: GitHub asset downloads plus the
@@ -1060,14 +1070,18 @@ function monthGroupLabel(ym) {
   return new Date(Date.UTC(y, mo - 1, 1)).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 }
 
-// Event markers for the daily chart, keyed by LOCAL day so each lands on the
-// same bar the downloads were bucketed onto. Releases are derived from the
-// snapshot (no extra fetch); a release published near local midnight therefore
-// tags its true release day even though the spike bleeds onto the next bar, and
-// its exact local time rides in the hover. Custom events come from
+// Event markers for the daily chart, keyed by the same local day the downloads
+// were bucketed onto, so a marker sits on the bar its spike is in. Releases are
+// derived from the snapshot (no extra fetch); custom events come from
 // annotations.json. Within a day the list is sorted oldest first, so the newest
 // event stacks on top.
-function localTime(t) { return new Date(t + tzMs).toISOString().slice(11, 16); }
+//
+// The hover names the release's own moment in GMT, date included, so it reads
+// on the page's one clock and stands on its own. The bars are cut on local days
+// (see tzMs), so a release published either side of a boundary shows a hover
+// date one off its bar: the hover says when it shipped, the bar says when the
+// downloads landed, and both are true. Naming the zone is what keeps that
+// readable rather than looking like a fault.
 const dailyAnnotations = {};
 function pushAnnotation(day, entry) {
   (dailyAnnotations[day] || (dailyAnnotations[day] = [])).push(entry);
@@ -1076,7 +1090,8 @@ for (const r of latest.releases) {
   const t = Date.parse(r.published);
   const day = localDate(t);
   pushAnnotation(day, { kind: "release", tag: r.tag.replace(/^v/, ""), t,
-    hover: r.tag + " released, " + dayLabel(day) + " " + localTime(t) });
+    hover: r.tag + " released, " + dayLabel(new Date(t).toISOString().slice(0, 10)) +
+           " " + gmtStamp(t) });
 }
 for (const c of (DATA.custom_annotations || [])) {
   if (!c || !c.date) continue;
@@ -1177,12 +1192,18 @@ new Chart(document.getElementById("chartAssets"), {
     if (bytes >= 1e3) return nf1.format(bytes / 1e3) + " kB";
     return nfInt.format(bytes) + " B";
   }
+  // GMT, matching the download charts above: a report sent from any timezone is
+  // stamped on the one clock, so two rows an hour apart always read an hour
+  // apart whoever is looking. The date-only form carries no zone label because
+  // there is no clock on it to misread.
   function dateLong(ts) {
-    return new Date(ts).toLocaleString("en-GB",
-      { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return new Date(ts).toLocaleDateString("en-GB",
+      { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) +
+      ", " + new Date(ts).toISOString().slice(11, 16) + " GMT";
   }
   function dateShort(ts) {
-    return new Date(ts).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    return new Date(ts).toLocaleDateString("en-GB",
+      { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   }
   function esc(s) {
     return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
