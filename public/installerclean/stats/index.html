@@ -791,9 +791,11 @@ const splitTickPlugin = {
       const { pre, bold } = split(k);
       ctx.font = NORMAL; const wPre = ctx.measureText(pre).width;
       ctx.font = BOLD; const wBold = ctx.measureText(bold).width;
-      // Centred on its bar, except that the run-up's label is far wider than a
-      // slot: nudged right when it would otherwise start off-canvas, which it
-      // does whenever the oldest page happens to hold a full set of bars.
+      // Centred on its bar. The run-up's label is far wider than one slot, and
+      // the empty slots held beside it (PRE_GAP) are what give it the room, so
+      // nothing here needs to know it is a special case. The clamp covers the
+      // one layout those slots cannot help with, an oldest page filled to the
+      // left edge.
       const left = Math.max(2, bar.x - (wPre + wBold) / 2);
       ctx.font = NORMAL; ctx.fillText(pre, left, y);
       ctx.font = BOLD; ctx.fillText(bold, left + wPre, y);
@@ -939,11 +941,19 @@ const preLabel = preStart ? dayLabel(preStart) + " - " + dayLabel(preEnd) : "";
 const hasPre = preTotal > 0 && preStart !== null;
 
 // Prepend the run-up to a bucket set so it becomes the oldest bar of a chart,
-// paging and scaling like any other bucket.
+// paging and scaling like any other bucket, held clear of the first real bar by
+// empty slots. The gap earns its width twice: it stops the run-up reading as
+// the day before the record starts, and it is the room its full-span label sits
+// in, which is why the label needs no special casing to avoid its neighbour.
+// Two slots rather than one, so a longer span (the label is built from dates
+// that move) still clears the next label comfortably. A null key is how this
+// widget already spells an empty slot, so every drawing pass skips these
+// without being taught to.
+const PRE_GAP = 2;
 function withPre(bucket) {
   if (!hasPre) return bucket;
   return {
-    keys: [PRE_KEY, ...bucket.keys],
+    keys: [PRE_KEY, ...Array(PRE_GAP).fill(null), ...bucket.keys],
     valueAt: (key, b) => b === PRE_KEY ? preByChannel[key] : bucket.valueAt(key, b),
   };
 }
