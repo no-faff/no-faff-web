@@ -1196,13 +1196,23 @@ new Chart(document.getElementById("chartAssets"), {
   // stamped on the one clock, so two rows an hour apart always read an hour
   // apart whoever is looking. The date-only form carries no zone label because
   // there is no clock on it to misread.
+  //
+  // These render timestamps out of submitted reports, so an unparseable one is
+  // possible and must cost only its own cell: toISOString throws on a bad date
+  // (toLocaleDateString merely says "Invalid Date"), which unguarded would take
+  // the whole table down with it.
+  const validDate = ts => { const d = new Date(ts); return Number.isNaN(d.getTime()) ? null : d; };
   function dateLong(ts) {
-    return new Date(ts).toLocaleDateString("en-GB",
+    const d = validDate(ts);
+    if (!d) return "-";
+    return d.toLocaleDateString("en-GB",
       { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) +
-      ", " + new Date(ts).toISOString().slice(11, 16) + " GMT";
+      ", " + d.toISOString().slice(11, 16) + " GMT";
   }
   function dateShort(ts) {
-    return new Date(ts).toLocaleDateString("en-GB",
+    const d = validDate(ts);
+    if (!d) return "-";
+    return d.toLocaleDateString("en-GB",
       { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
   }
   function esc(s) {
