@@ -791,7 +791,10 @@ const splitTickPlugin = {
       const { pre, bold } = split(k);
       ctx.font = NORMAL; const wPre = ctx.measureText(pre).width;
       ctx.font = BOLD; const wBold = ctx.measureText(bold).width;
-      const left = bar.x - (wPre + wBold) / 2;
+      // Centred on its bar, except that the run-up's label is far wider than a
+      // slot: nudged right when it would otherwise start off-canvas, which it
+      // does whenever the oldest page happens to hold a full set of bars.
+      const left = Math.max(2, bar.x - (wPre + wBold) / 2);
       ctx.font = NORMAL; ctx.fillText(pre, left, y);
       ctx.font = BOLD; ctx.fillText(bold, left + wPre, y);
     }
@@ -903,6 +906,54 @@ function dayLabel(d) {
   const [y, mo, da] = d.split("-").map(Number);
   return new Date(Date.UTC(y, mo - 1, da)).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
+
+// -- the run-up bucket: everything counted before the daily record starts --
+//
+// Each channel's counter was already running when tracking began (GitHub's
+// stood at four figures at the first snapshot, months after the first release),
+// so the bars have always totalled less than the headline with nothing on the
+// page to say why. This carries that remainder as one leading bar, per channel
+// so it stacks like the rest, which makes the bars and the headline reconcile.
+//
+// It is emphatically NOT a day, and it is drawn to say so: faded, labelled with
+// its full span, and left out of the month row beneath. Deriving it as
+// "headline minus every bar" rather than measuring the span directly is what
+// keeps it exact, since it then absorbs whatever the bars cannot account for,
+// including per-bar rounding and any stretch too sparsely measured to attribute
+// (see ATTRIBUTABLE_GAP_MS).
+const PRE_KEY = " run-up";
+const preByChannel = {};
+for (const key of CH) {
+  const total = { github: gh, majorgeeks: mg, softpedia: sp }[key];
+  const inBars = dailyByChannel[key].reduce((a, p) => a + p.y, 0);
+  preByChannel[key] = Math.max(0, Math.round(total - inBars));
+}
+const preTotal = CH.reduce((a, k) => a + preByChannel[k], 0);
+// From the first release to the day before tracking starts: the window those
+// downloads must have landed in.
+const preStart = dailyDates.length
+  ? dayOf(Math.min(...latest.releases.map(r => Date.parse(r.published))))
+  : null;
+const preEnd = dailyDates.length ? addDays(dailyDates[0], -1) : null;
+const preLabel = preStart ? dayLabel(preStart) + " - " + dayLabel(preEnd) : "";
+const hasPre = preTotal > 0 && preStart !== null;
+
+// Prepend the run-up to a bucket set so it becomes the oldest bar of a chart,
+// paging and scaling like any other bucket.
+function withPre(bucket) {
+  if (!hasPre) return bucket;
+  return {
+    keys: [PRE_KEY, ...bucket.keys],
+    valueAt: (key, b) => b === PRE_KEY ? preByChannel[key] : bucket.valueAt(key, b),
+  };
+}
+// Each chart labels its own buckets, so these wrap a chart's own callback and
+// answer for the run-up first.
+const preTick = fn => k => k === PRE_KEY ? preLabel : fn(k);
+const preGroup = fn => k => k === PRE_KEY ? null : fn(k);   // spans months: no month row
+const preTitle = fn => k => k === PRE_KEY ? "Before daily tracking, " + preLabel : fn(k);
+const preRange = (fn, first) => (a, b) => a === PRE_KEY ? first(b) : fn(a, b);
+
 // One/two-letter weekday prefix for the daily x-axis tick (m tu w th f sa su),
 // indexed by getUTCDay (0 = Sunday). Two letters where one would be ambiguous
 // (tu/th, sa/su). Dates are built in UTC so the weekday never shifts with the
@@ -1048,6 +1099,10 @@ function makePagedChart(canvasId, cfg) {
     chart.data.labels = ks.map(k => k == null ? "" : cfg.tick(k));
     CH.forEach((key, i) => {
       chart.data.datasets[i].data = ks.map(k => k == null ? null : cfg.valueAt(key, k));
+      // The run-up is faded so the eye reads it as a different kind of thing
+      // before it reads the label; per slot, since the pager moves it.
+      chart.data.datasets[i].backgroundColor =
+        ks.map(k => k === PRE_KEY ? alpha(CHAN[key].color, 0.4) : CHAN[key].color);
     });
     if (hasGroup) chart.$groupKeys = ks.map(k => k == null ? null : cfg.group(k));
     chart.update();
@@ -1120,31 +1175,27 @@ for (const c of (DATA.custom_annotations || [])) {
 for (const k in dailyAnnotations) dailyAnnotations[k].sort((a, b) => a.t - b.t);
 const annMaxStack = Object.values(dailyAnnotations).reduce((m, l) => Math.max(m, l.length), 0);
 
-// -- daily: one bar per calendar day; second row names the month. --
-const daily = bucketUp(d => d, d => addDays(d, 1));
+// -- daily: one bar per calendar day, behind the run-up; second row names the
+// month. --
+const daily = withPre(bucketUp(d => d, d => addDays(d, 1)));
 makePagedChart("chartDaily", {
   keys: daily.keys, valueAt: daily.valueAt, peak: peakOf(daily),
-  tick: d => weekdayAbbr(d) + String(Number(d.slice(8, 10))),
-  splitTick: d => ({ pre: weekdayAbbr(d), bold: String(Number(d.slice(8, 10))) }),
+  tick: preTick(d => weekdayAbbr(d) + String(Number(d.slice(8, 10)))),
+  // The run-up has no weekday to set in light type, so it takes the bold half
+  // whole and the plugin lays out one label instead of two.
+  splitTick: d => d === PRE_KEY ? { pre: "", bold: preLabel }
+                                : { pre: weekdayAbbr(d), bold: String(Number(d.slice(8, 10))) },
   annotations: dailyAnnotations, annMaxStack,
-  group: d => d.slice(0, 7), groupLabel: monthGroupLabel,
-  title: d => dayLabel(d),
-  range: (a, b) => dayLabel(a) + " - " + dayLabel(b),
+  group: preGroup(d => d.slice(0, 7)), groupLabel: monthGroupLabel,
+  title: preTitle(d => dayLabel(d)),
+  range: preRange((a, b) => dayLabel(a) + " - " + dayLabel(b), b => dayLabel(preStart) + " - " + dayLabel(b)),
   els: { prev: "dayPrev", next: "dayNext", label: "dayRange" },
 });
 
-// The bars only ever cover the tracked period: whatever each channel had
-// already counted when tracking started is in the headline but in no bar, so
-// the bars total less than it. GitHub is most of that (its counter stood at
-// four figures at the first snapshot), and any stretch too sparsely measured to
-// attribute to a day joins it. Stated on the page and worked out here rather
-// than written in, so the figure cannot go stale as the record grows.
-const barsTotal = Object.values(dailyByChannel).flat().reduce((a, p) => a + p.y, 0);
-const preRecord = Math.max(0, Math.round(grand - barsTotal));
-if (preRecord > 0) {
+if (hasPre) {
   document.getElementById("preRecord").textContent =
-    "Bars cover the tracked period only: the " + fmt(preRecord) +
-    " downloads already counted when tracking began are in the totals above, but in no bar.";
+    "The faded bar at the start of the oldest page is not a day: it is the " + fmt(preTotal) +
+    " downloads each channel had already counted when daily tracking began.";
 }
 
 // -- weekly: one bar per Mon-Sun week, keyed by its Monday; second row names
@@ -1154,13 +1205,14 @@ function weekKey(d) {
   const dow = (dt.getUTCDay() + 6) % 7;
   return new Date(dt.getTime() - dow * DAY_MS).toISOString().slice(0, 10);
 }
-const weekly = bucketUp(weekKey, mon => addDays(mon, 7));
+const weekly = withPre(bucketUp(weekKey, mon => addDays(mon, 7)));
 makePagedChart("chartWeekly", {
   keys: weekly.keys, valueAt: weekly.valueAt, peak: peakOf(weekly),
-  tick: mon => String(Number(mon.slice(8, 10))),
-  group: mon => mon.slice(0, 7), groupLabel: monthGroupLabel,
-  title: mon => dayLabel(mon) + " - " + dayLabel(addDays(mon, 6)),
-  range: (a, b) => dayLabel(a) + " - " + dayLabel(addDays(b, 6)),
+  tick: preTick(mon => String(Number(mon.slice(8, 10)))),
+  group: preGroup(mon => mon.slice(0, 7)), groupLabel: monthGroupLabel,
+  title: preTitle(mon => dayLabel(mon) + " - " + dayLabel(addDays(mon, 6))),
+  range: preRange((a, b) => dayLabel(a) + " - " + dayLabel(addDays(b, 6)),
+                  b => dayLabel(preStart) + " - " + dayLabel(addDays(b, 6))),
   els: { prev: "weekPrev", next: "weekNext", label: "weekRange" },
 });
 
@@ -1169,13 +1221,14 @@ function monthStep(ym) {
   const [y, mo] = ym.split("-").map(Number);
   return new Date(Date.UTC(y, mo, 1)).toISOString().slice(0, 7);
 }
-const monthly = bucketUp(d => d.slice(0, 7), monthStep);
+const monthly = withPre(bucketUp(d => d.slice(0, 7), monthStep));
 makePagedChart("chartMonthly", {
   keys: monthly.keys, valueAt: monthly.valueAt, peak: peakOf(monthly),
-  tick: monthShort,
-  group: ym => ym.slice(0, 4), groupLabel: y => y,
-  title: ym => monthGroupLabel(ym),
-  range: (a, b) => a === b ? monthGroupLabel(a) : monthGroupLabel(a) + " - " + monthGroupLabel(b),
+  tick: preTick(monthShort),
+  group: preGroup(ym => ym.slice(0, 4)), groupLabel: y => y,
+  title: preTitle(ym => monthGroupLabel(ym)),
+  range: preRange((a, b) => a === b ? monthGroupLabel(a) : monthGroupLabel(a) + " - " + monthGroupLabel(b),
+                  b => monthGroupLabel(preStart.slice(0, 7)) + " - " + monthGroupLabel(b)),
   els: { prev: "monthPrev", next: "monthNext", label: "monthRange" },
 });
 
