@@ -462,6 +462,24 @@ const mgAt = t => valueAt(mgSeries, t) || 0;
 // both read off one set of numbers. A day is measured end to end, and the
 // snapshots either end of it rarely land on midnight, so the rise is an
 // interpolation and gets rounded to the download it stands for. --
+
+// A day is only drawn when readings sit close enough either side to attribute
+// its growth to it. A channel's declared anchor can precede its first recorded
+// reading by weeks (Softpedia: one anchor at zero, then nothing for 18 days),
+// and spreading that evenly draws a run of identical bars for days nobody
+// measured. Worse, the run silently rewrites itself: the anchor is fixed while
+// the oldest snapshots roll off the 500-cap, so the same downloads stretch over
+// an ever longer span and the whole plateau sags (this one has read 44, then
+// 12, then 10). Blank is the honest answer, and the cumulative chart still
+// carries the growth. 48h separates the two cases with room to spare: no gap in
+// the recorded history has ever exceeded ~31h, and no day of it lacks a
+// reading, while an anchor gap runs to hundreds of hours.
+const ATTRIBUTABLE_GAP_MS = 48 * 60 * 60 * 1000;
+function gapAround(series, t) {
+  for (let i = 1; i < series.length; i++) if (t <= series[i].t) return series[i].t - series[i - 1].t;
+  return 0;
+}
+
 function dailyBars(series) {
   if (!series.length) return [];
   const out = [];
@@ -476,7 +494,10 @@ function dailyBars(series) {
       const v = valueAt(series, eod);
       if (v !== null) {
         const rise = Math.max(0, v - prev);
-        if (rise > 0 || day !== firstDay) out.push({ x: day, y: Math.round(rise) });
+        const measured = gapAround(series, eod) <= ATTRIBUTABLE_GAP_MS;
+        if (measured && (rise > 0 || day !== firstDay)) out.push({ x: day, y: Math.round(rise) });
+        // prev advances even across a skipped day, so the first day out the far
+        // side of a gap reports its own growth rather than the whole backlog.
         prev = v;
       }
     }
