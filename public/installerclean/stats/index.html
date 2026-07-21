@@ -1409,7 +1409,7 @@ const assetLabel = name => name
   .replace(/^installerclean[-_]/i, "")
   .replace(/\.exe\.sha256$/i, ".sha256");
 const assetRanked = Object.entries(latestRelease.assets).sort((a, b) => b[1] - a[1]);
-new Chart(document.getElementById("chartAssets"), {
+const assetChart = new Chart(document.getElementById("chartAssets"), {
   type: "bar",
   data: {
     labels: assetRanked.map(([k]) => assetLabel(k)),
@@ -1424,16 +1424,21 @@ new Chart(document.getElementById("chartAssets"), {
     scales: {
       x: { beginAtZero: true, border: { display: false },
            grid: { color: COL.grid }, ticks: { color: COL.muted, precision: 0 } },
-      // Asset names are long and the axis is the only thing holding them, so
-      // the space it reserves is measured from the labels themselves rather
-      // than left to the layout, which sizes the axis from the space going
-      // spare and slices the longest name when there is not enough (a phone
-      // lost the leading letter of `portable.exe.sha256`). Capped at half the
+      // Asset names are long and this axis is the only thing holding them, so
+      // the space it takes is measured from the labels themselves rather than
+      // left to the layout, which sizes the axis from the space going spare and
+      // slices the longest name when there is not enough. Capped at half the
       // canvas so a long name can never squeeze the bars out; a label that
       // still will not fit is better shortened at the source above.
+      //
+      // GAP is deliberately more than the millimetre the text needs: measuring
+      // a proportional face and drawing it are never exact to the pixel, and
+      // the failure is asymmetric. A few spare pixels cost nothing; a few short
+      // eat the first letter of the longest name.
       y: { grid: { display: false }, border: { color: COL.grid },
            ticks: { color: COL.body, font: { size: 12 } },
            afterFit(scale) {
+             const GAP = 16;
              const ctx = scale.chart.ctx;
              ctx.save();
              ctx.font = "12px " + Chart.defaults.font.family;
@@ -1443,11 +1448,19 @@ new Chart(document.getElementById("chartAssets"), {
              }
              ctx.restore();
              scale.width = Math.max(scale.width,
-               Math.min(Math.ceil(widest) + 12, scale.chart.width / 2));
+               Math.min(Math.ceil(widest) + GAP, scale.chart.width / 2));
            } },
     },
   },
 });
+
+// The axis above sizes itself by measuring its labels, and on a cold load it
+// does that before Inter has arrived over the network: it measures the stand-in
+// face, reserves what THAT needs, and then Inter swaps in wider and overflows
+// the space, taking the first letter of the longest label with it. Measuring
+// again once the real face is in is the fix, and it is the same one the event
+// pills carry, for the same reason.
+if (document.fonts) document.fonts.ready.then(() => assetChart.update());
 </script>
 <script>
 
