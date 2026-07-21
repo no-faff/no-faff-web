@@ -1180,17 +1180,22 @@ function makePagedChart(canvasId, cfg) {
   next.addEventListener("click", () => show(page - 1));
   show(0);
 
-  // A reshaped viewport fits a different number of slots. Pages are counted
-  // back from the newest bucket, so the page INDEX means something different at
-  // a new size; the newest bucket on screen is re-found instead, and whoever
-  // was reading last March is still reading last March after a rotation.
+  // A reshaped viewport fits a different number of slots, and a page index
+  // counts whole page-widths back from today, so the same index lands somewhere
+  // else once the width changes. The bucket that was newest on screen is
+  // carried over instead: whoever was reading last March is still looking at
+  // last March afterwards. Only the page it sits on is preserved, not its
+  // position on that page, because pages start on page-width boundaries and an
+  // arbitrary bucket cannot be pinned to the edge of one. Flooring the distance
+  // is what guarantees it survives at all: the chosen page spans the distances
+  // [P*size, P*size + size - 1], which is exactly the band the floor came from.
   relayouts.push(() => {
     const size = pageSizeFor(canvasId);
     if (size === pageSize) return;
-    const newest = cfg.keys.length - page * pageSize - 1;
+    const anchor = cfg.keys.length - page * pageSize - 1;
     pageSize = size;
     pageCount = Math.max(1, Math.ceil(cfg.keys.length / pageSize));
-    show(Math.floor((cfg.keys.length - 1 - newest) / pageSize));
+    show(Math.floor((cfg.keys.length - 1 - anchor) / pageSize));
   });
 
   // Inter arrives over the network and swaps in, so a first load measures and
