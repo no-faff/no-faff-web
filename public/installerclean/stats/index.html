@@ -488,28 +488,53 @@ function gapAround(series, t) {
   return 0;
 }
 
-// Where the daily record can honestly begin. A series that opens ON zero is a
-// channel's declared launch, so every earlier day really was zero for it and
-// nothing is missing. A series that opens on a COUNT was already running when
-// the first reading was taken (GitHub had served downloads for weeks): the day
-// that reading lands in is only part-measured, and every day before it is
-// unknown, so the first whole day is the following midnight. The latest such
-// day across the channels is where bars start; everything earlier is the
-// run-up's business.
-//
-// Drawing those part-days instead is not a small inaccuracy, it is one that
-// moves: the day the record opens on is only ever a fraction of a day, and
-// before 2026-07-21 a rolling cap kept dropping the oldest snapshot, so that
-// fraction shrank on every run and the bar quietly sank (6 May read 1,880, then
-// 1,190). The cap is gone and the lost snapshots are back, but the rule stays,
-// because the opening day is a part-day however the record starts.
-function firstFullDay(series) {
-  if (!series.length || series[0].v === 0) return null;
-  const opens = series[0].t, day = dayOf(opens);
-  return dayStart(day) === opens ? day : addDays(day, 1);
+// Can this channel's figure for this day be trusted? Both ends of the day are
+// tested, not just its close: a day that ends beside a reading can still have
+// begun deep inside a long gap, and its bar would then be the tail of an
+// interpolation rather than a day's traffic.
+function dayMeasured(series, day) {
+  if (!series.length) return true;                     // channel does not exist yet
+  const opens = series[0].t, closes = series[series.length - 1].t;
+  const from = dayStart(day), to = from + DAY_MS - 1;
+  // A series that opens ON zero is a declared launch, so earlier days really
+  // were zero for it. One that opens on a COUNT was already running unwatched
+  // (GitHub had served downloads for weeks before the first snapshot), so
+  // earlier days are unknown, not zero.
+  if (to < opens) return series[0].v === 0;
+  if (from < opens || from > closes) return false;     // the opening or closing part-day
+  return gapAround(series, from) <= ATTRIBUTABLE_GAP_MS &&
+         gapAround(series, to) <= ATTRIBUTABLE_GAP_MS;
 }
-const RECORD_STARTS = [githubSeries, mgSeries, softSeries]
-  .map(firstFullDay).filter(Boolean).sort().pop() || null;
+
+// Where the daily record begins: the first day every channel can vouch for
+// that is not immediately followed by days they cannot. Checking that it
+// settles is what separates the true start of the record from the stray early
+// readings before it (April 2026 has a day measured either side of a 45-hour
+// hole and a 54-hour one). Those stragglers would otherwise stand alone at the
+// far left, a bar or two adrift of everything else, reading as a quiet period
+// rather than as an unwatched one.
+//
+// Only the LEADING days are skipped, and only until the record settles, so a
+// later stretch of missed checks costs its own days and nothing more. A rule
+// that instead demanded continuity all the way to today would let one long
+// holiday hide every bar before it.
+const SETTLED_DAYS = 3;
+const RECORD_STARTS = (() => {
+  const series = [githubSeries, mgSeries, softSeries];
+  const live = series.filter(s => s.length);
+  if (!live.length) return null;
+  const first = dayOf(Math.min(...live.map(s => s[0].t)));
+  const last = dayOf(Math.max(...live.map(s => s[s.length - 1].t)));
+  for (let d = first; d <= last; d = addDays(d, 1)) {
+    let settled = true;
+    for (let i = 0; i < SETTLED_DAYS && settled; i++) {
+      const probe = addDays(d, i);
+      if (probe <= last && !series.every(s => dayMeasured(s, probe))) settled = false;
+    }
+    if (settled) return d;
+  }
+  return null;
+})();
 
 function dailyBars(series) {
   if (!series.length) return [];
@@ -525,7 +550,7 @@ function dailyBars(series) {
       const v = valueAt(series, eod);
       if (v !== null) {
         const rise = Math.max(0, v - prev);
-        const measured = gapAround(series, eod) <= ATTRIBUTABLE_GAP_MS &&
+        const measured = dayMeasured(series, day) &&
                          (RECORD_STARTS === null || day >= RECORD_STARTS);
         if (measured && (rise > 0 || day !== firstDay)) out.push({ x: day, y: Math.round(rise) });
         // prev advances even across a skipped day, so the first day out the far
