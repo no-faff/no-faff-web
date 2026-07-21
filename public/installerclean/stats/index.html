@@ -1400,7 +1400,14 @@ makePagedChart("chartMonthly", {
 // the assets are not consistently cased (`installerclean-cli.exe` beside
 // `InstallerClean-portable.exe`), and only where a separator follows, so a
 // bare `InstallerClean.exe` keeps a name rather than being reduced to `.exe`.
-const assetLabel = name => name.replace(/^installerclean[-_]/i, "");
+// A checksum file drops the extension of the file it is a checksum OF as well:
+// `portable.exe.sha256` says nothing `portable.sha256` does not, and the four
+// characters are what push the longest label past the axis on a phone. The
+// `.exe` is only dropped where `.sha256` follows it, so the downloads keep the
+// extension that tells you they are runnable.
+const assetLabel = name => name
+  .replace(/^installerclean[-_]/i, "")
+  .replace(/\.exe\.sha256$/i, ".sha256");
 const assetRanked = Object.entries(latestRelease.assets).sort((a, b) => b[1] - a[1]);
 new Chart(document.getElementById("chartAssets"), {
   type: "bar",
@@ -1417,8 +1424,27 @@ new Chart(document.getElementById("chartAssets"), {
     scales: {
       x: { beginAtZero: true, border: { display: false },
            grid: { color: COL.grid }, ticks: { color: COL.muted, precision: 0 } },
+      // Asset names are long and the axis is the only thing holding them, so
+      // the space it reserves is measured from the labels themselves rather
+      // than left to the layout, which sizes the axis from the space going
+      // spare and slices the longest name when there is not enough (a phone
+      // lost the leading letter of `portable.exe.sha256`). Capped at half the
+      // canvas so a long name can never squeeze the bars out; a label that
+      // still will not fit is better shortened at the source above.
       y: { grid: { display: false }, border: { color: COL.grid },
-           ticks: { color: COL.body, font: { size: 12 } } },
+           ticks: { color: COL.body, font: { size: 12 } },
+           afterFit(scale) {
+             const ctx = scale.chart.ctx;
+             ctx.save();
+             ctx.font = "12px " + Chart.defaults.font.family;
+             let widest = 0;
+             for (const label of scale.chart.data.labels) {
+               widest = Math.max(widest, ctx.measureText(label).width);
+             }
+             ctx.restore();
+             scale.width = Math.max(scale.width,
+               Math.min(Math.ceil(widest) + 12, scale.chart.width / 2));
+           } },
     },
   },
 });
