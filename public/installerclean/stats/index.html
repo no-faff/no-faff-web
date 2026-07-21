@@ -1078,6 +1078,12 @@ function makePagedChart(canvasId, cfg) {
   let pageSize = pageSizeFor(canvasId);
   let pageCount = Math.max(1, Math.ceil(cfg.keys.length / pageSize));
   let page = 0;
+  // The bucket the reader last chose to look at, as an index into cfg.keys:
+  // where they are in history, held independently of how many slots happen to
+  // fit. Only the arrow buttons move it. A resize re-derives the page from it,
+  // so reshaping the window never walks the view along the timeline, and a
+  // rotation there and back lands exactly where it started.
+  let anchor = cfg.keys.length - 1;
 
   // Slot keys for a page: the pageSize-wide window ending at the newest bucket,
   // padded on the left with nulls when the data does not fill it.
@@ -1176,23 +1182,29 @@ function makePagedChart(canvasId, cfg) {
     next.disabled = page === 0;
     prev.disabled = page >= pageCount - 1;
   }
-  prev.addEventListener("click", () => show(page + 1));
-  next.addEventListener("click", () => show(page - 1));
+  // Paging is the one thing that moves the anchor, and it moves it to the
+  // newest bucket of the page it lands on.
+  function goTo(p) {
+    show(p);
+    anchor = cfg.keys.length - page * pageSize - 1;
+  }
+  prev.addEventListener("click", () => goTo(page + 1));
+  next.addEventListener("click", () => goTo(page - 1));
   show(0);
 
   // A reshaped viewport fits a different number of slots, and a page index
   // counts whole page-widths back from today, so the same index lands somewhere
-  // else once the width changes. The bucket that was newest on screen is
-  // carried over instead: whoever was reading last March is still looking at
-  // last March afterwards. Only the page it sits on is preserved, not its
-  // position on that page, because pages start on page-width boundaries and an
-  // arbitrary bucket cannot be pinned to the edge of one. Flooring the distance
-  // is what guarantees it survives at all: the chosen page spans the distances
-  // [P*size, P*size + size - 1], which is exactly the band the floor came from.
+  // else once the width changes. The page is re-derived from the anchor, which
+  // keeps the anchor on screen but not at a fixed position on the page: pages
+  // begin on page-width boundaries, so an arbitrary bucket cannot be pinned to
+  // the edge of one. Flooring the distance is what guarantees it stays visible
+  // at all, since the page that comes back spans distances
+  // [P*size, P*size + size - 1] from the newest bucket, exactly the band the
+  // floor was taken from. That also bounds the page below pageCount, so this
+  // never asks for a page that has to be clamped away.
   relayouts.push(() => {
     const size = pageSizeFor(canvasId);
     if (size === pageSize) return;
-    const anchor = cfg.keys.length - page * pageSize - 1;
     pageSize = size;
     pageCount = Math.max(1, Math.ceil(cfg.keys.length / pageSize));
     show(Math.floor((cfg.keys.length - 1 - anchor) / pageSize));
