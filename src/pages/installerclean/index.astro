@@ -8,9 +8,19 @@ import mainShot from '@assets/installerclean/screenshots/02-main-window.webp';
 import confirmShot from '@assets/installerclean/screenshots/04b-Delete-dialogue.webp';
 import doneShot from '@assets/installerclean/screenshots/04d-deleted-freed-success.webp';
 
-const downloadBase = 'https://github.com/no-faff/InstallerClean/releases/latest/download';
+// The page pins the release it describes instead of tracking
+// releases/latest/download. That path resolves a FILENAME against the newest
+// release, and from v2.2.0 the two GUI downloads carry the version in theirs,
+// so a latest link would 404 the moment a release changed them. Rewritten by
+// release-linux.sh at release time, along with the hashes below; the line
+// shapes are sed-load-bearing.
+const RELEASE_TAG = 'v2.1.0';
+const SETUP_FILE = 'InstallerClean-setup.exe';
+const PORTABLE_FILE = 'InstallerClean-portable.exe';
+
+const downloadBase = `https://github.com/no-faff/InstallerClean/releases/download/${RELEASE_TAG}`;
 const releasesPage = 'https://github.com/no-faff/InstallerClean/releases';
-const downloadPortable = `${downloadBase}/InstallerClean-portable.exe`;
+const downloadPortable = `${downloadBase}/${PORTABLE_FILE}`;
 
 // VirusTotal hash-pinned URLs. Rewritten by release-linux.sh after
 // the Stage 2 VT pause; the line shape is sed-load-bearing.
@@ -22,20 +32,20 @@ const vtPortable = `https://www.virustotal.com/gui/file/${VT_PORTABLE_HASH}`;
 const builds = [
   {
     label: 'Setup',
-    filename: 'InstallerClean-setup.exe',
+    filename: SETUP_FILE,
     size: '90 MB',
-    href: `${downloadBase}/InstallerClean-setup.exe`,
-    shaHref: `${downloadBase}/InstallerClean-setup.exe.sha256`,
+    href: `${downloadBase}/${SETUP_FILE}`,
+    shaHref: `${downloadBase}/${SETUP_FILE}.sha256`,
     blurb:
       'A regular Windows installer. Adds InstallerClean to your Start Menu and Programs list so you can find it again later. Run it and follow the prompts.',
     icon: 'lucide:package',
   },
   {
     label: 'Portable',
-    filename: 'InstallerClean-portable.exe',
+    filename: PORTABLE_FILE,
     size: '135 MB',
-    href: `${downloadBase}/InstallerClean-portable.exe`,
-    shaHref: `${downloadBase}/InstallerClean-portable.exe.sha256`,
+    href: `${downloadBase}/${PORTABLE_FILE}`,
+    shaHref: `${downloadBase}/${PORTABLE_FILE}.sha256`,
     blurb:
       'No install, no uninstaller. Run it, use it, close it.',
     icon: 'lucide:zap',
