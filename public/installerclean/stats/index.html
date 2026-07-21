@@ -495,14 +495,21 @@ function gapAround(series, t) {
 function dayMeasured(series, day) {
   if (!series.length) return true;                     // channel does not exist yet
   const opens = series[0].t, closes = series[series.length - 1].t;
+  const launched = series[0].v === 0;                  // opened ON zero, so nothing precedes it
   const from = dayStart(day), to = from + DAY_MS - 1;
   // A series that opens ON zero is a declared launch, so earlier days really
   // were zero for it. One that opens on a COUNT was already running unwatched
   // (GitHub had served downloads for weeks before the first snapshot), so
   // earlier days are unknown, not zero.
-  if (to < opens) return series[0].v === 0;
-  if (from < opens || from > closes) return false;     // the opening or closing part-day
-  return gapAround(series, from) <= ATTRIBUTABLE_GAP_MS &&
+  if (to < opens) return launched;
+  if (from > closes) return false;
+  // The launch day itself is whole: the hours before the anchor are known to
+  // have been empty, so only the hours after it need readings. Without this a
+  // channel's opening day is thrown away for looking like a part-day, and its
+  // launch spike (MajorGeeks, 283 downloads on 5 May 2026) goes with it.
+  const measureFrom = from < opens ? (launched ? opens : null) : from;
+  if (measureFrom === null) return false;              // a genuine part-day
+  return gapAround(series, measureFrom) <= ATTRIBUTABLE_GAP_MS &&
          gapAround(series, to) <= ATTRIBUTABLE_GAP_MS;
 }
 
@@ -1033,7 +1040,13 @@ function withPre(bucket) {
 const preTick = fn => k => k === PRE_KEY ? preLabel : fn(k);
 const preGroup = fn => k => k === PRE_KEY ? null : fn(k);   // spans months: no month row
 const preTitle = fn => k => k === PRE_KEY ? "Before daily tracking, " + preLabel : fn(k);
-const preRange = (fn, first) => (a, b) => a === PRE_KEY ? first(b) : fn(a, b);
+// The pager's range label. When the run-up opens the page the label runs from
+// the first release rather than from a bucket key; and when the run-up is the
+// ONLY thing on the page, which happens whenever the buckets divide so that it
+// lands alone on the oldest one, both ends of the range are it, so the label is
+// just its own span.
+const preRange = (fn, first) => (a, b) =>
+  a === PRE_KEY ? (b === PRE_KEY ? preLabel : first(b)) : fn(a, b);
 
 // One/two-letter weekday prefix for the daily x-axis tick (m tu w th f sa su),
 // indexed by getUTCDay (0 = Sunday). Two letters where one would be ambiguous
