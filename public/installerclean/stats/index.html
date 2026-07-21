@@ -1394,11 +1394,18 @@ makePagedChart("chartMonthly", {
 });
 
 // -- downloads per asset for the latest release, ranked high to low --
+// Every bar on this chart is the same product, so its name on every label is
+// noise that costs the part that differs its room: the CLI's label was wide
+// enough to be clipped by the axis. Matched without regard to case, because
+// the assets are not consistently cased (`installerclean-cli.exe` beside
+// `InstallerClean-portable.exe`), and only where a separator follows, so a
+// bare `InstallerClean.exe` keeps a name rather than being reduced to `.exe`.
+const assetLabel = name => name.replace(/^installerclean[-_]/i, "");
 const assetRanked = Object.entries(latestRelease.assets).sort((a, b) => b[1] - a[1]);
 new Chart(document.getElementById("chartAssets"), {
   type: "bar",
   data: {
-    labels: assetRanked.map(([k]) => k.replace("InstallerClean-", "")),
+    labels: assetRanked.map(([k]) => assetLabel(k)),
     datasets: [{
       data: assetRanked.map(([, v]) => v),
       backgroundColor: COL.violet, borderRadius: 5, borderWidth: 0, maxBarThickness: 26,
