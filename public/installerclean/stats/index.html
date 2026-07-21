@@ -46,7 +46,10 @@
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); font-size: 14px; letter-spacing: -.01em; }
   .brand-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 4px var(--violet-soft); }
   .brand span { color: var(--muted); font-weight: 500; }
-  .updated { font-size: 12px; color: var(--muted); }
+  /* One row per zone. Right-aligned so the clocks line up in a column and the
+     rows below the first sit indented under the date, with "Updated" said once
+     rather than repeated down the block. */
+  .updated { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.45; font-variant-numeric: tabular-nums; }
 
   /* -- section eyebrow -- */
   .section { margin-top: 8px; }
@@ -549,21 +552,22 @@ const dateIn = (t, tz, opts) =>
   new Date(t + tz.offset_minutes * 60000)
     .toLocaleDateString("en-GB", { ...opts, timeZone: "UTC" });
 
-// The "Updated" stamp reads twice: the page's own zone, then the zone the
-// stats are checked from. The second clock repeats its date whenever the two
-// zones are on different days, which they are for hours out of every day, so
-// the reading is never a time floating without a date to belong to.
+// The "Updated" stamp reads once per zone, one row each: the page's own zone
+// first, then the zone the stats are checked from. A row carries its own date
+// rather than borrowing the one above, because the two zones sit on different
+// days for hours out of every day and a bare time would then be a day out with
+// nothing to show for it.
 const stampMs = Date.parse(latest.timestamp);
 const SECOND = DATA.second_clock;
-let stamp = dateIn(stampMs, TZ, { day: "numeric", month: "short", year: "numeric" }) +
-            ", " + timeIn(stampMs, TZ);
-if (SECOND) {
-  const sameDay = dayOf(stampMs) ===
-    new Date(stampMs + SECOND.offset_minutes * 60000).toISOString().slice(0, 10);
-  stamp += " (" + (sameDay ? "" : dateIn(stampMs, SECOND, { day: "numeric", month: "short" }) + ", ") +
-           timeIn(stampMs, SECOND) + ")";
-}
-document.getElementById("updated").textContent = "Updated " + stamp;
+const updatedEl = document.getElementById("updated");
+[TZ, ...(SECOND ? [SECOND] : [])].forEach((tz, i) => {
+  const row = document.createElement("div");
+  // Said once, on the first row; the rest align under it.
+  row.textContent = (i === 0 ? "Updated " : "") +
+    dateIn(stampMs, tz, { day: "numeric", month: "short", year: "numeric" }) +
+    ", " + timeIn(stampMs, tz);
+  updatedEl.appendChild(row);
+});
 
 document.getElementById("heroNum").textContent = fmt(grand);
 const heroDelta = document.getElementById("heroDelta");
