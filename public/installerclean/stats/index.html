@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <title>InstallerClean stats</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- No webfont. The page asks nothing of a third party, and the type is
+     whatever the machine already has: Inter where it is installed, the system
+     UI face otherwise. It also removes a class of bug this page is prone to,
+     because several of these charts size themselves by measuring their own
+     text, and a face that arrives after the first measurement leaves every
+     reservation made against the wrong metrics. -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha256-0q+JdOlScWOHcunpUk21uab1jW7C1deBQARHtKMcaB4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js" integrity="sha256-6nqzDSbDjc8fLSa7Q+c6lFN7WPGQb1XhpUbdCTIbVhU=" crossorigin="anonymous"></script>
 <style>
@@ -32,7 +35,7 @@
   body {
     background: var(--page);
     color: var(--body);
-    font-family: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -699,8 +702,13 @@ document.getElementById("relBreakdown").textContent = relExtra.length
   : "";
 
 // -- shared chart styling --
+// One family string for the canvas and the stylesheet. They have to be the same
+// list: a chart that reserves room by measuring its own labels has to measure
+// them in the face they will be drawn in, and the two drift apart the moment
+// they are written out separately.
+const FONT_FAMILY = "'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 Chart.defaults.color = COL.muted;
-Chart.defaults.font.family = "'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif";
+Chart.defaults.font.family = FONT_FAMILY;
 Chart.defaults.font.size = 12;
 Chart.defaults.borderColor = COL.grid;
 
@@ -794,7 +802,7 @@ const barTotalsPlugin = {
       });
     });
     ctx.save();
-    ctx.font = "700 11px 'Inter', ui-sans-serif, sans-serif";
+    ctx.font = "700 11px " + FONT_FAMILY;
     ctx.fillStyle = COL.ink;
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
@@ -831,7 +839,7 @@ const groupRowPlugin = {
     });
     const ctx = chart.ctx;
     ctx.save();
-    ctx.font = "600 11px 'Inter', ui-sans-serif, sans-serif";
+    ctx.font = "600 11px " + FONT_FAMILY;
     ctx.fillStyle = COL.muted;
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
@@ -856,8 +864,8 @@ const splitTickPlugin = {
     const meta = chart.getDatasetMeta(0);
     if (!split || !slots || !meta || !meta.data.length) return;
     const ctx = chart.ctx;
-    const NORMAL = "400 12px 'Inter', ui-sans-serif, sans-serif";
-    const BOLD = "700 12px 'Inter', ui-sans-serif, sans-serif";
+    const NORMAL = "400 12px " + FONT_FAMILY;
+    const BOLD = "700 12px " + FONT_FAMILY;
     const y = chart.scales.x.top + 4;
     ctx.save();
     ctx.textBaseline = "top";
@@ -890,7 +898,7 @@ const splitTickPlugin = {
 // drawn 6px above the bar); a column whose pills would overlap the column to its
 // left is lifted above it, stairstepping a run of adjacent events apart.
 const ANN = { PAD_X: 6, PILL_H: 17, GAP: 3, ABOVE_TOTAL: 22, TOP_MARGIN: 6, EDGE_MARGIN: 4,
-              FONT: "600 11px 'Inter', ui-sans-serif, sans-serif" };
+              FONT: "600 11px " + FONT_FAMILY };
 // One font for measuring and for drawing: a pill measured in a different face
 // than it is drawn in reserves the wrong width.
 const pillWidth = (ctx, e) => Math.ceil(ctx.measureText(e.tag).width) + 2 * ANN.PAD_X;
@@ -1181,7 +1189,7 @@ function makePagedChart(canvasId, cfg) {
   // the slot pitch already covers part of that overhang, but the pitch is only
   // known once the chart has laid out, so reserve the full half-pill: the cost
   // is a little white space, the alternative is a clipped release tag.
-  const padRight = () => cfg.annotations
+  const padRight = cfg.annotations
     ? Math.ceil(widestPill(canvasId, cfg.annotations) / 2) + ANN.EDGE_MARGIN
     : 0;
 
@@ -1193,7 +1201,7 @@ function makePagedChart(canvasId, cfg) {
     })) },
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: padTop, right: padRight() } },
+      layout: { padding: { top: padTop, right: padRight } },
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: legendOpts,
@@ -1273,16 +1281,6 @@ function makePagedChart(canvasId, cfg) {
     show(Math.floor((cfg.keys.length - 1 - anchor) / pageSize));
   });
 
-  // Inter arrives over the network and swaps in, so a first load measures and
-  // draws its canvas text in whatever face is standing in. Re-measure and
-  // redraw once the real one is in: a width reserved in the fallback's metrics
-  // is the one way the newest bar's pill could still meet the canvas edge.
-  if (cfg.annotations && document.fonts) {
-    document.fonts.ready.then(() => {
-      chart.options.layout.padding.right = padRight();
-      chart.update();
-    });
-  }
   return chart;
 }
 
@@ -1409,7 +1407,7 @@ const assetLabel = name => name
   .replace(/^installerclean[-_]/i, "")
   .replace(/\.exe\.sha256$/i, ".sha256");
 const assetRanked = Object.entries(latestRelease.assets).sort((a, b) => b[1] - a[1]);
-const assetChart = new Chart(document.getElementById("chartAssets"), {
+new Chart(document.getElementById("chartAssets"), {
   type: "bar",
   data: {
     labels: assetRanked.map(([k]) => assetLabel(k)),
@@ -1441,7 +1439,7 @@ const assetChart = new Chart(document.getElementById("chartAssets"), {
              const GAP = 16;
              const ctx = scale.chart.ctx;
              ctx.save();
-             ctx.font = "12px " + Chart.defaults.font.family;
+             ctx.font = "12px " + FONT_FAMILY;
              let widest = 0;
              for (const label of scale.chart.data.labels) {
                widest = Math.max(widest, ctx.measureText(label).width);
@@ -1454,13 +1452,6 @@ const assetChart = new Chart(document.getElementById("chartAssets"), {
   },
 });
 
-// The axis above sizes itself by measuring its labels, and on a cold load it
-// does that before Inter has arrived over the network: it measures the stand-in
-// face, reserves what THAT needs, and then Inter swaps in wider and overflows
-// the space, taking the first letter of the longest label with it. Measuring
-// again once the real face is in is the fix, and it is the same one the event
-// pills carry, for the same reason.
-if (document.fonts) document.fonts.ready.then(() => assetChart.update());
 </script>
 <script>
 
