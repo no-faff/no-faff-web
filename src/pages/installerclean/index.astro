@@ -59,7 +59,7 @@ const faqs = [
   },
   {
     q: 'Will the app connect to the internet?',
-    a: 'Only on a button you click. Two opt-in buttons make a single HTTPS request when clicked. <strong>Check for updates</strong> in the About box asks GitHub whether there is a newer version. <strong>Send summary</strong> on the completion screen opens a window showing the exact JSON the app would send to a No Faff endpoint (counts and category labels only; no file paths, no user names, no machine identifiers); review it there and press Send to confirm or Cancel to back out. The app makes no other network calls. No background checks.',
+    a: 'Once by itself, plus buttons you click. On launch it checks GitHub for a newer version (off switch in About; nothing downloaded, nothing sent about you). Two opt-in buttons make a single HTTPS request when clicked. <strong>Check for updates</strong> on the main window asks GitHub whether there is a newer version. <strong>Send summary</strong> on the completion screen opens a window showing the exact JSON the app would send to a No Faff endpoint (counts and category labels only; no file paths, no user names, no machine identifiers); review it there and press Send to confirm or Cancel to back out. The app makes no other network calls. No other background activity.',
   },
   {
     q: 'Why does it ask for Administrator?',
@@ -378,7 +378,7 @@ if (freed.length > 0) {
 
         <p>
           The advice is right if it means "don't delete files in here by name and date".
-          The folder is owned by Windows; going in blind really does break the way Windows
+          The folder is owned by Windows; going in blind really can break the way Windows
           updates and removes software. The advice is wrong if it means "there is nothing
           safe to remove". Windows already keeps a database of what's still needed and
           what isn't. InstallerClean reads that database and only flags installers for
@@ -551,11 +551,12 @@ if (freed.length > 0) {
         <li class="claim">
           <Icon name="lucide:wifi-off" class="claim-icon" aria-hidden="true" />
           <div class="claim-body">
-            <strong>No telemetry, no background network.</strong>
+            <strong>No telemetry, one version check.</strong>
             <span class="claim-detail">
-              No version pings on startup, no analytics, nothing in the background. The app
-              only makes a network call when you click one of two buttons. Check for updates
-              queries GitHub's releases API. Send summary shows you exactly what the app
+              On launch it asks GitHub once whether a newer version exists; you can turn
+              that off in About, and nothing is ever downloaded. Otherwise it only makes a
+              network call when you click one of two buttons. Check for updates asks
+              GitHub whether there is a newer version. Send summary shows you exactly what the app
               would send (counts, app version, your Windows family and architecture, an
               outcome label; no file names, no usernames, no machine identifiers) and waits
               for you to confirm or close the window.
