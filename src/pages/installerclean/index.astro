@@ -14,9 +14,9 @@ import doneShot from '@assets/installerclean/screenshots/04d-deleted-freed-succe
 // so a latest link would 404 the moment a release changed them. Rewritten by
 // release-linux.sh at release time, along with the hashes below; the line
 // shapes are sed-load-bearing.
-const RELEASE_TAG = 'v2.2.0';
-const SETUP_FILE = 'InstallerClean-2.2.0-setup.exe';
-const PORTABLE_FILE = 'InstallerClean-2.2.0-portable.exe';
+const RELEASE_TAG = 'v2.3.0';
+const SETUP_FILE = 'InstallerClean-2.3.0-setup.exe';
+const PORTABLE_FILE = 'InstallerClean-2.3.0-portable.exe';
 
 const downloadBase = `https://github.com/no-faff/InstallerClean/releases/download/${RELEASE_TAG}`;
 const releasesPage = 'https://github.com/no-faff/InstallerClean/releases';
@@ -24,8 +24,8 @@ const downloadPortable = `${downloadBase}/${PORTABLE_FILE}`;
 
 // VirusTotal hash-pinned URLs. Rewritten by release-linux.sh after
 // the Stage 2 VT pause; the line shape is sed-load-bearing.
-const VT_SETUP_HASH = 'b6e0194d5ebf81b7e0ad840d247968b371eb66776d84fed9a9cf6b503aec2c46';
-const VT_PORTABLE_HASH = 'e0b3c8d7973414927ae397b229c0440db483b644ec5f3566fa6bc7c4c827e1f1';
+const VT_SETUP_HASH = '459e7f5b1b90022483692f74bd2a4904f633a139bf6b84a430feb1aba78fa28f';
+const VT_PORTABLE_HASH = '922f5546f71905d0eccab2f7383621198b34b97ad65e46ac2ef0c9edf814ec22';
 const vtSetup = `https://www.virustotal.com/gui/file/${VT_SETUP_HASH}`;
 const vtPortable = `https://www.virustotal.com/gui/file/${VT_PORTABLE_HASH}`;
 
