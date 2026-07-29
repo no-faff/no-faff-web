@@ -731,6 +731,33 @@ const tooltipOpts = {
   titleFont: { size: 12, weight: "600" }, bodyFont: { size: 12 },
   footerFont: { size: 12, weight: "700" },
 };
+// Chart.js draws one tooltip body line per array entry and never wraps, so a
+// sentence-length custom annotation (annotations.json carries the prose, not
+// just the pill text) draws as a single line that stretches the box past the
+// canvas and off a phone entirely. Wrapped to whichever is narrower: a
+// comfortable reading measure, or what this canvas can hold. Measured in the
+// face the body is drawn in, since measuring in another reserves the wrong
+// width, the same trap the annotation pills document.
+const TIP_WRAP = { MAX_PX: 400, CANVAS_MARGIN: 48, MIN_PX: 150 };
+function wrapTooltipText(chart, text) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const ctx = chart.ctx;
+  ctx.save();
+  ctx.font = "12px " + FONT_FAMILY;
+  const max = Math.max(TIP_WRAP.MIN_PX,
+                       Math.min(TIP_WRAP.MAX_PX, chart.width - TIP_WRAP.CANVAS_MARGIN));
+  const lines = [];
+  let line = words[0];
+  for (let i = 1; i < words.length; i++) {
+    const candidate = line + " " + words[i];
+    if (ctx.measureText(candidate).width <= max) line = candidate;
+    else { lines.push(line); line = words[i]; }
+  }
+  lines.push(line);
+  ctx.restore();
+  return lines;
+}
 const timeX = {
   type: "time",
   time: { unit: "day", tooltipFormat: "d MMM yyyy", displayFormats: { day: "d MMM" } },
@@ -1212,7 +1239,7 @@ function makePagedChart(canvasId, cfg) {
             if (!ann) return [];
             const k = chart.$slots[items[0].dataIndex];
             const list = k == null ? null : ann[k];
-            return list ? ["", ...list.map(e => e.hover)] : [];
+            return list ? ["", ...list.flatMap(e => wrapTooltipText(chart, e.hover))] : [];
           },
           footer: items => "Total  " + fmt(items.reduce((a, i) => a + i.parsed.y, 0)),
         } },
