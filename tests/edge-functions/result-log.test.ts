@@ -49,6 +49,22 @@ describe('validateReport: schema 3 delete categories and codes', () => {
     expect(validateReport(r, 3)).toBeNull();
   });
 
+  // Both categories shipped in the v2.1.0 client and were missing from the
+  // allowlist until 2026-08-01, so every run that failed on a locked file
+  // was rejected with a 400 for two releases. Pinned here per category
+  // rather than as one loop, so a future removal names which one it broke.
+  it('accepts a FileInUse bucket, the category a locked file produces', () => {
+    const r = baseReport();
+    r.operation.errors = [{ category: 'FileInUse', count: 3 }];
+    expect(validateReport(r, 3)).toBeNull();
+  });
+
+  it('accepts a CandidateOutsideCache bucket', () => {
+    const r = baseReport();
+    r.operation.errors = [{ category: 'CandidateOutsideCache', count: 3 }];
+    expect(validateReport(r, 3)).toBeNull();
+  });
+
   it('accepts an error bucket with no codes field (codes is optional)', () => {
     const r = baseReport();
     r.operation.errors = [{ category: 'MissingSourceFile', count: 2 }];

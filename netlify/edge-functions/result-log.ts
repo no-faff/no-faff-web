@@ -115,21 +115,31 @@ const ALLOWED_OS = new Set([
 ]);
 
 // Categories are the C# runtime type names of FileOperationError's
-// subclasses in InstallerClean.Core.Models. Anything else rejects.
-// ShellRefused is the SHFileOperation-era recycle failure that clients up
-// to v1.8.2 emit; RecycleFailed and PermanentlyDeleted are its
-// IFileOperation-era successors from v1.8.3 on. All three stay accepted so
-// reports from both client generations validate.
+// subclasses in InstallerClean.Core.Models. Anything else rejects the whole
+// report with a 400, and the user is told sending failed, so a category
+// missing from this set is silent data loss that cannot be measured after
+// the fact: the reports that would have counted it are the ones discarded.
+// CandidateOutsideCache and FileInUse were shipped by the client in v2.1.0
+// and were absent here until 2026-08-01, so every run that failed because
+// another program held a file open was rejected for two releases.
+//
+// Three entries are legacy-only and no current client can send them.
+// ShellRefused is the SHFileOperation-era recycle failure emitted up to
+// v1.8.2; RecycleFailed and PermanentlyDeleted are its IFileOperation-era
+// successors from v1.8.3, retired in 2.4.0 with the Recycle Bin itself.
+// All three stay accepted because older clients are still installed.
 const ALLOWED_ERROR_CATEGORY = new Set([
   "MissingSourceFile",
   "AccessDenied",
   "DestinationCollision",
+  "SourceIsReparsePoint",
+  "CandidateOutsideCache",
+  "FileInUse",
+  "IOFailure",
+  "UnknownError",
   "ShellRefused",
   "RecycleFailed",
   "PermanentlyDeleted",
-  "SourceIsReparsePoint",
-  "IOFailure",
-  "UnknownError",
 ]);
 
 // Reflected key names in 400 responses are truncated to this width so
