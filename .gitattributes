@@ -1,0 +1,4 @@
+# Developed only on Fedora, and npm and some editors write CRLF into a file
+# they rewrite. Without this, a dependency bump arrives as a whole-file diff and
+# the one line that actually changed is invisible in it. That has happened.
+* text=auto eol=lf
