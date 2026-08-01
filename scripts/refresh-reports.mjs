@@ -112,7 +112,6 @@ const asOf = friendlyDate(payload.generatedAt ?? new Date().toISOString());
 
 const lines = [
   START,
-  `const reportsAsOf = '${asOf}';`,
   'const runs: Run[] = [',
   ...runs.map((r) => `  { ts: '${r.ts}', gb: ${r.gb}, missing: ${r.missing} },`),
   '];',
