@@ -11,7 +11,6 @@
     "nonStringLocalPackageCount": 1,
     "unreadablePatchStateCount": 5,
     "unreadableVerdictPathCount": 4,
-    "unparseableProductKeyCount": 1,
     "productCount": 137,
     "registryProductKeyCount": 140,
     "patchClaimCount": 2
@@ -32,7 +31,7 @@
     "unclaimedProductFileCount": 3,
     "unclaimedPatchFileCount": 1,
     "recoveredProductCount": 2,
-    "unansweredProductCount": 1,
+    "unresolvableProductCount": 1,
     "keptIdentityClaimedCount": 0,
     "keptIdentityUnreadableCount": 0,
     "keptIdentityUnaskableCount": 0

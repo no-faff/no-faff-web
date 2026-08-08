@@ -117,29 +117,28 @@ describe('real client payloads', () => {
     expect(r.machine.nonStringLocalPackageCount).toBe(1);
     expect(r.machine.unreadablePatchStateCount).toBe(5);
     expect(r.machine.unreadableVerdictPathCount).toBe(4);
-    expect(r.machine.unparseableProductKeyCount).toBe(1);
+    expect(r.machine.productCount).toBe(137);
     expect(r.machine.registryProductKeyCount).toBe(140);
     expect(r.scan.unreadableProductCount).toBe(2);
     expect(r.scan.skippedProductRowCount).toBe(1);
     expect(r.scan.unclaimedProductFileCount).toBe(3);
     expect(r.scan.unclaimedPatchFileCount).toBe(1);
     expect(r.scan.recoveredProductCount).toBe(2);
-    expect(r.scan.unansweredProductCount).toBe(1);
+    expect(r.scan.unresolvableProductCount).toBe(1);
   });
 
-  it('the two ways a product went unsettled travel as two numbers, never as one', () => {
-    // A product code Windows would not answer about, and a registry key name that
-    // yielded no code to ask with, are different findings: Windows was never
-    // asked about the second, so a sentence about what it would not say is false
-    // of every one of them. The app adds them for its own withholding total,
-    // where the superordinate "could not be settled" is true of both. Nothing
-    // narrower may, and the payload carries no field that does.
+  it('the unresolvable count is one finding, and nothing here widens it', () => {
+    // It counts product codes Windows was asked about and would not answer for.
+    // A registry key name that yields no product code is a DIFFERENT finding,
+    // Windows having never been asked about it, so a sentence about what Windows
+    // would not say would be false of every such member. The client carries no
+    // field mixing the two, and if one ever arrives it needs a second key here
+    // rather than a wider reading of this one.
     for (const name of names) {
       const r = load(name);
-      expect(r.scan).toHaveProperty('unansweredProductCount');
-      expect(r.machine).toHaveProperty('unparseableProductKeyCount');
-      expect(JSON.stringify(r)).not.toContain('unresolvable');
-      expect(JSON.stringify(r)).not.toContain('unsettled');
+      expect(r.scan).toHaveProperty('unresolvableProductCount');
+      expect(r.machine).not.toHaveProperty('unparseableProductKeyCount');
+      expect(r.scan).not.toHaveProperty('unsettledProductCount');
     }
   });
 
