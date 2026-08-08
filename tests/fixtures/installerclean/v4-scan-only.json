@@ -10,6 +10,8 @@
     "longFileNameCount": 0,
     "nonStringLocalPackageCount": 0,
     "unreadablePatchStateCount": 0,
+    "unreadableVerdictPathCount": 0,
+    "unparseableProductKeyCount": 0,
     "productCount": 137,
     "registryProductKeyCount": 137,
     "patchClaimCount": 2
@@ -29,6 +31,8 @@
     "skippedProductRowCount": 0,
     "unclaimedProductFileCount": 0,
     "unclaimedPatchFileCount": 0,
+    "recoveredProductCount": 0,
+    "unansweredProductCount": 0,
     "keptIdentityClaimedCount": 0,
     "keptIdentityUnreadableCount": 0,
     "keptIdentityUnaskableCount": 0

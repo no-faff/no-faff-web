@@ -104,6 +104,57 @@ describe('real client payloads', () => {
     expect(op.heldBackRecordsUnreadable).toBe(0);
   });
 
+  it('the degraded payload carries every census term non-zero', () => {
+    // WITHOUT THIS THE FIXTURE SUITE PASSES OVER A ROW OF ZEROES, which would
+    // satisfy any validator at all and prove nothing about these fields. One
+    // fixture is a machine that answered less cleanly, and every term it can
+    // report is distinct so a transposition between two of them fails here rather
+    // than cancelling out.
+    const r = load('v4-delete-with-errors.json');
+
+    expect(r.machine.shortNameCreation).toBe('systemVolumeOnly');
+    expect(r.machine.longFileNameCount).toBe(6);
+    expect(r.machine.nonStringLocalPackageCount).toBe(1);
+    expect(r.machine.unreadablePatchStateCount).toBe(5);
+    expect(r.machine.unreadableVerdictPathCount).toBe(4);
+    expect(r.machine.unparseableProductKeyCount).toBe(1);
+    expect(r.machine.registryProductKeyCount).toBe(140);
+    expect(r.scan.unreadableProductCount).toBe(2);
+    expect(r.scan.skippedProductRowCount).toBe(1);
+    expect(r.scan.unclaimedProductFileCount).toBe(3);
+    expect(r.scan.unclaimedPatchFileCount).toBe(1);
+    expect(r.scan.recoveredProductCount).toBe(2);
+    expect(r.scan.unansweredProductCount).toBe(1);
+  });
+
+  it('the two ways a product went unsettled travel as two numbers, never as one', () => {
+    // A product code Windows would not answer about, and a registry key name that
+    // yielded no code to ask with, are different findings: Windows was never
+    // asked about the second, so a sentence about what it would not say is false
+    // of every one of them. The app adds them for its own withholding total,
+    // where the superordinate "could not be settled" is true of both. Nothing
+    // narrower may, and the payload carries no field that does.
+    for (const name of names) {
+      const r = load(name);
+      expect(r.scan).toHaveProperty('unansweredProductCount');
+      expect(r.machine).toHaveProperty('unparseableProductKeyCount');
+      expect(JSON.stringify(r)).not.toContain('unresolvable');
+      expect(JSON.stringify(r)).not.toContain('unsettled');
+    }
+  });
+
+  it('the pairing count and the path count both travel, in the same object', () => {
+    // They are one measurement at two granularities and the pair is the reading:
+    // failures concentrated on one shared patch and failures spread across many
+    // are different faults wearing one number, and only the two side by side tell
+    // them apart. Splitting them across objects would throw that away.
+    const r = load('v4-delete-with-errors.json');
+
+    expect(r.machine).toHaveProperty('unreadablePatchStateCount');
+    expect(r.machine).toHaveProperty('unreadableVerdictPathCount');
+    expect(r.scan).not.toHaveProperty('unreadableVerdictPathCount');
+  });
+
   it('no payload carries a total over the held-back causes', () => {
     // Five causes and no sum, so nothing downstream can be tempted into one
     // sentence over a set that has several.
