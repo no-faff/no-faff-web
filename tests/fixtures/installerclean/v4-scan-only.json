@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 4,
+  "app": {
+    "version": "2.3.0",
+    "language": "en-GB"
+  },
+  "os": "Windows (X64)",
+  "machine": {
+    "shortNameCreation": "noVolumes",
+    "longStemCount": 0,
+    "nonStringLocalPackageCount": 0,
+    "unreadablePatchStateCount": 0,
+    "productCount": 137,
+    "patchClaimCount": 2
+  },
+  "scan": {
+    "durationMs": 4210,
+    "registeredCount": 348,
+    "registeredBytes": 6960000000,
+    "orphanedCount": 1,
+    "supersededCount": 1,
+    "obsoletedCount": 1,
+    "removableBytes": 1300000000,
+    "missingFromDiskCount": 1,
+    "missingNeededCount": 0,
+    "withheldPatchCount": 0,
+    "unreadableProductCount": 0,
+    "shortfallProductCount": 0,
+    "unlistedProductCount": 0,
+    "keptIdentityClaimedCount": 0,
+    "keptIdentityUnreadableCount": 0,
+    "keptIdentityUnaskableCount": 0
+  },
+  "operation": {
+    "kind": "scan",
+    "outcome": "noFiles",
+    "durationMs": 0,
+    "filesProcessed": 0,
+    "filesFailed": 0,
+    "bytesFreed": 0,
+    "errors": [],
+    "moveDestinationKind": null,
+    "heldBackReclaimed": 0,
+    "heldBackRecordsChanged": 0,
+    "heldBackRecordsUnreadable": 0,
+    "heldBackIdentityClaimed": 0,
+    "heldBackIdentityUnreadable": 0
+  }
+}

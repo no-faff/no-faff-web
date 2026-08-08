@@ -20,10 +20,22 @@ import { getStore } from "@netlify/blobs";
 // error" for what is really a deployment lag.
 
 // Schema 3 adds the optional per-error `codes` HRESULT histogram and the
-// IFileOperation-era delete categories (see ALLOWED_ERROR_CATEGORY). A
-// version outside this set is stored under v<n>-unknown/ and still 200s,
-// so a client that ships ahead of this deploy never loses a report.
-const ALLOWED_VERSIONS = new Set([1, 2, 3]);
+// IFileOperation-era delete categories (see ALLOWED_ERROR_CATEGORY). Schema 4
+// adds the top-level `machine` object and a batch of scan and operation fields,
+// and drops `pendingReboot`. A version outside this set is stored under
+// v<n>-unknown/ and still 200s, so a client that ships ahead of this deploy
+// never loses a report.
+//
+// THAT LENIENCE STOPS AT THE TOP LEVEL, which is why this function has to be
+// deployed before a client that sends schema 4 ships: the top-level allowlist
+// runs for every version including the ones this cannot validate, so a `machine`
+// key arriving before this deploy is a 400 and a user told sending failed.
+const ALLOWED_VERSIONS = new Set([1, 2, 3, 4]);
+
+// The version at which `machine` arrives and `pendingReboot` leaves. Named
+// rather than repeated, because the two moves are one schema change and a
+// future reader has to see that they cannot come apart.
+const FIRST_MACHINE_VERSION = 4;
 const MAX_BODY_BYTES = 64 * 1024;
 const STORE_NAME = "installerclean-results";
 
@@ -32,12 +44,39 @@ const STORE_NAME = "installerclean-results";
 // long or PII-bearing UA cannot land in storage.
 const USER_AGENT_PATTERN = /^InstallerClean\/\d+\.\d+\.\d+$/;
 
+// Schema 1 to 3 only. The client dropped the field at schema 4: a move or a
+// delete is gated on that state before it can run, so it could only ever vary on
+// a scan-only run, and across every report received it never did.
 const PENDING_REBOOT_LABELS = new Set([
   "clean",
   "msiExecuteMutexHeld",
   "installerInProgress",
   "pendingRenameInCache",
 ]);
+
+// Where the machine still generates 8dot3 short names. The first four mirror the
+// four settings Microsoft's fsutil 8dot3name reference documents for
+// NtfsDisable8dot3NameCreation, inverted (the registry value disables); the last
+// three are the three ways of having no setting to report, which the client keeps
+// apart because one label for all three would be false of two of them.
+const SHORT_NAME_CREATION_LABELS = new Set([
+  "allVolumes",
+  "noVolumes",
+  "perVolume",
+  "systemVolumeOnly",
+  "unset",
+  "unrecognised",
+  "unreadable",
+]);
+
+// The display language, as a BCP 47 tag, plus the word the client sends when the
+// UI culture is invariant and has no name. A PATTERN rather than the allowlist
+// this file uses everywhere else, and deliberately: the set of shipped languages
+// grows between releases, and an allowlist would reject the reports from every
+// new one until this function redeployed. The bound is what an allowlist is
+// really for here, and 20 characters of [a-z-] cannot carry a payload.
+const LANGUAGE_PATTERN = /^(invariant|[a-z]{2,3}(-[A-Za-z]{2,8}){0,2})$/;
+
 const OPERATION_KINDS = new Set(["scan", "move", "delete"]);
 const OPERATION_OUTCOMES = new Set([
   "complete",
@@ -61,9 +100,18 @@ const MOVE_DESTINATION_KINDS = new Set([
 // the ones validateReport understands); the per-object allowlists
 // run inside validateReport because the published schema for an
 // unknown version is by definition unknown.
-const ALLOWED_TOP = new Set(["schemaVersion", "app", "os", "scan", "operation"]);
-const ALLOWED_APP = new Set(["version"]);
-const ALLOWED_SCAN = new Set([
+const ALLOWED_TOP = new Set(["schemaVersion", "app", "os", "machine", "scan", "operation"]);
+
+// PER-VERSION AND EXACT, not a union with the odd version-gated extra check. A
+// union would accept a schema-3 report carrying schema-4 keys and a schema-4
+// report still carrying pendingReboot, and both are a client that has gone wrong
+// in a way worth hearing about rather than one to quietly accommodate. Being
+// exact also means the unknown-key check does the whole job: there is no separate
+// list of keys a version must NOT have, which is the list that goes stale.
+const ALLOWED_APP_LEGACY = new Set(["version"]);
+const ALLOWED_APP_V4 = new Set(["version", "language"]);
+
+const ALLOWED_SCAN_LEGACY = new Set([
   "durationMs",
   "registeredCount",
   "orphanedCount",
@@ -72,7 +120,26 @@ const ALLOWED_SCAN = new Set([
   "missingFromDiskCount",
   "pendingReboot",
 ]);
-const ALLOWED_OPERATION = new Set([
+const ALLOWED_SCAN_V4 = new Set([
+  "durationMs",
+  "registeredCount",
+  "registeredBytes",
+  "orphanedCount",
+  "supersededCount",
+  "obsoletedCount",
+  "removableBytes",
+  "missingFromDiskCount",
+  "missingNeededCount",
+  "withheldPatchCount",
+  "unreadableProductCount",
+  "shortfallProductCount",
+  "unlistedProductCount",
+  "keptIdentityClaimedCount",
+  "keptIdentityUnreadableCount",
+  "keptIdentityUnaskableCount",
+]);
+
+const ALLOWED_OPERATION_LEGACY = new Set([
   "kind",
   "outcome",
   "filesProcessed",
@@ -81,9 +148,87 @@ const ALLOWED_OPERATION = new Set([
   "errors",
   "moveDestinationKind",
 ]);
-const ALLOWED_ERROR = new Set(["category", "count", "codes"]);
+const ALLOWED_OPERATION_V4 = new Set([
+  "kind",
+  "outcome",
+  "durationMs",
+  "filesProcessed",
+  "filesFailed",
+  "bytesFreed",
+  "errors",
+  "moveDestinationKind",
+  "heldBackReclaimed",
+  "heldBackRecordsChanged",
+  "heldBackRecordsUnreadable",
+  "heldBackIdentityClaimed",
+  "heldBackIdentityUnreadable",
+]);
 
-// Optional per-error HRESULT histogram (schema 3+, delete only). Keys are
+const ALLOWED_MACHINE = new Set([
+  "shortNameCreation",
+  "longStemCount",
+  "nonStringLocalPackageCount",
+  "unreadablePatchStateCount",
+  "productCount",
+  "patchClaimCount",
+]);
+
+// `codes` was populated by the two shell-delete categories alone, both retired
+// with the Recycle Bin, so no schema-4 client can send it and a schema-4 report
+// carrying one is not a report this understands.
+const ALLOWED_ERROR_LEGACY = new Set(["category", "count", "codes"]);
+const ALLOWED_ERROR_V4 = new Set(["category", "count"]);
+
+// Numeric fields required by version, so a client that stops sending one is a
+// 400 rather than a series that quietly goes to zero. The v4 list is every
+// numeric key in that version's shape: they are all sent on all three run kinds,
+// zero being a real answer rather than an absent field.
+const SCAN_NUMERIC_LEGACY = [
+  "durationMs",
+  "registeredCount",
+  "orphanedCount",
+  "supersededCount",
+  "missingFromDiskCount",
+];
+const SCAN_NUMERIC_V4 = [
+  "durationMs",
+  "registeredCount",
+  "registeredBytes",
+  "orphanedCount",
+  "supersededCount",
+  "obsoletedCount",
+  "removableBytes",
+  "missingFromDiskCount",
+  "missingNeededCount",
+  "withheldPatchCount",
+  "unreadableProductCount",
+  "shortfallProductCount",
+  "unlistedProductCount",
+  "keptIdentityClaimedCount",
+  "keptIdentityUnreadableCount",
+  "keptIdentityUnaskableCount",
+];
+const OPERATION_NUMERIC_LEGACY = ["filesProcessed", "filesFailed", "bytesFreed"];
+const OPERATION_NUMERIC_V4 = [
+  "durationMs",
+  "filesProcessed",
+  "filesFailed",
+  "bytesFreed",
+  "heldBackReclaimed",
+  "heldBackRecordsChanged",
+  "heldBackRecordsUnreadable",
+  "heldBackIdentityClaimed",
+  "heldBackIdentityUnreadable",
+];
+const MACHINE_NUMERIC = [
+  "longStemCount",
+  "nonStringLocalPackageCount",
+  "unreadablePatchStateCount",
+  "productCount",
+  "patchClaimCount",
+];
+
+// Optional per-error HRESULT histogram, schema 3 only and delete only. Keys are
 // the shell HRESULT formatted exactly as the client renders it for
 // display: 0x followed by eight uppercase hex digits. Values are per-code
 // file counts. One error bucket can hold files that failed with different
@@ -126,8 +271,11 @@ const ALLOWED_OS = new Set([
 // Three entries are legacy-only and no current client can send them.
 // ShellRefused is the SHFileOperation-era recycle failure emitted up to
 // v1.8.2; RecycleFailed and PermanentlyDeleted are its IFileOperation-era
-// successors from v1.8.3, retired in 2.4.0 with the Recycle Bin itself.
-// All three stay accepted because older clients are still installed.
+// successors from v1.8.3, retired with the Recycle Bin itself. All three stay
+// accepted because older clients are still installed, and they are accepted at
+// every version rather than only the legacy ones: what a category means does not
+// change with the envelope around it, and a client is free to keep an installed
+// copy of an old release while a newer one reports beside it.
 const ALLOWED_ERROR_CATEGORY = new Set([
   "MissingSourceFile",
   "AccessDenied",
@@ -219,7 +367,13 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   // the forward-compat branch below. Any future schema that bumps
   // the version also gets added to ALLOWED_TOP if it introduces new
   // top-level keys.
-  const topUnknown = unknownKey(parsed, ALLOWED_TOP);
+  //
+  // AND THAT IS WHY A NEW TOP-LEVEL KEY MEANS THIS FUNCTION DEPLOYS BEFORE THE
+  // CLIENT SHIPS. Everything below the top level is forgiving of a version this
+  // does not know; this line is not, so `machine` arriving early would be a 400
+  // and a user told sending failed, which is the one failure mode the lenient
+  // v<n>-unknown/ path exists to avoid.
+  const topUnknown = topLevelUnknownKey(parsed);
   if (topUnknown) {
     return new Response(`unknown key at top level: ${truncate(topUnknown)}`, {
       status: 400,
@@ -285,51 +439,79 @@ export default async function handler(req: Request, _ctx: Context): Promise<Resp
   });
 }
 
+/**
+ * The first top-level key this does not recognise, or null. Exported so a test
+ * can put a real client payload through the SAME gate the handler runs: this one
+ * applies at every schemaVersion, including the ones validateReport cannot check,
+ * so it is the gate a forward-deployed client trips and the only one whose
+ * failure reaches a user as "Sending failed".
+ */
+export function topLevelUnknownKey(body: Record<string, unknown>): string | null {
+  return unknownKey(body, ALLOWED_TOP);
+}
+
 export function validateReport(body: Record<string, unknown>, version: number): string | null {
   // Top-level allowlist runs above this function so unknown
-  // schemaVersions are also filtered. Per-object allowlists below
-  // apply to the shared v1/v2 shape; the only structural difference is
-  // scan.obsoletedCount, which schema 2 adds and schema 1 omits.
+  // schemaVersions are also filtered. Per-object allowlists below are
+  // chosen by version: v1 to v3 share one shape (the only difference
+  // between them being scan.obsoletedCount, which schema 2 adds and
+  // schema 1 omits) and v4 is its own.
+  const isV4 = version >= FIRST_MACHINE_VERSION;
 
   const app = body.app;
   if (!isPlainObject(app)) return "app must be an object";
-  const appUnknown = unknownKey(app, ALLOWED_APP);
+  const appUnknown = unknownKey(app, isV4 ? ALLOWED_APP_V4 : ALLOWED_APP_LEGACY);
   if (appUnknown) return `unknown key in app: ${truncate(appUnknown)}`;
   if (typeof app.version !== "string" || !/^\d+\.\d+\.\d+$/.test(app.version)) {
     return "app.version must match semver";
+  }
+  if (isV4 && (typeof app.language !== "string" || !LANGUAGE_PATTERN.test(app.language))) {
+    return "app.language must be a language tag";
   }
 
   if (typeof body.os !== "string" || !ALLOWED_OS.has(body.os)) {
     return "os must be a known family / architecture label";
   }
 
+  // The machine object arrives with schema 4 and must be absent before it: the
+  // top-level allowlist has to accept the key for every version so that a
+  // forward-deployed client is not rejected, so this is where a v3 report
+  // carrying one is caught.
+  const machine = body.machine;
+  if (isV4) {
+    if (!isPlainObject(machine)) return "machine must be an object";
+    const machineUnknown = unknownKey(machine, ALLOWED_MACHINE);
+    if (machineUnknown) return `unknown key in machine: ${truncate(machineUnknown)}`;
+    if (
+      typeof machine.shortNameCreation !== "string" ||
+      !SHORT_NAME_CREATION_LABELS.has(machine.shortNameCreation)
+    ) {
+      return "machine.shortNameCreation must be a known label";
+    }
+    const machineError = requireNonNegativeNumbers(machine, MACHINE_NUMERIC, "machine");
+    if (machineError) return machineError;
+  } else if (machine !== undefined) {
+    return "machine is not part of this schema version";
+  }
+
   const scan = body.scan;
   if (!isPlainObject(scan)) return "scan must be an object";
-  const scanUnknown = unknownKey(scan, ALLOWED_SCAN);
+  const scanUnknown = unknownKey(scan, isV4 ? ALLOWED_SCAN_V4 : ALLOWED_SCAN_LEGACY);
   if (scanUnknown) return `unknown key in scan: ${truncate(scanUnknown)}`;
-  const scanNumericKeys = [
-    "durationMs",
-    "registeredCount",
-    "orphanedCount",
-    "supersededCount",
-    "missingFromDiskCount",
-  ];
+  const scanNumericKeys = isV4 ? [...SCAN_NUMERIC_V4] : [...SCAN_NUMERIC_LEGACY];
   // Schema 2 adds obsoletedCount (PatchState=4 split out of
-  // supersededCount). Required from v2 on, absent in v1.
-  if (version >= 2) scanNumericKeys.push("obsoletedCount");
-  for (const key of scanNumericKeys) {
-    const value = (scan as Record<string, unknown>)[key];
-    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-      return `scan.${key} must be a non-negative finite number`;
-    }
-  }
-  if (typeof scan.pendingReboot !== "string" || !PENDING_REBOOT_LABELS.has(scan.pendingReboot)) {
+  // supersededCount). Required from v2 on, absent in v1; v4's own list
+  // already carries it.
+  if (!isV4 && version >= 2) scanNumericKeys.push("obsoletedCount");
+  const scanError = requireNonNegativeNumbers(scan, scanNumericKeys, "scan");
+  if (scanError) return scanError;
+  if (!isV4 && (typeof scan.pendingReboot !== "string" || !PENDING_REBOOT_LABELS.has(scan.pendingReboot))) {
     return "scan.pendingReboot must be a known label";
   }
 
   const op = body.operation;
   if (!isPlainObject(op)) return "operation must be an object";
-  const opUnknown = unknownKey(op, ALLOWED_OPERATION);
+  const opUnknown = unknownKey(op, isV4 ? ALLOWED_OPERATION_V4 : ALLOWED_OPERATION_LEGACY);
   if (opUnknown) return `unknown key in operation: ${truncate(opUnknown)}`;
   if (typeof op.kind !== "string" || !OPERATION_KINDS.has(op.kind)) {
     return "operation.kind must be scan, move, or delete";
@@ -337,17 +519,14 @@ export function validateReport(body: Record<string, unknown>, version: number): 
   if (typeof op.outcome !== "string" || !OPERATION_OUTCOMES.has(op.outcome)) {
     return "operation.outcome must be a known label";
   }
-  for (const key of ["filesProcessed", "filesFailed", "bytesFreed"]) {
-    const value = (op as Record<string, unknown>)[key];
-    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-      return `operation.${key} must be a non-negative finite number`;
-    }
-  }
+  const opError = requireNonNegativeNumbers(
+    op, isV4 ? OPERATION_NUMERIC_V4 : OPERATION_NUMERIC_LEGACY, "operation");
+  if (opError) return opError;
   if (!Array.isArray(op.errors)) return "operation.errors must be an array";
   if (op.errors.length > 100) return "operation.errors length capped at 100";
   for (const entry of op.errors) {
     if (!isPlainObject(entry)) return "operation.errors entries must be objects";
-    const errUnknown = unknownKey(entry, ALLOWED_ERROR);
+    const errUnknown = unknownKey(entry, isV4 ? ALLOWED_ERROR_V4 : ALLOWED_ERROR_LEGACY);
     if (errUnknown) return `unknown key in operation.errors[]: ${truncate(errUnknown)}`;
     if (typeof entry.category !== "string" || !ALLOWED_ERROR_CATEGORY.has(entry.category)) {
       return "operation.errors[].category must be a known FileOperationError subtype";
@@ -384,6 +563,25 @@ export function validateReport(body: Record<string, unknown>, version: number): 
     return "operation.moveDestinationKind must be null or a known label";
   }
 
+  return null;
+}
+
+// Every count in this schema is a non-negative finite number, so the three
+// objects check theirs the same way rather than each spelling out the same loop.
+// A missing key fails on the type check, which is the point: an absent count and
+// a count of zero are different reports, and only one of them is a client that
+// has stopped sending something.
+function requireNonNegativeNumbers(
+  obj: Record<string, unknown>,
+  keys: readonly string[],
+  objectName: string,
+): string | null {
+  for (const key of keys) {
+    const value = obj[key];
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+      return `${objectName}.${key} must be a non-negative finite number`;
+    }
+  }
   return null;
 }
 

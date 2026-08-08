@@ -163,3 +163,261 @@ describe('validateReport: existing guards still hold', () => {
     expect(validateReport(r, 3)).toMatch(/obsoletedCount/);
   });
 });
+
+// A fresh, fully-valid schema-4 move report. Schema 4 adds the top-level
+// `machine` object and a batch of scan and operation fields, and drops
+// `pendingReboot`. Tests mutate a clone.
+function v4Report(): Record<string, any> {
+  return {
+    schemaVersion: 4,
+    app: { version: '3.0.0', language: 'en-GB' },
+    os: 'Windows 11 (X64)',
+    machine: {
+      shortNameCreation: 'noVolumes',
+      longStemCount: 0,
+      nonStringLocalPackageCount: 0,
+      unreadablePatchStateCount: 0,
+      productCount: 137,
+      patchClaimCount: 2,
+    },
+    scan: {
+      durationMs: 100,
+      registeredCount: 50,
+      registeredBytes: 5_000_000,
+      orphanedCount: 2,
+      supersededCount: 0,
+      obsoletedCount: 0,
+      removableBytes: 300_000,
+      missingFromDiskCount: 0,
+      missingNeededCount: 0,
+      withheldPatchCount: 0,
+      unreadableProductCount: 0,
+      shortfallProductCount: 0,
+      unlistedProductCount: 0,
+      keptIdentityClaimedCount: 0,
+      keptIdentityUnreadableCount: 0,
+      keptIdentityUnaskableCount: 0,
+    },
+    operation: {
+      kind: 'move',
+      outcome: 'complete',
+      durationMs: 900,
+      filesProcessed: 2,
+      filesFailed: 0,
+      bytesFreed: 300_000,
+      errors: [],
+      moveDestinationKind: 'sameDrive',
+      heldBackReclaimed: 0,
+      heldBackRecordsChanged: 0,
+      heldBackRecordsUnreadable: 0,
+      heldBackIdentityClaimed: 0,
+      heldBackIdentityUnreadable: 0,
+    },
+  };
+}
+
+describe('validateReport: schema 4', () => {
+  it('accepts a full v4 report', () => {
+    expect(validateReport(v4Report(), 4)).toBeNull();
+  });
+
+  // EVERY FIELD, ONE AT A TIME. The failure this guards against is a client that
+  // stops sending one: the receiver would accept the report, the key would be
+  // absent, and the series for that field would go quiet with nothing saying so.
+  const requiredNumbers: Array<[string, string]> = [
+    ['machine', 'longStemCount'],
+    ['machine', 'nonStringLocalPackageCount'],
+    ['machine', 'unreadablePatchStateCount'],
+    ['machine', 'productCount'],
+    ['machine', 'patchClaimCount'],
+    ['scan', 'durationMs'],
+    ['scan', 'registeredCount'],
+    ['scan', 'registeredBytes'],
+    ['scan', 'orphanedCount'],
+    ['scan', 'supersededCount'],
+    ['scan', 'obsoletedCount'],
+    ['scan', 'removableBytes'],
+    ['scan', 'missingFromDiskCount'],
+    ['scan', 'missingNeededCount'],
+    ['scan', 'withheldPatchCount'],
+    ['scan', 'unreadableProductCount'],
+    ['scan', 'shortfallProductCount'],
+    ['scan', 'unlistedProductCount'],
+    ['scan', 'keptIdentityClaimedCount'],
+    ['scan', 'keptIdentityUnreadableCount'],
+    ['scan', 'keptIdentityUnaskableCount'],
+    ['operation', 'durationMs'],
+    ['operation', 'filesProcessed'],
+    ['operation', 'filesFailed'],
+    ['operation', 'bytesFreed'],
+    ['operation', 'heldBackReclaimed'],
+    ['operation', 'heldBackRecordsChanged'],
+    ['operation', 'heldBackRecordsUnreadable'],
+    ['operation', 'heldBackIdentityClaimed'],
+    ['operation', 'heldBackIdentityUnreadable'],
+  ];
+
+  it.each(requiredNumbers)('requires %s.%s', (object, key) => {
+    const r = v4Report();
+    delete r[object][key];
+    expect(validateReport(r, 4)).toMatch(new RegExp(`${object}\\.${key}`));
+  });
+
+  it.each(requiredNumbers)('rejects a negative %s.%s', (object, key) => {
+    const r = v4Report();
+    r[object][key] = -1;
+    expect(validateReport(r, 4)).toMatch(new RegExp(`${object}\\.${key}`));
+  });
+
+  it('requires the machine object', () => {
+    const r = v4Report();
+    delete r.machine;
+    expect(validateReport(r, 4)).toMatch(/machine/);
+  });
+
+  it.each([
+    'allVolumes',
+    'noVolumes',
+    'perVolume',
+    'systemVolumeOnly',
+    'unset',
+    'unrecognised',
+    'unreadable',
+  ])('accepts the short-name label %s', (label) => {
+    const r = v4Report();
+    r.machine.shortNameCreation = label;
+    expect(validateReport(r, 4)).toBeNull();
+  });
+
+  it('rejects an unknown short-name label', () => {
+    const r = v4Report();
+    r.machine.shortNameCreation = 'sometimes';
+    expect(validateReport(r, 4)).toMatch(/shortNameCreation/);
+  });
+
+  it.each(['en-GB', 'pt-BR', 'zh-Hans', 'ja', 'uk', 'invariant'])(
+    'accepts the language tag %s', (tag) => {
+      const r = v4Report();
+      r.app.language = tag;
+      expect(validateReport(r, 4)).toBeNull();
+    });
+
+  it.each(['', 'not a tag', 'x'.repeat(200), 'EN-GB'])(
+    'rejects the language value %#', (tag) => {
+      const r = v4Report();
+      r.app.language = tag;
+      expect(validateReport(r, 4)).toMatch(/language/);
+    });
+
+  it('rejects a v4 report still carrying pendingReboot', () => {
+    // The field left with schema 4. A client still sending it is one that has
+    // gone wrong rather than one to quietly accommodate, and the exact per-version
+    // key sets are what catch it.
+    const r = v4Report();
+    r.scan.pendingReboot = 'clean';
+    expect(validateReport(r, 4)).toMatch(/unknown key in scan/i);
+  });
+
+  it('rejects a v4 error bucket carrying a codes histogram', () => {
+    // codes was populated by the two shell-delete categories alone and both went
+    // with the Recycle Bin, so no v4 client can produce one.
+    const r = v4Report();
+    r.operation.errors = [{ category: 'IOFailure', count: 1, codes: { '0x80004005': 1 } }];
+    r.operation.filesFailed = 1;
+    expect(validateReport(r, 4)).toMatch(/unknown key/i);
+  });
+
+  it('accepts a v4 scan-only report, where every operation number is zero', () => {
+    const r = v4Report();
+    r.operation = {
+      kind: 'scan',
+      outcome: 'noFiles',
+      durationMs: 0,
+      filesProcessed: 0,
+      filesFailed: 0,
+      bytesFreed: 0,
+      errors: [],
+      moveDestinationKind: null,
+      heldBackReclaimed: 0,
+      heldBackRecordsChanged: 0,
+      heldBackRecordsUnreadable: 0,
+      heldBackIdentityClaimed: 0,
+      heldBackIdentityUnreadable: 0,
+    };
+    expect(validateReport(r, 4)).toBeNull();
+  });
+
+  it('accepts a v4 report carrying every held-back cause at once', () => {
+    // A batch can meet several causes, which is why they are five numbers rather
+    // than one. Distinct values so a transposition fails rather than cancelling.
+    const r = v4Report();
+    r.operation.heldBackReclaimed = 1;
+    r.operation.heldBackRecordsChanged = 2;
+    r.operation.heldBackRecordsUnreadable = 3;
+    r.operation.heldBackIdentityClaimed = 4;
+    r.operation.heldBackIdentityUnreadable = 5;
+    expect(validateReport(r, 4)).toBeNull();
+  });
+});
+
+describe('validateReport: the schemas do not leak into each other', () => {
+  // The store holds every report ever received and the public chart reads all of
+  // them, so a change made for schema 4 that quietly invalidated schema 3 would
+  // not show up as an error anywhere: it would show up as older reports failing
+  // to validate on a re-check nobody runs.
+  it('still accepts a full schema 3 report unchanged', () => {
+    expect(validateReport(baseReport(), 3)).toBeNull();
+  });
+
+  it('still accepts a schema 2 report', () => {
+    const r = baseReport();
+    r.schemaVersion = 2;
+    r.operation.errors = [{ category: 'ShellRefused', count: 3 }];
+    expect(validateReport(r, 2)).toBeNull();
+  });
+
+  it('still accepts a schema 1 report with no obsoletedCount', () => {
+    const r = baseReport();
+    r.schemaVersion = 1;
+    delete r.scan.obsoletedCount;
+    r.operation.errors = [{ category: 'ShellRefused', count: 3 }];
+    expect(validateReport(r, 1)).toBeNull();
+  });
+
+  it('rejects a schema 3 report carrying the machine object', () => {
+    const r = baseReport();
+    r.machine = { shortNameCreation: 'unset' };
+    expect(validateReport(r, 3)).toMatch(/machine/);
+  });
+
+  it.each([
+    'registeredBytes',
+    'removableBytes',
+    'missingNeededCount',
+    'withheldPatchCount',
+    'unreadableProductCount',
+    'keptIdentityClaimedCount',
+  ])('rejects a schema 3 report carrying the v4 scan key %s', (key) => {
+    const r = baseReport();
+    r.scan[key] = 1;
+    expect(validateReport(r, 3)).toMatch(/unknown key in scan/i);
+  });
+
+  it('rejects a schema 3 report carrying a v4 operation key', () => {
+    const r = baseReport();
+    r.operation.heldBackReclaimed = 0;
+    expect(validateReport(r, 3)).toMatch(/unknown key in operation/i);
+  });
+
+  it('rejects a schema 3 report carrying app.language', () => {
+    const r = baseReport();
+    r.app.language = 'en-GB';
+    expect(validateReport(r, 3)).toMatch(/unknown key in app/i);
+  });
+
+  it('still requires pendingReboot on schema 3', () => {
+    const r = baseReport();
+    delete r.scan.pendingReboot;
+    expect(validateReport(r, 3)).toMatch(/pendingReboot/);
+  });
+});
