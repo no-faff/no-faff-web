@@ -174,7 +174,7 @@ function v4Report(): Record<string, any> {
     os: 'Windows 11 (X64)',
     machine: {
       shortNameCreation: 'noVolumes',
-      longStemCount: 0,
+      longFileNameCount: 0,
       nonStringLocalPackageCount: 0,
       unreadablePatchStateCount: 0,
       productCount: 137,
@@ -225,7 +225,7 @@ describe('validateReport: schema 4', () => {
   // stops sending one: the receiver would accept the report, the key would be
   // absent, and the series for that field would go quiet with nothing saying so.
   const requiredNumbers: Array<[string, string]> = [
-    ['machine', 'longStemCount'],
+    ['machine', 'longFileNameCount'],
     ['machine', 'nonStringLocalPackageCount'],
     ['machine', 'unreadablePatchStateCount'],
     ['machine', 'productCount'],

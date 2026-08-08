@@ -7,7 +7,7 @@
   "os": "Windows (X64)",
   "machine": {
     "shortNameCreation": "noVolumes",
-    "longStemCount": 0,
+    "longFileNameCount": 0,
     "nonStringLocalPackageCount": 0,
     "unreadablePatchStateCount": 0,
     "productCount": 137,

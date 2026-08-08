@@ -166,7 +166,7 @@ const ALLOWED_OPERATION_V4 = new Set([
 
 const ALLOWED_MACHINE = new Set([
   "shortNameCreation",
-  "longStemCount",
+  "longFileNameCount",
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "productCount",
@@ -221,7 +221,7 @@ const OPERATION_NUMERIC_V4 = [
   "heldBackIdentityUnreadable",
 ];
 const MACHINE_NUMERIC = [
-  "longStemCount",
+  "longFileNameCount",
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "productCount",
