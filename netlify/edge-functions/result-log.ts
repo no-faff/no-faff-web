@@ -132,8 +132,9 @@ const ALLOWED_SCAN_V4 = new Set([
   "missingNeededCount",
   "withheldPatchCount",
   "unreadableProductCount",
-  "shortfallProductCount",
-  "unlistedProductCount",
+  "skippedProductRowCount",
+  "unclaimedProductFileCount",
+  "unclaimedPatchFileCount",
   "keptIdentityClaimedCount",
   "keptIdentityUnreadableCount",
   "keptIdentityUnaskableCount",
@@ -170,6 +171,7 @@ const ALLOWED_MACHINE = new Set([
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "productCount",
+  "registryProductKeyCount",
   "patchClaimCount",
 ]);
 
@@ -202,8 +204,9 @@ const SCAN_NUMERIC_V4 = [
   "missingNeededCount",
   "withheldPatchCount",
   "unreadableProductCount",
-  "shortfallProductCount",
-  "unlistedProductCount",
+  "skippedProductRowCount",
+  "unclaimedProductFileCount",
+  "unclaimedPatchFileCount",
   "keptIdentityClaimedCount",
   "keptIdentityUnreadableCount",
   "keptIdentityUnaskableCount",
@@ -225,6 +228,7 @@ const MACHINE_NUMERIC = [
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "productCount",
+  "registryProductKeyCount",
   "patchClaimCount",
 ];
 

@@ -11,6 +11,7 @@
     "nonStringLocalPackageCount": 0,
     "unreadablePatchStateCount": 0,
     "productCount": 137,
+    "registryProductKeyCount": 137,
     "patchClaimCount": 2
   },
   "scan": {
@@ -25,8 +26,9 @@
     "missingNeededCount": 0,
     "withheldPatchCount": 0,
     "unreadableProductCount": 0,
-    "shortfallProductCount": 0,
-    "unlistedProductCount": 0,
+    "skippedProductRowCount": 0,
+    "unclaimedProductFileCount": 0,
+    "unclaimedPatchFileCount": 0,
     "keptIdentityClaimedCount": 0,
     "keptIdentityUnreadableCount": 0,
     "keptIdentityUnaskableCount": 0
