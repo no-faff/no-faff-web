@@ -108,6 +108,41 @@ describe('real client payloads', () => {
     }
   });
 
+  it('every error category the client can emit is accepted', () => {
+    // THE ONE FAULT IN THIS AREA WITH A HISTORY, and the reason it is checked
+    // against the categories rather than a couple of samples: a category the
+    // receiver does not allowlist rejects the WHOLE report, so the runs that
+    // would have counted it are exactly the runs discarded. A rename on the
+    // client once reached the point of shipping while this end still knew only
+    // the old names, which would have binned every delete-failure report until
+    // somebody noticed, and a reporting path going quiet reads identically to
+    // nothing being wrong.
+    //
+    // The fixture's categories are produced by reflecting over the client's own
+    // FileOperationError subtypes, which is the same derivation the client uses
+    // to name them, so a new or renamed subtype arrives here rather than being
+    // remembered here.
+    const errors = load('v4-delete-with-errors.json').operation.errors;
+    const categories = errors.map((e: any) => e.category);
+
+    expect(categories.length).toBeGreaterThan(1);
+    expect(new Set(categories).size).toBe(categories.length);
+    for (const category of categories) {
+      const r = load('v4-move.json');
+      r.operation.errors = [{ category, count: 1 }];
+      r.operation.filesFailed = 1;
+      r.operation.outcome = 'partial';
+      expect([category, validateReport(r, 4)]).toEqual([category, null]);
+    }
+
+    // The control. Without it the loop above passes just as well against a
+    // receiver that accepts any string at all.
+    const r = load('v4-move.json');
+    r.operation.errors = [{ category: 'VrunklyPhandiferFailure', count: 1 }];
+    r.operation.filesFailed = 1;
+    expect(validateReport(r, 4)).toMatch(/category/i);
+  });
+
   it('a held-back file is reported under its own cause', () => {
     const op = load('v4-delete-with-errors.json').operation;
 

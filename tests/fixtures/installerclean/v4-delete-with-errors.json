@@ -58,11 +58,39 @@
     "outcome": "partial",
     "durationMs": 620,
     "filesProcessed": 1,
-    "filesFailed": 1,
+    "filesFailed": 36,
     "bytesFreed": 900000000,
     "errors": [
       {
+        "category": "UnknownError",
+        "count": 8
+      },
+      {
+        "category": "SourceIsReparsePoint",
+        "count": 7
+      },
+      {
+        "category": "MissingSourceFile",
+        "count": 6
+      },
+      {
+        "category": "IOFailure",
+        "count": 5
+      },
+      {
         "category": "FileInUse",
+        "count": 4
+      },
+      {
+        "category": "DestinationCollision",
+        "count": 3
+      },
+      {
+        "category": "CandidateOutsideCache",
+        "count": 2
+      },
+      {
+        "category": "AccessDenied",
         "count": 1
       }
     ],
