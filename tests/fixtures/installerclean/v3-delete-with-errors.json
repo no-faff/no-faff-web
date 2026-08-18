@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 3,
+  "app": {
+    "version": "2.3.0"
+  },
+  "os": "Windows 11 (X64)",
+  "scan": {
+    "durationMs": 3100,
+    "registeredCount": 212,
+    "orphanedCount": 9,
+    "supersededCount": 4,
+    "obsoletedCount": 1,
+    "missingFromDiskCount": 2,
+    "pendingReboot": "clean"
+  },
+  "operation": {
+    "kind": "delete",
+    "outcome": "partial",
+    "filesProcessed": 12,
+    "filesFailed": 1,
+    "bytesFreed": 450000000,
+    "errors": [
+      {
+        "category": "FileInUse",
+        "count": 1
+      }
+    ],
+    "moveDestinationKind": null
+  }
+}

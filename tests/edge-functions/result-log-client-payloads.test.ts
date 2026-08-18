@@ -14,10 +14,17 @@ import { validateReport, topLevelUnknownKey } from '../../netlify/edge-functions
 // renamed on the client is a failure HERE rather than a key silently dropped in
 // the store and a series that quietly goes flat.
 //
-// Regenerating them: serialise ResultLogEntry.ForScanOnly / ForMove / ForDelete
-// with WriteIndented and CamelCase and drop the output in beside the others. A
+// Regenerating them: construct the entry from InstallerClean.Core's own record
+// types and serialise it with WriteIndented and CamelCase, which is what
+// ResultLogService posts with, then drop the output in beside the others. A
 // fixture must never be hand-edited to make a test pass; that is the one edit
 // that would turn this file back into a re-statement of the schema.
+//
+// THE v3 PAIR IS GENERATED FROM THE v2.3.0 TAG, not from the current client, and
+// they are the reason this file can answer the question a v4-only suite cannot:
+// whether the newest release anybody has installed still validates. Every
+// released version sends schema 3 or lower, so those two are the shape actually
+// in the field and the v4 three are the shape nothing has shipped yet.
 const FIXTURES = join(import.meta.dirname, '..', 'fixtures', 'installerclean');
 
 function load(name: string): Record<string, any> {
@@ -25,16 +32,22 @@ function load(name: string): Record<string, any> {
 }
 
 const names = readdirSync(FIXTURES).filter((f) => f.endsWith('.json')).sort();
+const v4Names = names.filter((n) => n.startsWith('v4-'));
+const legacyNames = names.filter((n) => !n.startsWith('v4-'));
 
 describe('real client payloads', () => {
-  it('there are fixtures to check, one per run kind', () => {
-    // Without this the two it.each blocks below pass vacuously over an empty
+  it('there are fixtures to check, one per run kind and one per era', () => {
+    // Without this the it.each blocks below pass vacuously over an empty
     // directory, which reads exactly like a clean run.
     expect(names).toEqual([
+      'v3-delete-with-errors.json',
+      'v3-scan-only.json',
       'v4-delete-with-errors.json',
       'v4-move.json',
       'v4-scan-only.json',
     ]);
+    expect(v4Names).toHaveLength(3);
+    expect(legacyNames).toHaveLength(2);
   });
 
   it.each(names)('%s passes the top-level allowlist', (name) => {
@@ -90,7 +103,6 @@ describe('real client payloads', () => {
     for (const key of [
       'durationMs', 'filesProcessed', 'filesFailed', 'bytesFreed',
       'heldBackReclaimed', 'heldBackRecordsChanged', 'heldBackRecordsUnreadable',
-      'heldBackIdentityClaimed', 'heldBackIdentityUnreadable',
     ]) {
       expect(op[key]).toBe(0);
     }
@@ -110,35 +122,82 @@ describe('real client payloads', () => {
     // fixture is a machine that answered less cleanly, and every term it can
     // report is distinct so a transposition between two of them fails here rather
     // than cancelling out.
+    //
+    // IT IS WRITTEN AS "EVERY KEY" RATHER THAN A LIST OF THE INTERESTING ONES,
+    // because a list is what went stale: the fixture and this file both described
+    // a machine object of eight keys long after the client had twenty-eight, and
+    // a named-key assertion passes happily while the twenty it does not name are
+    // missing entirely.
     const r = load('v4-delete-with-errors.json');
+    const numeric = Object.entries(r.machine).filter(([k]) => k !== 'shortNameCreation');
 
     expect(r.machine.shortNameCreation).toBe('systemVolumeOnly');
-    expect(r.machine.longFileNameCount).toBe(6);
-    expect(r.machine.nonStringLocalPackageCount).toBe(1);
-    expect(r.machine.unreadablePatchStateCount).toBe(5);
-    expect(r.machine.unreadableVerdictPathCount).toBe(4);
-    expect(r.machine.productCount).toBe(137);
-    expect(r.machine.registryProductKeyCount).toBe(140);
-    expect(r.scan.unreadableProductCount).toBe(2);
-    expect(r.scan.skippedProductRowCount).toBe(1);
-    expect(r.scan.unclaimedProductFileCount).toBe(3);
-    expect(r.scan.unclaimedPatchFileCount).toBe(1);
-    expect(r.scan.recoveredProductCount).toBe(2);
-    expect(r.scan.unresolvableProductCount).toBe(1);
+    expect(numeric).toHaveLength(27);
+    for (const [key, value] of numeric) expect([key, value]).not.toEqual([key, 0]);
+    expect(new Set(numeric.map(([, v]) => v)).size).toBe(numeric.length);
+
+    // Every scan term this fixture can carry, and obsoletedCount is deliberately
+    // not among them: it is derived from the offer, and an obsoleted patch cannot
+    // reach the offer, so a non-zero here would be a state the client cannot
+    // produce. The machine object's obsoletedRegistrationCount is where that
+    // class shows up, and it is non-zero above.
+    for (const key of [
+      'missingFromDiskCount', 'missingNeededCount', 'withheldPatchCount',
+      'unreadableProductCount', 'skippedProductRowCount', 'unclaimedProductFileCount',
+      'unclaimedPatchFileCount', 'recoveredProductCount', 'unansweredProductCount',
+    ]) {
+      expect([key, r.scan[key]]).not.toEqual([key, 0]);
+    }
   });
 
-  it('the unresolvable count is one finding, and nothing here widens it', () => {
-    // It counts product codes Windows was asked about and would not answer for.
-    // A registry key name that yields no product code is a DIFFERENT finding,
-    // Windows having never been asked about it, so a sentence about what Windows
-    // would not say would be false of every such member. The client carries no
-    // field mixing the two, and if one ever arrives it needs a second key here
-    // rather than a wider reading of this one.
-    for (const name of names) {
+  it('the refusal total agrees with its own four parts, on the wire', () => {
+    // The client derives it rather than taking it as a parameter, so a total
+    // contradicting its breakdown inside one object is meant to be impossible.
+    // Checked against the bytes anyway: "impossible" is a property of the code
+    // that built the object, and this is the object that arrives.
+    for (const name of v4Names) {
+      const m = load(name).machine;
+      expect(m.pathNormalisationRefusedCount).toBe(
+        m.pathNormalisationRefusedAtExpansionCount +
+        m.pathNormalisationRefusedAtPrefixStripCount +
+        m.pathNormalisationRefusedAtFullPathCount +
+        m.pathNormalisationRefusedAtEmbeddedNullCount,
+      );
+    }
+  });
+
+  it('the two product-shortfall findings are kept apart', () => {
+    // One counts products Windows was asked about and would not answer for; the
+    // other counts registry key names that yielded no product code, so Windows
+    // was never asked. A sentence about what Windows would not say is false of
+    // every member of the second, which is why one figure carrying both was
+    // split. They sit in different objects because they answer different
+    // questions: two scans of one machine agree about the second and need not
+    // agree about the first.
+    for (const name of v4Names) {
       const r = load(name);
-      expect(r.scan).toHaveProperty('unresolvableProductCount');
-      expect(r.machine).not.toHaveProperty('unparseableProductKeyCount');
-      expect(r.scan).not.toHaveProperty('unsettledProductCount');
+      expect(r.scan).toHaveProperty('unansweredProductCount');
+      expect(r.machine).toHaveProperty('unparseableProductKeyCount');
+      expect(r.scan).not.toHaveProperty('unparseableProductKeyCount');
+      expect(r.machine).not.toHaveProperty('unansweredProductCount');
+      // The key that carried both. Its removal is why the receiver stopped
+      // requiring it, and a client sending it again is a client that has gone
+      // backwards rather than one to accommodate.
+      expect(r.scan).not.toHaveProperty('unresolvableProductCount');
+    }
+  });
+
+  it('no released client sends the schema the v4 lists validate', () => {
+    // THE QUESTION THIS FILE EXISTS TO ANSWER, and the one a v4-only suite
+    // cannot: the receiver's v4 lists were brought into line with an unreleased
+    // client, and every version anybody has installed sends schema 3 or lower.
+    // Those go down the legacy path, which this change did not touch.
+    for (const name of legacyNames) {
+      const r = load(name);
+      expect(r.schemaVersion).toBeLessThan(4);
+      expect(r).not.toHaveProperty('machine');
+      expect(r.scan).toHaveProperty('pendingReboot');
+      expect(validateReport(r, r.schemaVersion)).toBeNull();
     }
   });
 
@@ -155,8 +214,11 @@ describe('real client payloads', () => {
   });
 
   it('no payload carries a total over the held-back causes', () => {
-    // Five causes and no sum, so nothing downstream can be tempted into one
-    // sentence over a set that has several.
+    // Three causes and no sum, so nothing downstream can be tempted into one
+    // sentence over a set that has several. It was five until the identity check
+    // came out, and the count in this comment is the sort that goes stale
+    // silently, so the assertion is written against the absence rather than
+    // against the number.
     for (const name of names) {
       expect(JSON.stringify(load(name))).not.toContain('heldBackTotal');
     }

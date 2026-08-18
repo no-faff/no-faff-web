@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, it, expect } from 'vitest';
 
 import { validateReport } from '../../netlify/edge-functions/result-log';
@@ -167,58 +170,22 @@ describe('validateReport: existing guards still hold', () => {
 // A fresh, fully-valid schema-4 move report. Schema 4 adds the top-level
 // `machine` object and a batch of scan and operation fields, and drops
 // `pendingReboot`. Tests mutate a clone.
+//
+// TAKEN FROM THE CLIENT FIXTURE RATHER THAN WRITTEN OUT HERE, and that is the
+// whole point of the change that brought it: the hand-written version of this
+// object sat at eight machine keys while the client sent twenty-eight, and it
+// went on passing every test in this file, because a hand-written base and a
+// hand-written expectation agree with each other whatever the client does. The
+// fixture is generated from InstallerClean.Core's own records, so the two can no
+// longer drift apart in private.
 function v4Report(): Record<string, any> {
-  return {
-    schemaVersion: 4,
-    app: { version: '3.0.0', language: 'en-GB' },
-    os: 'Windows 11 (X64)',
-    machine: {
-      shortNameCreation: 'noVolumes',
-      longFileNameCount: 0,
-      nonStringLocalPackageCount: 0,
-      unreadablePatchStateCount: 0,
-      unreadableVerdictPathCount: 0,
-            productCount: 137,
-      registryProductKeyCount: 137,
-      patchClaimCount: 2,
-    },
-    scan: {
-      durationMs: 100,
-      registeredCount: 50,
-      registeredBytes: 5_000_000,
-      orphanedCount: 2,
-      supersededCount: 0,
-      obsoletedCount: 0,
-      removableBytes: 300_000,
-      missingFromDiskCount: 0,
-      missingNeededCount: 0,
-      withheldPatchCount: 0,
-      unreadableProductCount: 0,
-      skippedProductRowCount: 0,
-      unclaimedProductFileCount: 0,
-      unclaimedPatchFileCount: 0,
-      recoveredProductCount: 0,
-      unresolvableProductCount: 0,
-      keptIdentityClaimedCount: 0,
-      keptIdentityUnreadableCount: 0,
-      keptIdentityUnaskableCount: 0,
-    },
-    operation: {
-      kind: 'move',
-      outcome: 'complete',
-      durationMs: 900,
-      filesProcessed: 2,
-      filesFailed: 0,
-      bytesFreed: 300_000,
-      errors: [],
-      moveDestinationKind: 'sameDrive',
-      heldBackReclaimed: 0,
-      heldBackRecordsChanged: 0,
-      heldBackRecordsUnreadable: 0,
-      heldBackIdentityClaimed: 0,
-      heldBackIdentityUnreadable: 0,
-    },
-  };
+  return structuredClone(clientPayload('v4-move.json'));
+}
+
+function clientPayload(name: string): Record<string, any> {
+  return JSON.parse(
+    readFileSync(join(import.meta.dirname, '..', 'fixtures', 'installerclean', name), 'utf8'),
+  );
 }
 
 describe('validateReport: schema 4', () => {
@@ -229,43 +196,29 @@ describe('validateReport: schema 4', () => {
   // EVERY FIELD, ONE AT A TIME. The failure this guards against is a client that
   // stops sending one: the receiver would accept the report, the key would be
   // absent, and the series for that field would go quiet with nothing saying so.
-  const requiredNumbers: Array<[string, string]> = [
-    ['machine', 'longFileNameCount'],
-    ['machine', 'nonStringLocalPackageCount'],
-    ['machine', 'unreadablePatchStateCount'],
-    ['machine', 'unreadableVerdictPathCount'],
-    ['machine', 'productCount'],
-    ['machine', 'registryProductKeyCount'],
-    ['machine', 'patchClaimCount'],
-    ['scan', 'durationMs'],
-    ['scan', 'registeredCount'],
-    ['scan', 'registeredBytes'],
-    ['scan', 'orphanedCount'],
-    ['scan', 'supersededCount'],
-    ['scan', 'obsoletedCount'],
-    ['scan', 'removableBytes'],
-    ['scan', 'missingFromDiskCount'],
-    ['scan', 'missingNeededCount'],
-    ['scan', 'withheldPatchCount'],
-    ['scan', 'unreadableProductCount'],
-    ['scan', 'skippedProductRowCount'],
-    ['scan', 'unclaimedProductFileCount'],
-    ['scan', 'unclaimedPatchFileCount'],
-    ['scan', 'recoveredProductCount'],
-    ['scan', 'unresolvableProductCount'],
-    ['scan', 'keptIdentityClaimedCount'],
-    ['scan', 'keptIdentityUnreadableCount'],
-    ['scan', 'keptIdentityUnaskableCount'],
-    ['operation', 'durationMs'],
-    ['operation', 'filesProcessed'],
-    ['operation', 'filesFailed'],
-    ['operation', 'bytesFreed'],
-    ['operation', 'heldBackReclaimed'],
-    ['operation', 'heldBackRecordsChanged'],
-    ['operation', 'heldBackRecordsUnreadable'],
-    ['operation', 'heldBackIdentityClaimed'],
-    ['operation', 'heldBackIdentityUnreadable'],
-  ];
+  //
+  // DERIVED FROM THE PAYLOAD, so it is every number the client actually sends
+  // rather than the subset somebody remembered to list. A key the client adds
+  // and the receiver does not allowlist fails the row below; a key the receiver
+  // allowlists but does not require fails it too.
+  const base = v4Report();
+  const requiredNumbers: Array<[string, string]> = ['machine', 'scan', 'operation'].flatMap(
+    (object) => Object.entries(base[object])
+      .filter(([, value]) => typeof value === 'number')
+      .map(([key]) => [object, key] as [string, string]),
+  );
+
+  it('the derived list covers every object and is not a short read', () => {
+    // Without this the two it.each blocks below scale silently with whatever the
+    // fixture happens to hold, and an empty or truncated fixture would read as a
+    // clean pass over nothing.
+    expect(requiredNumbers.filter(([o]) => o === 'machine')).toHaveLength(27);
+    expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(16);
+    expect(requiredNumbers.filter(([o]) => o === 'operation')).toHaveLength(7);
+    // The one machine key that is a label rather than a count, so it is checked
+    // against its own set instead and must not have been swept in here.
+    expect(requiredNumbers).not.toContainEqual(['machine', 'shortNameCreation']);
+  });
 
   it.each(requiredNumbers)('requires %s.%s', (object, key) => {
     const r = v4Report();
@@ -338,35 +291,43 @@ describe('validateReport: schema 4', () => {
   });
 
   it('accepts a v4 scan-only report, where every operation number is zero', () => {
-    const r = v4Report();
-    r.operation = {
-      kind: 'scan',
-      outcome: 'noFiles',
-      durationMs: 0,
-      filesProcessed: 0,
-      filesFailed: 0,
-      bytesFreed: 0,
-      errors: [],
-      moveDestinationKind: null,
-      heldBackReclaimed: 0,
-      heldBackRecordsChanged: 0,
-      heldBackRecordsUnreadable: 0,
-      heldBackIdentityClaimed: 0,
-      heldBackIdentityUnreadable: 0,
-    };
+    // The client's own scan-only payload rather than one assembled here, so this
+    // is the run kind as it arrives and not as this file imagines it.
+    const r = clientPayload('v4-scan-only.json');
+
+    expect(r.operation.kind).toBe('scan');
     expect(validateReport(r, 4)).toBeNull();
   });
 
   it('accepts a v4 report carrying every held-back cause at once', () => {
-    // A batch can meet several causes, which is why they are five numbers rather
-    // than one. Distinct values so a transposition fails rather than cancelling.
+    // A batch can meet several causes, which is why they are separate numbers
+    // rather than one. Distinct values so a transposition fails rather than
+    // cancelling.
     const r = v4Report();
     r.operation.heldBackReclaimed = 1;
     r.operation.heldBackRecordsChanged = 2;
     r.operation.heldBackRecordsUnreadable = 3;
-    r.operation.heldBackIdentityClaimed = 4;
-    r.operation.heldBackIdentityUnreadable = 5;
     expect(validateReport(r, 4)).toBeNull();
+  });
+
+  it('rejects a v4 report carrying a key the identity check used to send', () => {
+    // Six keys stopped being produced when that check was removed, four under
+    // scan and two under operation, and the receiver required all six until this
+    // change. They are gone rather than kept optional: no release ever sent
+    // schema 4, so nothing in the field can be carrying them, and the per-version
+    // key sets are exact by design.
+    for (const [object, key] of [
+      ['scan', 'unresolvableProductCount'],
+      ['scan', 'keptIdentityClaimedCount'],
+      ['scan', 'keptIdentityUnreadableCount'],
+      ['scan', 'keptIdentityUnaskableCount'],
+      ['operation', 'heldBackIdentityClaimed'],
+      ['operation', 'heldBackIdentityUnreadable'],
+    ] as Array<[string, string]>) {
+      const r = v4Report();
+      r[object][key] = 0;
+      expect(validateReport(r, 4)).toMatch(new RegExp(`unknown key in ${object}`, 'i'));
+    }
   });
 });
 
@@ -408,7 +369,7 @@ describe('validateReport: the schemas do not leak into each other', () => {
     'unreadableProductCount',
     'unclaimedProductFileCount',
     'recoveredProductCount',
-    'keptIdentityClaimedCount',
+    'unansweredProductCount',
   ])('rejects a schema 3 report carrying the v4 scan key %s', (key) => {
     const r = baseReport();
     r.scan[key] = 1;

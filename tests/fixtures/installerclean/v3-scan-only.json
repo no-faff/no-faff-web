@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 3,
+  "app": {
+    "version": "2.3.0"
+  },
+  "os": "Windows 10 (X64)",
+  "scan": {
+    "durationMs": 2400,
+    "registeredCount": 180,
+    "orphanedCount": 0,
+    "supersededCount": 0,
+    "obsoletedCount": 0,
+    "missingFromDiskCount": 0,
+    "pendingReboot": "clean"
+  },
+  "operation": {
+    "kind": "scan",
+    "outcome": "noFiles",
+    "filesProcessed": 0,
+    "filesFailed": 0,
+    "bytesFreed": 0,
+    "errors": [],
+    "moveDestinationKind": null
+  }
+}

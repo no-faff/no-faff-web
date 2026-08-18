@@ -1,29 +1,49 @@
 {
   "schemaVersion": 4,
   "app": {
-    "version": "2.3.0",
-    "language": "en-GB"
+    "version": "3.0.0",
+    "language": "de-DE"
   },
-  "os": "Windows (X64)",
+  "os": "Windows 10 (X64)",
   "machine": {
     "shortNameCreation": "noVolumes",
-    "longFileNameCount": 0,
+    "longFileNameCount": 340,
     "nonStringLocalPackageCount": 0,
     "unreadablePatchStateCount": 0,
     "unreadableVerdictPathCount": 0,
+    "unparseableProductKeyCount": 0,
     "productCount": 137,
     "registryProductKeyCount": 137,
-    "patchClaimCount": 2
+    "patchClaimCount": 2,
+    "instanceProductCount": 0,
+    "instanceTypeUnreadableCount": 0,
+    "supersededRegistrationCount": 2,
+    "obsoletedRegistrationCount": 0,
+    "productPatchKeyCount": 2,
+    "productPatchRegistrationCount": 2,
+    "productsWithRemovablePatchCount": 0,
+    "productsWithPatchSetUnestablishedCount": 0,
+    "pathResolverAttemptCount": 0,
+    "pathResolverNotAPathCount": 0,
+    "pathResolverNoAncestorCount": 0,
+    "pathResolverOpenRefusedCount": 0,
+    "pathResolverNoFinalNameCount": 0,
+    "pathResolverFaultedCount": 0,
+    "pathNormalisationRefusedAtExpansionCount": 0,
+    "pathNormalisationRefusedAtPrefixStripCount": 0,
+    "pathNormalisationRefusedAtFullPathCount": 0,
+    "pathNormalisationRefusedAtEmbeddedNullCount": 0,
+    "pathNormalisationRefusedCount": 0
   },
   "scan": {
     "durationMs": 4210,
     "registeredCount": 348,
     "registeredBytes": 6960000000,
-    "orphanedCount": 1,
-    "supersededCount": 1,
-    "obsoletedCount": 1,
+    "orphanedCount": 12,
+    "supersededCount": 3,
+    "obsoletedCount": 0,
     "removableBytes": 1300000000,
-    "missingFromDiskCount": 1,
+    "missingFromDiskCount": 0,
     "missingNeededCount": 0,
     "withheldPatchCount": 0,
     "unreadableProductCount": 0,
@@ -31,24 +51,19 @@
     "unclaimedProductFileCount": 0,
     "unclaimedPatchFileCount": 0,
     "recoveredProductCount": 0,
-    "unresolvableProductCount": 0,
-    "keptIdentityClaimedCount": 0,
-    "keptIdentityUnreadableCount": 0,
-    "keptIdentityUnaskableCount": 0
+    "unansweredProductCount": 0
   },
   "operation": {
     "kind": "move",
     "outcome": "complete",
-    "durationMs": 1180,
-    "filesProcessed": 3,
+    "durationMs": 3400,
+    "filesProcessed": 15,
     "filesFailed": 0,
     "bytesFreed": 1300000000,
     "errors": [],
     "moveDestinationKind": "differentFixedDrive",
     "heldBackReclaimed": 0,
     "heldBackRecordsChanged": 0,
-    "heldBackRecordsUnreadable": 0,
-    "heldBackIdentityClaimed": 0,
-    "heldBackIdentityUnreadable": 0
+    "heldBackRecordsUnreadable": 0
   }
 }

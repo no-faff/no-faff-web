@@ -1,7 +1,7 @@
 {
   "schemaVersion": 4,
   "app": {
-    "version": "2.3.0",
+    "version": "3.0.0",
     "language": "en-GB"
   },
   "os": "Windows (X64)",
@@ -11,9 +11,29 @@
     "nonStringLocalPackageCount": 1,
     "unreadablePatchStateCount": 5,
     "unreadableVerdictPathCount": 4,
+    "unparseableProductKeyCount": 7,
     "productCount": 137,
     "registryProductKeyCount": 140,
-    "patchClaimCount": 2
+    "patchClaimCount": 21,
+    "instanceProductCount": 8,
+    "instanceTypeUnreadableCount": 9,
+    "supersededRegistrationCount": 11,
+    "obsoletedRegistrationCount": 12,
+    "productPatchKeyCount": 13,
+    "productPatchRegistrationCount": 14,
+    "productsWithRemovablePatchCount": 15,
+    "productsWithPatchSetUnestablishedCount": 16,
+    "pathResolverAttemptCount": 120,
+    "pathResolverNotAPathCount": 18,
+    "pathResolverNoAncestorCount": 19,
+    "pathResolverOpenRefusedCount": 20,
+    "pathResolverNoFinalNameCount": 22,
+    "pathResolverFaultedCount": 23,
+    "pathNormalisationRefusedAtExpansionCount": 24,
+    "pathNormalisationRefusedAtPrefixStripCount": 25,
+    "pathNormalisationRefusedAtFullPathCount": 26,
+    "pathNormalisationRefusedAtEmbeddedNullCount": 27,
+    "pathNormalisationRefusedCount": 102
   },
   "scan": {
     "durationMs": 4210,
@@ -21,20 +41,17 @@
     "registeredBytes": 6960000000,
     "orphanedCount": 1,
     "supersededCount": 1,
-    "obsoletedCount": 1,
+    "obsoletedCount": 0,
     "removableBytes": 1300000000,
-    "missingFromDiskCount": 1,
-    "missingNeededCount": 0,
-    "withheldPatchCount": 0,
+    "missingFromDiskCount": 4,
+    "missingNeededCount": 3,
+    "withheldPatchCount": 6,
     "unreadableProductCount": 2,
     "skippedProductRowCount": 1,
     "unclaimedProductFileCount": 3,
     "unclaimedPatchFileCount": 1,
     "recoveredProductCount": 2,
-    "unresolvableProductCount": 1,
-    "keptIdentityClaimedCount": 0,
-    "keptIdentityUnreadableCount": 0,
-    "keptIdentityUnaskableCount": 0
+    "unansweredProductCount": 5
   },
   "operation": {
     "kind": "delete",
@@ -52,8 +69,6 @@
     "moveDestinationKind": null,
     "heldBackReclaimed": 1,
     "heldBackRecordsChanged": 0,
-    "heldBackRecordsUnreadable": 0,
-    "heldBackIdentityClaimed": 0,
-    "heldBackIdentityUnreadable": 0
+    "heldBackRecordsUnreadable": 0
   }
 }

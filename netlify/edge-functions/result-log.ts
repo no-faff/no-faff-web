@@ -30,6 +30,18 @@ import { getStore } from "@netlify/blobs";
 // deployed before a client that sends schema 4 ships: the top-level allowlist
 // runs for every version including the ones this cannot validate, so a `machine`
 // key arriving before this deploy is a 400 and a user told sending failed.
+//
+// AND THE SCHEMA-4 LISTS BELOW MOVED WITHOUT THE VERSION MOVING, which is the
+// same rule read the other way: a key that stops being produced is a
+// subtraction, and an allowlisting receiver needs no new version to understand
+// one. Six keys went, four under scan and two under operation, when the client's
+// identity check was removed; twenty-one arrived, twenty under machine and one
+// under scan. Only the additions could ever have been rejected, and the
+// subtractions were required fields here, so both halves were fatal until this
+// deploy. Nothing was renamed on the wire.
+//
+// NO RELEASE EVER SENT EITHER SHAPE. Schema 4 has shipped in no version, so the
+// v4 lists have exactly one client and it is the unreleased one they now match.
 const ALLOWED_VERSIONS = new Set([1, 2, 3, 4]);
 
 // The version at which `machine` arrives and `pendingReboot` leaves. Named
@@ -136,10 +148,7 @@ const ALLOWED_SCAN_V4 = new Set([
   "unclaimedProductFileCount",
   "unclaimedPatchFileCount",
   "recoveredProductCount",
-  "unresolvableProductCount",
-  "keptIdentityClaimedCount",
-  "keptIdentityUnreadableCount",
-  "keptIdentityUnaskableCount",
+  "unansweredProductCount",
 ]);
 
 const ALLOWED_OPERATION_LEGACY = new Set([
@@ -163,19 +172,49 @@ const ALLOWED_OPERATION_V4 = new Set([
   "heldBackReclaimed",
   "heldBackRecordsChanged",
   "heldBackRecordsUnreadable",
-  "heldBackIdentityClaimed",
-  "heldBackIdentityUnreadable",
 ]);
 
+// In the order the client serialises them, which is the order the schema pin in
+// InstallerClean.Tests/Models/ResultLogEntryTests.cs enumerates: that pin is the
+// authoritative list, CI checks it against the real serialised output, and this
+// set was taken from it rather than transcribed from the record declaration.
+// Keeping the order means a diff between the two is read down two columns.
+//
+// THE LAST ONE IS DERIVED ON THE CLIENT, the sum of the four refusal causes
+// above it, and it arrives as a key like any other. It is allowlisted and
+// required here for that reason and not treated as a total to be recomputed:
+// the client computes it at the one place the parts are read so that a total
+// contradicting its own breakdown is impossible, and a receiver recomputing it
+// would be a second opinion nobody needs.
 const ALLOWED_MACHINE = new Set([
   "shortNameCreation",
   "longFileNameCount",
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "unreadableVerdictPathCount",
-    "productCount",
+  "unparseableProductKeyCount",
+  "productCount",
   "registryProductKeyCount",
   "patchClaimCount",
+  "instanceProductCount",
+  "instanceTypeUnreadableCount",
+  "supersededRegistrationCount",
+  "obsoletedRegistrationCount",
+  "productPatchKeyCount",
+  "productPatchRegistrationCount",
+  "productsWithRemovablePatchCount",
+  "productsWithPatchSetUnestablishedCount",
+  "pathResolverAttemptCount",
+  "pathResolverNotAPathCount",
+  "pathResolverNoAncestorCount",
+  "pathResolverOpenRefusedCount",
+  "pathResolverNoFinalNameCount",
+  "pathResolverFaultedCount",
+  "pathNormalisationRefusedAtExpansionCount",
+  "pathNormalisationRefusedAtPrefixStripCount",
+  "pathNormalisationRefusedAtFullPathCount",
+  "pathNormalisationRefusedAtEmbeddedNullCount",
+  "pathNormalisationRefusedCount",
 ]);
 
 // `codes` was populated by the two shell-delete categories alone, both retired
@@ -211,10 +250,7 @@ const SCAN_NUMERIC_V4 = [
   "unclaimedProductFileCount",
   "unclaimedPatchFileCount",
   "recoveredProductCount",
-  "unresolvableProductCount",
-  "keptIdentityClaimedCount",
-  "keptIdentityUnreadableCount",
-  "keptIdentityUnaskableCount",
+  "unansweredProductCount",
 ];
 const OPERATION_NUMERIC_LEGACY = ["filesProcessed", "filesFailed", "bytesFreed"];
 const OPERATION_NUMERIC_V4 = [
@@ -225,17 +261,47 @@ const OPERATION_NUMERIC_V4 = [
   "heldBackReclaimed",
   "heldBackRecordsChanged",
   "heldBackRecordsUnreadable",
-  "heldBackIdentityClaimed",
-  "heldBackIdentityUnreadable",
 ];
+
+// Every machine key except shortNameCreation, which is the one label in the
+// object and is checked against its own set below.
+//
+// REQUIRING ALL OF THEM IS SAFE BECAUSE NO SHIPPED CLIENT SENDS THIS OBJECT AT
+// ALL. Requiring a key a released version does not send would 400 that version,
+// which is the trap this list sits in; it does not spring here, because the
+// machine object arrives with schema 4 and no release has ever sent schema 4.
+// Every tag from v1.9.0 to v2.3.0 sends 3, v1.8.2 sends 2, v1.8.0 and v1.8.1
+// send 1, so every client in the field goes down the LEGACY path and never
+// reaches this list. Anything added here later has to be asked the same
+// question, because by then a schema-4 client will have shipped.
 const MACHINE_NUMERIC = [
   "longFileNameCount",
   "nonStringLocalPackageCount",
   "unreadablePatchStateCount",
   "unreadableVerdictPathCount",
-    "productCount",
+  "unparseableProductKeyCount",
+  "productCount",
   "registryProductKeyCount",
   "patchClaimCount",
+  "instanceProductCount",
+  "instanceTypeUnreadableCount",
+  "supersededRegistrationCount",
+  "obsoletedRegistrationCount",
+  "productPatchKeyCount",
+  "productPatchRegistrationCount",
+  "productsWithRemovablePatchCount",
+  "productsWithPatchSetUnestablishedCount",
+  "pathResolverAttemptCount",
+  "pathResolverNotAPathCount",
+  "pathResolverNoAncestorCount",
+  "pathResolverOpenRefusedCount",
+  "pathResolverNoFinalNameCount",
+  "pathResolverFaultedCount",
+  "pathNormalisationRefusedAtExpansionCount",
+  "pathNormalisationRefusedAtPrefixStripCount",
+  "pathNormalisationRefusedAtFullPathCount",
+  "pathNormalisationRefusedAtEmbeddedNullCount",
+  "pathNormalisationRefusedCount",
 ];
 
 // Optional per-error HRESULT histogram, schema 3 only and delete only. Keys are
