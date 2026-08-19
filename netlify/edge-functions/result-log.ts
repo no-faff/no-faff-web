@@ -215,6 +215,16 @@ const ALLOWED_MACHINE = new Set([
   "pathNormalisationRefusedAtFullPathCount",
   "pathNormalisationRefusedAtEmbeddedNullCount",
   "pathNormalisationRefusedCount",
+  // Derived client-side over the five pathResolver*Count members above it, and it
+  // arrives as a key like any other, exactly as pathNormalisationRefusedCount does.
+  // ADDED AHEAD OF THE CLIENT ON PURPOSE. The client change that produces it is
+  // written and not yet released, and this file's own rule is that the function
+  // deploys before a client sending a new key ships: an unknown key is a 400 at
+  // this level and the user is told sending failed. Allowing a key nothing sends
+  // yet costs nothing, because the per-object lists permit rather than require;
+  // allowing it late loses every report from every machine that had the condition,
+  // which is the one population these reports exist to hear from.
+  "pathResolverRefusedCount",
 ]);
 
 // `codes` was populated by the two shell-delete categories alone, both retired
