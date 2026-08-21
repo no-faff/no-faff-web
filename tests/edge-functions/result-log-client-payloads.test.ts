@@ -167,7 +167,7 @@ describe('real client payloads', () => {
     const numeric = Object.entries(r.machine).filter(([k]) => k !== 'shortNameCreation');
 
     expect(r.machine.shortNameCreation).toBe('systemVolumeOnly');
-    expect(numeric).toHaveLength(27);
+    expect(numeric).toHaveLength(43);
     for (const [key, value] of numeric) expect([key, value]).not.toEqual([key, 0]);
     expect(new Set(numeric.map(([, v]) => v)).size).toBe(numeric.length);
 

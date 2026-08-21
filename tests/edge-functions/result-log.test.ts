@@ -212,8 +212,8 @@ describe('validateReport: schema 4', () => {
     // Without this the two it.each blocks below scale silently with whatever the
     // fixture happens to hold, and an empty or truncated fixture would read as a
     // clean pass over nothing.
-    expect(requiredNumbers.filter(([o]) => o === 'machine')).toHaveLength(27);
-    expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(16);
+    expect(requiredNumbers.filter(([o]) => o === 'machine')).toHaveLength(43);
+    expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(17);
     expect(requiredNumbers.filter(([o]) => o === 'operation')).toHaveLength(7);
     // The one machine key that is a label rather than a count, so it is checked
     // against its own set instead and must not have been swept in here.

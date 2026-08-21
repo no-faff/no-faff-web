@@ -149,6 +149,14 @@ const ALLOWED_SCAN_V4 = new Set([
   "unclaimedPatchFileCount",
   "recoveredProductCount",
   "unansweredProductCount",
+  // Files the folder walk found, that no registration's recorded path claimed, and
+  // that the scan then declined to offer. NOT withheldPatchCount five keys above it,
+  // which counts superseded registrations the scan would have offered: different
+  // populations, and nothing may add them. It was invisible to these reports until
+  // schema 4's client, by oversight rather than by decision, and it is the figure
+  // that answers whether a machine was offered nothing because its folder was clean
+  // or because the scan could not settle it.
+  "withheldCandidateCount",
 ]);
 
 const ALLOWED_OPERATION_LEGACY = new Set([
@@ -214,6 +222,42 @@ const ALLOWED_MACHINE = new Set([
   "pathNormalisationRefusedAtPrefixStripCount",
   "pathNormalisationRefusedAtFullPathCount",
   "pathNormalisationRefusedAtEmbeddedNullCount",
+  // NOT AN OUTCOME AND NOT A FAULT, unlike every other key in this group. It counts
+  // recorded values that CARRIED a spelling only the filesystem can settle, an 8dot3
+  // alias or a prefix the strip left on for want of a drive root, rather than values
+  // anything refused. A flagged spelling that resolves is the mechanism working.
+  //
+  // IT HAS BEEN REACHING THE PAYLOAD SINCE THE CLIENT ADDED IT AND WAS NEVER ADDED
+  // HERE. A client shipping with it would have had EVERY report rejected, an unknown
+  // key being a 400 for the whole object rather than one dropped field, and the
+  // reports going quiet reads exactly like nothing being wrong.
+  "pathFlaggedSpellingCount",
+  // THE SCAN'S IDENTITY COMPARISON, one group per side. The client asks the
+  // filesystem which file each recorded path names and which file each walked
+  // candidate is, so that a registration written in a spelling the folder walk never
+  // produces is still matched to its file. The two sides are counted apart because
+  // they are asked about different populations and only one of them can empty an
+  // offer: a registration the filesystem will not identify withholds the client's
+  // whole walk-derived offer, while a walked file it will not identify is kept back
+  // on its own.
+  //
+  // THE namesNothing PAIR IS NOT A FAILURE OF THE MACHINE and is deliberately
+  // outside the two derived totals at the foot of this list. It is a registration
+  // whose cached file has already gone, which is ordinary and is common, so a
+  // receiver reading it as a fault would read most of the machines in the world as
+  // broken.
+  "registrationIdentityAttemptCount",
+  "registrationIdentityNamesNothingCount",
+  "registrationIdentityNotAPathCount",
+  "registrationIdentityOpenRefusedCount",
+  "registrationIdentityUnavailableCount",
+  "registrationIdentityFaultedCount",
+  "candidateIdentityAttemptCount",
+  "candidateIdentityNamesNothingCount",
+  "candidateIdentityNotAPathCount",
+  "candidateIdentityOpenRefusedCount",
+  "candidateIdentityUnavailableCount",
+  "candidateIdentityFaultedCount",
   "pathNormalisationRefusedCount",
   // Derived client-side over the five pathResolver*Count members above it, and it
   // arrives as a key like any other, exactly as pathNormalisationRefusedCount does.
@@ -225,6 +269,11 @@ const ALLOWED_MACHINE = new Set([
   // allowing it late loses every report from every machine that had the condition,
   // which is the one population these reports exist to hear from.
   "pathResolverRefusedCount",
+  // Derived client-side over four of the six outcomes in each identity group above,
+  // and they arrive as keys like any other. The attempt count and the namesNothing
+  // count are outside them, which is the whole of what that split is for.
+  "registrationIdentityRefusedCount",
+  "candidateIdentityRefusedCount",
 ]);
 
 // `codes` was populated by the two shell-delete categories alone, both retired
@@ -261,6 +310,13 @@ const SCAN_NUMERIC_V4 = [
   "unclaimedPatchFileCount",
   "recoveredProductCount",
   "unansweredProductCount",
+  // REQUIRED, ON THE SAME REASONING AS THE MACHINE LIST AND IN THE SAME WINDOW.
+  // This list is only reached when the report is schema 4, and no released version
+  // sends schema 4, so requiring a key here cannot reject a client in the field
+  // today. It can from the moment a schema-4 client ships, so the decision has to be
+  // taken now rather than after: adding it here later would 400 the very version
+  // that introduced it.
+  "withheldCandidateCount",
 ];
 const OPERATION_NUMERIC_LEGACY = ["filesProcessed", "filesFailed", "bytesFreed"];
 const OPERATION_NUMERIC_V4 = [
@@ -311,7 +367,30 @@ const MACHINE_NUMERIC = [
   "pathNormalisationRefusedAtPrefixStripCount",
   "pathNormalisationRefusedAtFullPathCount",
   "pathNormalisationRefusedAtEmbeddedNullCount",
+  "pathFlaggedSpellingCount",
+  "registrationIdentityAttemptCount",
+  "registrationIdentityNamesNothingCount",
+  "registrationIdentityNotAPathCount",
+  "registrationIdentityOpenRefusedCount",
+  "registrationIdentityUnavailableCount",
+  "registrationIdentityFaultedCount",
+  "candidateIdentityAttemptCount",
+  "candidateIdentityNamesNothingCount",
+  "candidateIdentityNotAPathCount",
+  "candidateIdentityOpenRefusedCount",
+  "candidateIdentityUnavailableCount",
+  "candidateIdentityFaultedCount",
   "pathNormalisationRefusedCount",
+  // REQUIRED FROM HERE, WHERE IT WAS ALLOWED AND NOT REQUIRED, AND THE EARLIER CALL
+  // WAS CORRECT WHEN IT WAS MADE. Its note in ALLOWED_MACHINE says it was added
+  // ahead of the client, and while nothing sent it, permitting without requiring was
+  // exactly right. What changed is the client, which sends it on every report now.
+  // Its own derived sibling pathNormalisationRefusedCount has been in this list all
+  // along, so the two halves of one pattern had ended up on opposite sides of the
+  // line with nobody having decided that.
+  "pathResolverRefusedCount",
+  "registrationIdentityRefusedCount",
+  "candidateIdentityRefusedCount",
 ];
 
 // Optional per-error HRESULT histogram, schema 3 only and delete only. Keys are

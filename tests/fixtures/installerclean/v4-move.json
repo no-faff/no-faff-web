@@ -23,7 +23,7 @@
     "productPatchRegistrationCount": 2,
     "productsWithRemovablePatchCount": 0,
     "productsWithPatchSetUnestablishedCount": 0,
-    "pathResolverAttemptCount": 0,
+    "pathResolverAttemptCount": 348,
     "pathResolverNotAPathCount": 0,
     "pathResolverNoAncestorCount": 0,
     "pathResolverOpenRefusedCount": 0,
@@ -33,7 +33,23 @@
     "pathNormalisationRefusedAtPrefixStripCount": 0,
     "pathNormalisationRefusedAtFullPathCount": 0,
     "pathNormalisationRefusedAtEmbeddedNullCount": 0,
-    "pathNormalisationRefusedCount": 0
+    "pathFlaggedSpellingCount": 0,
+    "registrationIdentityAttemptCount": 348,
+    "registrationIdentityNamesNothingCount": 0,
+    "registrationIdentityNotAPathCount": 0,
+    "registrationIdentityOpenRefusedCount": 0,
+    "registrationIdentityUnavailableCount": 0,
+    "registrationIdentityFaultedCount": 0,
+    "candidateIdentityAttemptCount": 12,
+    "candidateIdentityNamesNothingCount": 0,
+    "candidateIdentityNotAPathCount": 0,
+    "candidateIdentityOpenRefusedCount": 0,
+    "candidateIdentityUnavailableCount": 0,
+    "candidateIdentityFaultedCount": 0,
+    "pathNormalisationRefusedCount": 0,
+    "pathResolverRefusedCount": 0,
+    "registrationIdentityRefusedCount": 0,
+    "candidateIdentityRefusedCount": 0
   },
   "scan": {
     "durationMs": 4210,
@@ -51,7 +67,8 @@
     "unclaimedProductFileCount": 0,
     "unclaimedPatchFileCount": 0,
     "recoveredProductCount": 0,
-    "unansweredProductCount": 0
+    "unansweredProductCount": 0,
+    "withheldCandidateCount": 0
   },
   "operation": {
     "kind": "move",
