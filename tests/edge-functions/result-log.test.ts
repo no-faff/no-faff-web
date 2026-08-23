@@ -214,7 +214,11 @@ describe('validateReport: schema 4', () => {
     // clean pass over nothing.
     expect(requiredNumbers.filter(([o]) => o === 'machine')).toHaveLength(43);
     expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(17);
-    expect(requiredNumbers.filter(([o]) => o === 'operation')).toHaveLength(7);
+    // Eight from the release that added a fourth held-back cause. The count is
+    // the point of this line: adding the key to the receiver's lists and not to
+    // the fixture would leave the two it.each blocks below covering seven fields
+    // and reading as a clean pass.
+    expect(requiredNumbers.filter(([o]) => o === 'operation')).toHaveLength(8);
     // The one machine key that is a label rather than a count, so it is checked
     // against its own set instead and must not have been swept in here.
     expect(requiredNumbers).not.toContainEqual(['machine', 'shortNameCreation']);

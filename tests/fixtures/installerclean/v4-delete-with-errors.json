@@ -114,6 +114,7 @@
     "moveDestinationKind": null,
     "heldBackReclaimed": 1,
     "heldBackRecordsChanged": 0,
-    "heldBackRecordsUnreadable": 0
+    "heldBackRecordsUnreadable": 0,
+    "heldBackOwnershipUnestablished": 0
   }
 }

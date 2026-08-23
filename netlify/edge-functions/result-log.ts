@@ -180,6 +180,12 @@ const ALLOWED_OPERATION_V4 = new Set([
   "heldBackReclaimed",
   "heldBackRecordsChanged",
   "heldBackRecordsUnreadable",
+  // The fourth cause, and it is not a fourth of a kind. The three above are
+  // findings about the registration naming the file the batch dropped: a live
+  // claim, a registration that has gone, a read that failed. This one is reached
+  // without reading anything about the file at all, because the act-time re-check
+  // met a condition under which the scan offers no walked file to anybody.
+  "heldBackOwnershipUnestablished",
 ]);
 
 // In the order the client serialises them, which is the order the schema pin in
@@ -327,6 +333,13 @@ const OPERATION_NUMERIC_V4 = [
   "heldBackReclaimed",
   "heldBackRecordsChanged",
   "heldBackRecordsUnreadable",
+  // REQUIRED, AND THE WINDOW FOR DECIDING THAT CLOSES AT THE TAG. This list is
+  // only reached when the report is schema 4, and no released version sends
+  // schema 4, so requiring a key here cannot reject a client in the field today.
+  // From the moment a schema-4 client ships it can, which is why it is added now
+  // rather than after: later, it could never be required at all, and an optional
+  // count is one a machine can go quiet on without anybody seeing.
+  "heldBackOwnershipUnestablished",
 ];
 
 // Every machine key except shortNameCreation, which is the one label in the

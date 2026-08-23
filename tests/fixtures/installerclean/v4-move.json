@@ -81,6 +81,7 @@
     "moveDestinationKind": "differentFixedDrive",
     "heldBackReclaimed": 0,
     "heldBackRecordsChanged": 0,
-    "heldBackRecordsUnreadable": 0
+    "heldBackRecordsUnreadable": 0,
+    "heldBackOwnershipUnestablished": 0
   }
 }
