@@ -993,14 +993,10 @@ const annTagPlugin = {
         ctx.globalAlpha = 1;
         ctx.fillStyle = "#ffffff";
         ctx.fillText(e.tag, cx, cyC + 0.5);
-        if (idx >= 0) {
-          // An underline is the only affordance a painted pill can carry: there
-          // is no element to give a link colour or a focus ring to, and the
-          // pointer cursor only shows once somebody is already over it.
-          const tw = w - 2 * ANN.PAD_X;
-          ctx.fillRect(cx - tw / 2, cyC + 6, tw, 1);
-          chart.$annHits.push({ x, y, w, h: ANN.PILL_H, url: e.url });
-        }
+        // A pill that links carries no mark of its own: the pointer cursor and
+        // the lightening under the pointer are the whole affordance, which is a
+        // deliberate trade of discoverability for a quiet chart.
+        if (idx >= 0) chart.$annHits.push({ x, y, w, h: ANN.PILL_H, url: e.url });
       }
       prev = { left, right, topEdge: bottom - colH };
     }
