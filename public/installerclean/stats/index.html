@@ -943,6 +943,10 @@ const annTagPlugin = {
   id: "annTags",
   afterDatasetsDraw(chart) {
     const ann = chart.$annotations, slots = chart.$slots;
+    // Rebuilt from scratch on every draw, never cached: a page turn, a legend
+    // toggle and a resize each move every pill, and a stale rectangle would go
+    // on answering clicks for a pill that is no longer under the pointer.
+    chart.$annHits = [];
     if (!ann || !slots) return;
     const ctx = chart.ctx;
     const topY = {}, cenX = {};
@@ -976,15 +980,60 @@ const annTagPlugin = {
         const e = list[j];
         const w = pillW(e);
         const cyC = bottom - ANN.PILL_H / 2 - j * (ANN.PILL_H + ANN.GAP);
-        roundedRect(ctx, cx - w / 2, cyC - ANN.PILL_H / 2, w, ANN.PILL_H, ANN.PILL_H / 2);
+        const x = cx - w / 2, y = cyC - ANN.PILL_H / 2;
+        // The index this pill will take in the hit list, read before the push
+        // so the drawing pass and the pointer test agree on which pill is which.
+        const idx = e.url ? chart.$annHits.length : -1;
+        roundedRect(ctx, x, y, w, ANN.PILL_H, ANN.PILL_H / 2);
         ctx.fillStyle = e.kind === "release" ? COL.violet : COL.ink;
+        // Lightened rather than recoloured under the pointer, so the violet of a
+        // release and the ink of an event both stay readable as themselves.
+        if (idx >= 0 && idx === chart.$annHot) ctx.globalAlpha = 0.75;
         ctx.fill();
+        ctx.globalAlpha = 1;
         ctx.fillStyle = "#ffffff";
         ctx.fillText(e.tag, cx, cyC + 0.5);
+        if (idx >= 0) {
+          // An underline is the only affordance a painted pill can carry: there
+          // is no element to give a link colour or a focus ring to, and the
+          // pointer cursor only shows once somebody is already over it.
+          const tw = w - 2 * ANN.PAD_X;
+          ctx.fillRect(cx - tw / 2, cyC + 6, tw, 1);
+          chart.$annHits.push({ x, y, w, h: ANN.PILL_H, url: e.url });
+        }
       }
       prev = { left, right, topEdge: bottom - colH };
     }
     ctx.restore();
+  },
+  // Pills are painted on the canvas rather than laid out as DOM, so nothing
+  // makes them clickable for free. This maps the pointer onto the rectangles
+  // the draw pass recorded and opens the annotation's own link. Chart.js
+  // dispatches click and mousemove here whether or not the pointer is inside
+  // the plot area, which is what makes it work at all: every pill sits ABOVE
+  // the bars, outside it.
+  afterEvent(chart, args) {
+    const hits = chart.$annHits;
+    if (!hits || !hits.length) return;
+    const ev = args.event;
+    let over = -1;
+    // A mouseout arrives with no coordinates, which is the signal to drop the
+    // highlight rather than a position to test.
+    if (ev.x != null && ev.y != null) {
+      for (let i = 0; i < hits.length; i++) {
+        const r = hits[i];
+        if (ev.x >= r.x && ev.x <= r.x + r.w && ev.y >= r.y && ev.y <= r.y + r.h) { over = i; break; }
+      }
+    }
+    if (ev.type === "click") {
+      // noopener because the opened page must not get a handle on this one.
+      if (over >= 0) window.open(hits[over].url, "_blank", "noopener");
+      return;
+    }
+    chart.canvas.style.cursor = over >= 0 ? "pointer" : "";
+    // Only ask for a redraw when the highlight actually changes, or every
+    // mousemove across the canvas would repaint the whole chart.
+    if (chart.$annHot !== over) { chart.$annHot = over; args.changed = true; }
   },
 };
 
@@ -1351,7 +1400,12 @@ for (const r of latest.releases) {
 }
 for (const c of (DATA.custom_annotations || [])) {
   if (!c || !c.date) continue;
-  pushAnnotation(c.date, { kind: "custom", tag: c.tag || "?",
+  // A custom event may name its source, and annotations.json has always had a
+  // url field for it. An entry that carries one draws as a link and opens it
+  // when clicked; an entry with an empty url is an ordinary pill, which is what
+  // the events that have no page to point at (a counter glitch, an article
+  // nobody kept a link to) still are.
+  pushAnnotation(c.date, { kind: "custom", tag: c.tag || "?", url: c.url || "",
     t: Date.parse(c.date + "T12:00:00Z"), hover: c.text || c.tag || "" });
 }
 for (const k in dailyAnnotations) dailyAnnotations[k].sort((a, b) => a.t - b.t);
