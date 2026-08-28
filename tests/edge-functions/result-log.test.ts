@@ -213,7 +213,10 @@ describe('validateReport: schema 4', () => {
     // fixture happens to hold, and an empty or truncated fixture would read as a
     // clean pass over nothing.
     expect(requiredNumbers.filter(([o]) => o === 'machine')).toHaveLength(43);
-    expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(17);
+    // Nineteen from the release that added the size of the withheld population
+    // and the third withheld population beside it. Seventeen was right until
+    // then, and this line moving is the acknowledgement that the shape did.
+    expect(requiredNumbers.filter(([o]) => o === 'scan')).toHaveLength(19);
     // Eight from the release that added a fourth held-back cause. The count is
     // the point of this line: adding the key to the receiver's lists and not to
     // the fixture would leave the two it.each blocks below covering seven fields

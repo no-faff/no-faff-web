@@ -68,7 +68,9 @@
     "unclaimedPatchFileCount": 1,
     "recoveredProductCount": 2,
     "unansweredProductCount": 5,
-    "withheldCandidateCount": 9
+    "withheldCandidateCount": 9,
+    "withheldTotalBytes": 412000000,
+    "registeredWithheldCount": 8
   },
   "operation": {
     "kind": "delete",

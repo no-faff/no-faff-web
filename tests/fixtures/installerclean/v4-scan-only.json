@@ -68,7 +68,9 @@
     "unclaimedPatchFileCount": 0,
     "recoveredProductCount": 0,
     "unansweredProductCount": 0,
-    "withheldCandidateCount": 0
+    "withheldCandidateCount": 0,
+    "withheldTotalBytes": 0,
+    "registeredWithheldCount": 0
   },
   "operation": {
     "kind": "scan",

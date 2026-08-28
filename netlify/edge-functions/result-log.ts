@@ -157,6 +157,24 @@ const ALLOWED_SCAN_V4 = new Set([
   // that answers whether a machine was offered nothing because its folder was clean
   // or because the scan could not settle it.
   "withheldCandidateCount",
+  // The size of the population the key above counts, so a report can say what the
+  // withholding cost and not only how many files it was; and the third withheld
+  // population, registered rows whose verdict was taken away, counted whether or
+  // not the file is still on disk. Both are on the client now.
+  "withheldTotalBytes",
+  "registeredWithheldCount",
+  // THE FIVE BELOW ARE PERMITTED AHEAD OF THE CLIENT ON PURPOSE, AND THAT IS THE
+  // WHOLE POINT OF THEM BEING HERE. They split withheldCandidateCount by which of
+  // the three mutually exclusive decisions put each file on the list, and they sum
+  // to it. Allowing a key nothing sends yet is inert; a key arriving before it is
+  // allowed is a 400 and the report is lost, so the order is always receiver
+  // first. They are NOT in the required list below, because a key required before
+  // the client sends it rejects every report until it does.
+  "withheldIdentityUnestablishedCount",
+  "withheldWholesaleCount",
+  "withheldDeclaredProductInstalledCount",
+  "withheldDeclaredProductUnestablishedCount",
+  "withheldScreenUnansweredCount",
 ]);
 
 const ALLOWED_OPERATION_LEGACY = new Set([
@@ -323,6 +341,12 @@ const SCAN_NUMERIC_V4 = [
   // taken now rather than after: adding it here later would 400 the very version
   // that introduced it.
   "withheldCandidateCount",
+  // REQUIRED ON THE SAME REASONING AND IN THE SAME WINDOW as the key above, and
+  // the client sends both today. The pair answers what a withholding cost rather
+  // than only how often it happened, and a size that is optional is a size a
+  // machine can go quiet on with the series still looking healthy.
+  "withheldTotalBytes",
+  "registeredWithheldCount",
 ];
 const OPERATION_NUMERIC_LEGACY = ["filesProcessed", "filesFailed", "bytesFreed"];
 const OPERATION_NUMERIC_V4 = [
